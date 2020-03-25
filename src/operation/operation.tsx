@@ -3,38 +3,59 @@ import { Instance, types } from "mobx-state-tree";
 import React from "react";
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
 import { rootStore } from "../App";
-import { FMChoiceProperty } from "./choice-type";
-import { MBoolProperty, MNumProperty } from "./raw-types";
+import { BoolFieldSpec, ChoiceFieldSpec, NumFieldSpec, PatternFieldSpec } from "../fields/";
+import { listToMap } from "../utils";
+import { createOp } from "./op-model-spec";
 
-function listToMap<T extends number | string>(l: Array<T>) {
-  return l.reduce((p, c) => {
-    p[c.toString()] = c;
-    return p;
-  }, {} as { [key: string]: T });
+const dimensionMap = { "1D": 1, "2D": 2, "3D": 3 };
+function shapeFromDim(dim: number) {
+  if (dim === 3) {
+    return /\d+|\[\d+\]|\[\d+,\d+\]|\[\d+,\d+,\d+\]/;
+  } else if (dim === 2) {
+    return /\d+|\[\d+\]|\[\d+,\d+\]/;
+  } else {
+    return /\d+|\[\d+\]/;
+  }
 }
 
-const convProps = types.model("", {
-  kernelSize: MNumProperty,
-  depthMultiplier: MNumProperty,
-  strides: MNumProperty,
-  padding: FMChoiceProperty("Padding", listToMap(["valid", "same", "causal"]))
+const extractShapePattern = (s: any) =>
+  shapeFromDim(dimensionMap[s.dimensions as keyof typeof dimensionMap]);
+
+const ConvolutionOp = createOp("Convolution", {
+  dimensions: new ChoiceFieldSpec({
+    choices: dimensionMap,
+    default: "1D"
+  }),
+  filters: new NumFieldSpec({ default: 32, min: 1, isInt: true }),
+  kernelSize: (() =>
+    new PatternFieldSpec({
+      default: [3],
+      pattern: extractShapePattern,
+      deps: ["dimensions"],
+      transform: (value: string) => JSON.parse(value),
+      transformInto: types.union(types.number, types.array(types.number))
+    }))(),
+  padding: new ChoiceFieldSpec({
+    choices: listToMap(["VALID", "SAME", "CAUSAL"]),
+    default: "SAME"
+  }),
+  filterType: new ChoiceFieldSpec({
+    choices: {"STRIDED": "STRIDED", "DILATED":"DILATED"},
+    default: "STRIDED"
+  }),
+  filter: new PatternFieldSpec({
+    default: [1],
+    pattern: extractShapePattern,
+    deps: ["dimensions"],
+    transform: (value: string) => JSON.parse(value),
+    transformInto: types.union(types.number, types.array(types.number))
+  }),
+  trainable: new BoolFieldSpec({ default: true })
 });
 
-
-
-const testM = types.model("", {
-  kernelSize: types.integer,
-  d: types.boolean,
-  c: types.union(types.integer, types.array(types.integer))
-});
-
-const denseProps = types.model("", {
-  units: MNumProperty,
-  useBias: MBoolProperty,
-  dtype: FMChoiceProperty(
-    "DType",
-    listToMap(["float32", "int32", "bool", "complex64", "string"])
-  )
+export const DenseOp = createOp("Dense", {
+  units: new NumFieldSpec({ default: 32, min: 1, isInt: true }),
+  useBias: new BoolFieldSpec({ default: true })
 });
 
 export const OperationModel = types
@@ -45,7 +66,7 @@ export const OperationModel = types
     y: types.number,
     width: types.maybe(types.number),
     height: types.maybe(types.number),
-    data: types.union(convProps, denseProps)
+    data: types.union(ConvolutionOp, DenseOp)
   })
   .actions(self => ({
     move(dx: number, dy: number) {
@@ -74,6 +95,7 @@ export const OperationView: React.FC<OperationViewProps> = observer(
     );
     const onClick = React.useCallback(
       (_: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        console.log(operation);
         rootStore.selectOperation(operation);
       },
       [operation]
@@ -84,7 +106,7 @@ export const OperationView: React.FC<OperationViewProps> = observer(
       <Draggable onDrag={onDrag} position={{ x, y }} bounds="parent">
         <div
           ref={e => {
-            if (e == null) return;
+            if (e === null) return;
             operation.setSize(e.getBoundingClientRect());
             setDivRef(e);
           }}
@@ -104,67 +126,3 @@ export const OperationView: React.FC<OperationViewProps> = observer(
     );
   }
 );
-
-// type Truthy2<T extends object> = {
-//   [key in keyof T]: T[key] extends false ? never : key;
-// }[keyof T];
-
-// type ValidFunc<
-//   C extends { [key: string]: any },
-//   F extends Partial<{ [key in keyof C]: boolean }>
-// > = {
-//   func: (
-//     values: { [P in Truthy2<F>]: P extends keyof C ? C[P]:never }
-//   ) => Partial<{ [key in keyof C]: string }> | void;
-//   deps: F;
-// };
-
-// type Truthy<
-//   V extends { [key: string]: any },
-//   F extends Partial<{ [key in keyof V]: boolean }>
-// > = {
-//   [key in keyof V]: key extends keyof F
-//     ? F[key] extends true
-//       ? V[key]
-//       : never
-//     : never;
-// };
-
-// type ValidFunc<
-//   C extends { [key: string]: any },
-//   F extends Partial<{ [key in keyof C]: boolean }>
-// > = {
-//   func: (values: Truthy<C, F>) => Partial<{ [key in keyof C]: string }> | void;
-//   deps: F;
-// };
-
-// function createOp<T extends { [key: string]: any }>(
-//   properties: T,
-//   validators: Array<ValidFunc<T, Partial<{ [key in keyof T]: boolean }>>>
-// ) {
-//   return {
-//     call: () => {
-//       validators.forEach(({ func, deps }) => {
-//         func(
-//           Object.entries(properties).reduce((p, [k, v]) => {
-//             if (k in deps && deps[k] === true) {
-//               (p as any)[k as any] = v;
-//             }
-//             return p;
-//           }, {} as Truthy<T, Partial<{ [key in keyof T]: boolean }>>)
-//         );
-//       });
-//     }
-//   };
-// }
-
-// const ss = createOp({ a: 3, b: "fe" }, [
-//   {
-//     func: values => {
-
-//       console.log(values.a + 2);
-//     },
-//     deps: { a: false, b: true }
-//   }
-// ]);
-// ss.call();

@@ -18,6 +18,7 @@ export const MainCanvas: React.FC<Props> = observer(() => {
       }}
     >
       {[...rootStore.operations.values()].map(operation => {
+        console.log(operation);
         return <OperationView operation={operation} key={operation.key} />;
       })}
       <svg style={{ width: "100%", height: "100%" }}>
@@ -28,40 +29,3 @@ export const MainCanvas: React.FC<Props> = observer(() => {
     </div>
   );
 });
-
-/* <Stage width={w} height={h}>
-        <Layer>
-          <Text text={`Layer: `} />
-          {[...Array(10)].map((_, i) => {
-            const x = Math.random() * w;
-            const y = Math.random() * h;
-            return (
-              <Group key={i} draggable>
-                <Rect
-                  height={50}
-                  width={60}
-                  x={x}
-                  y={y}
-                  border="2px solid grey"
-                  fill="#eee"
-                  shadowBlur={3}
-                  cornerRadius={5}
-                />
-                <Text text={`Layer: ${i}`} x={x} y={y} />
-                <Portal>
-                  <input
-                    placeholder="bs"
-                    style={{
-                      position: "absolute",
-                      top: 10,
-                      left: 10,
-                      width: "80px"
-                    }}
-                  ></input>
-                </Portal>
-                <Text text={`Layer: ${i}`} x={x} y={y} />
-              </Group>
-            );
-          })}
-        </Layer>
-      </Stage> */

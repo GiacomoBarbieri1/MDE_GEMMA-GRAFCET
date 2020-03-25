@@ -1,16 +1,16 @@
 import React from "react";
-import "./App.css";
 import { MainCanvas } from "./canvas/canvas";
 import { PropertiesView } from "./canvas/properties-view";
 import { RootStoreModel } from "./canvas/store";
 import { MainMenu } from "./graph-menu/main-menu";
+import { DenseOp } from "./operation/operation";
 
-// Regularizer, Constraint, Initializer, 
-// dilationRate (number|[number]|[number, number]|[number, number, number]) 
-// The dilation rate to use for the dilated convolution in each dimension. 
+// Regularizer, Constraint, Initializer,
+// dilationRate (number|[number]|[number, number]|[number, number, number])
+// The dilation rate to use for the dilated convolution in each dimension.
 // Should be an integer or array of two or three integers.
 
-// strides (number|number[]) The strides of the convolution in each dimension. 
+// strides (number|number[]) The strides of the convolution in each dimension.
 // If strides is a number, strides in both dimensions are equal.
 // Specifying any stride value != 1 is incompatible with specifying any dilationRate value != 1.
 
@@ -21,11 +21,7 @@ export const rootStore = RootStoreModel.create({
       name: "Rotterdam",
       x: 100,
       y: 100,
-      data: {
-        units: { value: 2 },
-        useBias: { value: true },
-        dtype: { choices: {} }
-      }
+      data: DenseOp.create({ units: 23, useBias: true })
     },
     "14194d76-aa31-45c5-a00c-104cc550430f": {
       key: "14194d76-aa31-45c5-a00c-104cc550430f",
@@ -33,11 +29,10 @@ export const rootStore = RootStoreModel.create({
       x: 350,
       y: 300,
       data: {
-        depthMultiplier: { value: 2 },
-        kernelSize: { value: 2 },
-        strides: { value: 0 },
-        units: { value: 2 },
-        padding: { choices: {} }
+        OP_TYPE: "Convolution",
+        filter: [1],
+        padding: "SAME",
+        kernelSize: 3
       }
     },
     "24194d76-aa31-45c5-a00c-104cc550430f": {
@@ -46,9 +41,9 @@ export const rootStore = RootStoreModel.create({
       x: 150,
       y: 350,
       data: {
-        units: { value: 2 },
-        useBias: { value: false },
-        dtype: { choices: {} }
+        OP_TYPE: "Dense",
+        units: 24,
+        useBias: false
       }
     }
   },
@@ -74,8 +69,9 @@ export const rootStore = RootStoreModel.create({
   ],
   selection: null
 });
+console.log(rootStore.operations.get("24194d76-aa31-45c5-a00c-104cc550430f"));
 
-function App() {
+export function App() {
   return (
     <div className="row" style={{ background: "rgba(250,250,250,0.7)" }}>
       <MainMenu />
@@ -89,5 +85,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
