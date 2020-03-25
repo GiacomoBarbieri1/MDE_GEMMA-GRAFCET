@@ -1,42 +1,7 @@
-import { observable, ObservableMap } from "mobx";
-import { types } from "mobx-state-tree";
+import { ObservableMap } from "mobx";
 import React from "react";
 import styled from "styled-components";
 import { FieldSpec } from "../fields";
-
-export const createOp = <V extends { [key: string]: FieldSpec }>(
-  name: string,
-  data: V
-) => {
-  const props = Object.entries(data).reduce(
-    (acc, [k, v]) => {
-      acc[k as keyof V] = v.mobxProp() as any;
-      return acc;
-    },
-    {} as {
-      [key in keyof V]: ReturnType<V[key]["mobxProp"]>;
-    }
-  );
-
-  return types
-    .model(name, {
-      ...props,
-      OP_TYPE: types.optional(types.literal(name), name)
-    })
-    .actions(self => ({
-      setValue<K extends string & keyof V>(name: K, value: any) {
-        self[name] = value;
-      }
-    }))
-    .views(self => {
-      const errors = observable.map<string, string>();
-      return {
-        form() {
-          return <PropertiesTable self={self} errors={errors} data={data} />;
-        }
-      };
-    });
-};
 
 export const PropertiesTable = ({
   self,

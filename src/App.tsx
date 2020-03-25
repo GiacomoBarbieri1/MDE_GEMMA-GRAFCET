@@ -1,9 +1,9 @@
 import React from "react";
 import { MainCanvas } from "./canvas/canvas";
-import { PropertiesView } from "./canvas/properties-view";
 import { RootStoreModel } from "./canvas/store";
 import { MainMenu } from "./graph-menu/main-menu";
-import { DenseOp } from "./operation/operation";
+import { DenseOp } from "./operation/layers";
+import { PropertiesView } from "./properties/properties-view";
 
 // Regularizer, Constraint, Initializer,
 // dilationRate (number|[number]|[number, number]|[number, number, number])

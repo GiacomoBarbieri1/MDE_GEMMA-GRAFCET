@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { Instance, types } from "mobx-state-tree";
 import React from "react";
-import { OperationModel, OperationModelT } from "../operation/operation";
+import { OperationModel, OperationModelT } from "../operation/operation-model";
 
 export const ArrowModel = types.model("Arrow", {
   key: types.identifier,

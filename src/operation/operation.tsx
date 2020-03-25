@@ -1,88 +1,58 @@
+import { observable } from "mobx";
 import { observer } from "mobx-react-lite";
-import { Instance, types } from "mobx-state-tree";
+import { types } from "mobx-state-tree";
 import React from "react";
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
+import styled from "styled-components";
 import { rootStore } from "../App";
-import { BoolFieldSpec, ChoiceFieldSpec, NumFieldSpec, PatternFieldSpec } from "../fields/";
-import { listToMap } from "../utils";
-import { createOp } from "./op-model-spec";
+import { FieldSpec } from "../fields";
+import { PropertiesTable } from "../properties/properties-table";
+import { OperationModelT } from "./operation-model";
 
-const dimensionMap = { "1D": 1, "2D": 2, "3D": 3 };
-function shapeFromDim(dim: number) {
-  if (dim === 3) {
-    return /\d+|\[\d+\]|\[\d+,\d+\]|\[\d+,\d+,\d+\]/;
-  } else if (dim === 2) {
-    return /\d+|\[\d+\]|\[\d+,\d+\]/;
-  } else {
-    return /\d+|\[\d+\]/;
-  }
-}
-
-const extractShapePattern = (s: any) =>
-  shapeFromDim(dimensionMap[s.dimensions as keyof typeof dimensionMap]);
-
-const ConvolutionOp = createOp("Convolution", {
-  dimensions: new ChoiceFieldSpec({
-    choices: dimensionMap,
-    default: "1D"
-  }),
-  filters: new NumFieldSpec({ default: 32, min: 1, isInt: true }),
-  kernelSize: (() =>
-    new PatternFieldSpec({
-      default: [3],
-      pattern: extractShapePattern,
-      deps: ["dimensions"],
-      transform: (value: string) => JSON.parse(value),
-      transformInto: types.union(types.number, types.array(types.number))
-    }))(),
-  padding: new ChoiceFieldSpec({
-    choices: listToMap(["VALID", "SAME", "CAUSAL"]),
-    default: "SAME"
-  }),
-  filterType: new ChoiceFieldSpec({
-    choices: {"STRIDED": "STRIDED", "DILATED":"DILATED"},
-    default: "STRIDED"
-  }),
-  filter: new PatternFieldSpec({
-    default: [1],
-    pattern: extractShapePattern,
-    deps: ["dimensions"],
-    transform: (value: string) => JSON.parse(value),
-    transformInto: types.union(types.number, types.array(types.number))
-  }),
-  trainable: new BoolFieldSpec({ default: true })
-});
-
-export const DenseOp = createOp("Dense", {
-  units: new NumFieldSpec({ default: 32, min: 1, isInt: true }),
-  useBias: new BoolFieldSpec({ default: true })
-});
-
-export const OperationModel = types
-  .model("Operation", {
-    key: types.identifier,
-    name: types.string,
-    x: types.number,
-    y: types.number,
-    width: types.maybe(types.number),
-    height: types.maybe(types.number),
-    data: types.union(ConvolutionOp, DenseOp)
-  })
-  .actions(self => ({
-    move(dx: number, dy: number) {
-      self.x += dx;
-      self.y += dy;
+export const createOp = <V extends { [key: string]: FieldSpec }>(
+  name: string,
+  data: V
+) => {
+  const props = Object.entries(data).reduce(
+    (acc, [k, v]) => {
+      acc[k as keyof V] = v.mobxProp() as any;
+      return acc;
     },
-    setSize(rect: DOMRect) {
-      self.width = rect.width;
-      self.height = rect.height;
-    },
-    setName(name: string) {
-      self.name = name;
+    {} as {
+      [key in keyof V]: ReturnType<V[key]["mobxProp"]>;
     }
-  }));
+  );
 
-export interface OperationModelT extends Instance<typeof OperationModel> {}
+  return types
+    .model(name, {
+      ...props,
+      OP_TYPE: types.optional(types.literal(name), name)
+    })
+    .actions(self => ({
+      setValue<K extends string & keyof V>(name: K, value: any) {
+        self[name] = value;
+      }
+    }))
+    .views(self => {
+      const errors = observable.map<string, string>();
+      return {
+        form() {
+          return <PropertiesTable self={self} errors={errors} data={data} />;
+        }
+      };
+    });
+};
+
+const StyledOperation = styled.div`
+  z-index: 1;
+  cursor: pointer;
+  position: absolute;
+  box-shadow: 0 1px 4px 1px #eee;
+  padding: 6px;
+  background: #fff;
+  border-radius: 6;
+  border: 1px solid #eee;
+`;
 
 type OperationViewProps = { operation: OperationModelT };
 export const OperationView: React.FC<OperationViewProps> = observer(
@@ -100,28 +70,20 @@ export const OperationView: React.FC<OperationViewProps> = observer(
       },
       [operation]
     );
-    const [divRef, setDivRef] = React.useState<HTMLDivElement | null>(null);
+    const [_divRef, setDivRef] = React.useState<HTMLDivElement | null>(null);
     const { x, y, name } = operation;
     return (
       <Draggable onDrag={onDrag} position={{ x, y }} bounds="parent">
-        <div
+        <StyledOperation
           ref={e => {
             if (e === null) return;
             operation.setSize(e.getBoundingClientRect());
             setDivRef(e);
           }}
           onClick={onClick}
-          style={{
-            zIndex: 1,
-            cursor: "pointer",
-            position: "absolute",
-            boxShadow: "0 1px 4px 1px #eee",
-            padding: "6px",
-            background: "#fff",
-            borderRadius: 6,
-            border: "1px solid #eee"
-          }}
-        >{`Layer ${name}`}</div>
+        >
+          {`Layer ${name}`}
+        </StyledOperation>
       </Draggable>
     );
   }

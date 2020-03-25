@@ -33,6 +33,7 @@ function resizableEnable(f: {
     return p;
   }, defaultResizeEnable);
 }
+
 export const PropertiesView: React.FC<Props> = observer(() => {
   let inner;
   if (rootStore.selection != null) {

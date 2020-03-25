@@ -1,5 +1,5 @@
 import { Instance, types } from "mobx-state-tree";
-import { OperationModel, OperationModelT } from "../operation/operation";
+import { OperationModel, OperationModelT } from "../operation/operation-model";
 import { ArrowModel } from "./arrow";
 
 export const RootStoreModel = types
