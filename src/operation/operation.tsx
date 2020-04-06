@@ -7,6 +7,52 @@ import { OperationModel } from "./operation-model";
 
 export type Shape = (number | undefined)[];
 
+const StyledOperation = styled.div`
+  z-index: 1;
+  cursor: pointer;
+  position: absolute;
+  box-shadow: 0 1px 4px 1px #eee;
+  padding: 6px;
+  background: #fff;
+  border-radius: 6;
+  border: 1px solid #eee;
+`;
+
+type OperationViewProps = { operation: OperationModel };
+export const OperationView: React.FC<OperationViewProps> = observer(
+  ({ operation }) => {
+    const onDrag = React.useCallback(
+      (_: DraggableEvent, data: DraggableData) => {
+        operation.move(data.deltaX, data.deltaY);
+      },
+      [operation]
+    );
+    const onClick = React.useCallback(
+      (_: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        console.log(operation);
+        rootStore.selectOperation(operation);
+      },
+      [operation]
+    );
+    const [_divRef, setDivRef] = React.useState<HTMLDivElement | null>(null);
+    const { x, y, name } = operation;
+    return (
+      <Draggable onDrag={onDrag} position={{ x, y }} bounds="parent">
+        <StyledOperation
+          ref={(e) => {
+            if (e === null) return;
+            operation.setSize(e.getBoundingClientRect());
+            setDivRef(e);
+          }}
+          onClick={onClick}
+        >
+          {`Layer ${name}`}
+        </StyledOperation>
+      </Draggable>
+    );
+  }
+);
+
 // export const createOp = <V extends { [key: string]: FieldSpec }>(
 //   name: string,
 //   data: V,
@@ -53,49 +99,3 @@ export type Shape = (number | undefined)[];
 //       };
 //     });
 // };
-
-const StyledOperation = styled.div`
-  z-index: 1;
-  cursor: pointer;
-  position: absolute;
-  box-shadow: 0 1px 4px 1px #eee;
-  padding: 6px;
-  background: #fff;
-  border-radius: 6;
-  border: 1px solid #eee;
-`;
-
-type OperationViewProps = { operation: OperationModel };
-export const OperationView: React.FC<OperationViewProps> = observer(
-  ({ operation }) => {
-    const onDrag = React.useCallback(
-      (_: DraggableEvent, data: DraggableData) => {
-        operation.move(data.deltaX, data.deltaY);
-      },
-      [operation]
-    );
-    const onClick = React.useCallback(
-      (_: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        console.log(operation);
-        rootStore.selectOperation(operation);
-      },
-      [operation]
-    );
-    const [_divRef, setDivRef] = React.useState<HTMLDivElement | null>(null);
-    const { x, y, name } = operation;
-    return (
-      <Draggable onDrag={onDrag} position={{ x, y }} bounds="parent">
-        <StyledOperation
-          ref={(e) => {
-            if (e === null) return;
-            operation.setSize(e.getBoundingClientRect());
-            setDivRef(e);
-          }}
-          onClick={onClick}
-        >
-          {`Layer ${name}`}
-        </StyledOperation>
-      </Draggable>
-    );
-  }
-);

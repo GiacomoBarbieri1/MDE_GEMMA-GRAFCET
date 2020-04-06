@@ -1,4 +1,4 @@
-import { computed, observable, ObservableMap } from "mobx";
+import { computed, IObservableArray, observable, ObservableMap } from "mobx";
 import { types } from "mobx-state-tree";
 import React from "react";
 import { BoolFieldSpec, ChoiceFieldSpec, FieldSpec, NumFieldSpec, PatternFieldSpec } from "../fields/";
@@ -21,7 +21,7 @@ function shapeFromDim(dim: number) {
 const extractShapePattern = (s: any) =>
   shapeFromDim(dimensionMap[s.dimensions as keyof typeof dimensionMap]);
 
-type OperationI<V extends { [key: string]: FieldSpec }> = {
+type _OperationI<V extends { [key: string]: FieldSpec }> = {
   [key in keyof V]: ReturnType<V[key]["default"]>;
 } & {
   outputShape: Shape;
@@ -29,6 +29,11 @@ type OperationI<V extends { [key: string]: FieldSpec }> = {
   errors: ObservableMap<string, string>;
   form: JSX.Element;
 };
+
+interface OperationI<V extends { [key: string]: FieldSpec }> {
+  new (): _OperationI<V>;
+  data: V;
+}
 
 const ConvolutionOpData = {
   dimensions: new ChoiceFieldSpec({
@@ -61,7 +66,8 @@ const ConvolutionOpData = {
   trainable: new BoolFieldSpec({ default: true }),
 };
 
-export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
+export class ConvolutionOp {
+  static data = ConvolutionOpData;
   constructor() {}
 
   @observable
@@ -101,33 +107,60 @@ export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
   }
 }
 
+const _ConvolutionOp: OperationI<typeof ConvolutionOpData> = ConvolutionOp;
+
 const DenseOpData = {
   units: new NumFieldSpec({ default: 32, min: 1, isInt: true }),
   useBias: new BoolFieldSpec({ default: true }),
 };
 
-export class DenseOp implements OperationI<typeof DenseOpData> {
+export class DenseOp {
+  static data = DenseOpData;
+
+  constructor(
+    d: {
+      units?: number;
+      useBias?: boolean;
+      inputs?: OperationModel[];
+    } = {}
+  ) {
+    this.units = d.units ?? DenseOpData.units.default;
+    this.useBias = d.useBias ?? DenseOpData.useBias.default;
+    this.inputs = d.inputs ? observable.array(d.inputs) : observable.array([]);
+  }
+
   @observable
-  units: number = DenseOpData.units.default;
+  units: number;
   @observable
-  useBias: boolean = DenseOpData.useBias.default;
+  useBias: boolean;
+
+  validInput = (op: OperationModel): boolean => {
+    return op.data.outputShape.length == 2;
+  };
 
   @computed
   get outputShape(): Shape {
-    return [];
+    const input = this.inputs[0];
+    if (!input) {
+      return [undefined];
+    }
+    return [input.data.outputShape[0], this.units];
   }
+
   @observable
-  inputs: OperationModel[] = [];
+  inputs: IObservableArray<OperationModel>;
   @observable
-  errors: ObservableMap<string, string> = observable.map();
+  errors: ObservableMap<keyof typeof DenseOpData, string> = observable.map();
 
   @computed
   get form() {
     return (
-      <PropertiesTable self={this} errors={this.errors} data={DenseOpData} />
+      <PropertiesTable self={this} errors={this.errors} data={DenseOp.data} />
     );
   }
 }
+
+const _DenseOp: OperationI<typeof DenseOpData> = DenseOp;
 
 enum DType {
   float32 = "float32",

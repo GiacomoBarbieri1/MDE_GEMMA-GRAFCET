@@ -1,25 +1,11 @@
 import { observer } from "mobx-react-lite";
 import React from "react";
-import { Shape } from "../operation/operation";
 import { OperationModel } from "../operation/operation-model";
 
-export class ArrowModel {
-  constructor(d: {
-    key: string;
-    from: OperationModel;
-    to: OperationModel;
-    shape: Shape;
-  }) {
-    this.key = d.key;
-    this.from = d.from;
-    this.to = d.to;
-    this.shape = d.shape;
-  }
-  key: string;
+export type ArrowModel = {
   from: OperationModel;
   to: OperationModel;
-  shape: Shape;
-}
+};
 
 // export const ArrowModel = types.model("Arrow", {
 //   key: types.identifier,
@@ -44,7 +30,9 @@ const triangleFromCenter = (
 
 export const ArrowView: React.FC<ArrowViewProps> = observer(
   ({ arrow }: ArrowViewProps) => {
-    const { from, to, shape } = arrow;
+    const { from, to } = arrow;
+    const shape = from.data.outputShape;
+
     const fwidth = from.width || 60;
     const fheight = from.height || 60;
     const twidth = to.width || 60;
@@ -92,7 +80,7 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
           }}
         />
         <RectAndText
-          text={`[${arrow.shape.map((v) => v || "?").join(", ")}]`}
+          text={`[${shape.map((v) => v || "?").join(", ")}]`}
           x={xm}
           y={ym}
         />
@@ -113,23 +101,32 @@ const RectAndText: React.FC<{
   padding?: number;
 }> = observer(({ text, x: xm, y: ym, rectFill = "#eee", padding = 3 }) => {
   const [textRef, setTextRef] = React.useState<SVGTextElement | null>(null);
+  const [prev, setPrev] = React.useState(text);
+  const bbox = textRef?.getBBox();
+  React.useEffect(() => {
+    if (prev !== text) {
+      const id = setTimeout(() => setPrev(text), 0);
+      return () => clearTimeout(id);
+    }
+  });
 
   return (
     <>
-      {textRef != null && (
+      {bbox !== undefined && (
         <rect
-          width={textRef.getBBox().width + padding * 2}
-          height={textRef.getBBox().height + padding * 2}
-          x={xm - textRef.getBBox().width / 2 - padding}
-          y={ym - textRef.getBBox().height + padding}
+          width={bbox.width + padding * 2}
+          height={bbox.height + padding * 2}
+          x={xm - bbox.width / 2 - padding}
+          y={ym - bbox.height + padding}
           fill={rectFill}
         ></rect>
       )}
       <text
-        x={textRef != null ? xm - textRef.getBBox().width / 2 : xm}
+        x={bbox !== undefined ? xm - bbox.width / 2 : xm}
         y={ym}
         fill="black"
         ref={setTextRef}
+        fontFamily="source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace"
       >
         {text}
       </text>
