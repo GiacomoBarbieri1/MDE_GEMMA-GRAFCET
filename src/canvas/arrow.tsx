@@ -1,18 +1,36 @@
 import { observer } from "mobx-react-lite";
-import { Instance, types } from "mobx-state-tree";
 import React from "react";
-import { OperationModel, OperationModelT } from "../operation/operation-model";
+import { Shape } from "../operation/operation";
+import { OperationModel } from "../operation/operation-model";
 
-export const ArrowModel = types.model("Arrow", {
-  key: types.identifier,
-  from: types.reference(OperationModel),
-  to: types.reference(OperationModel),
-  shape: types.array(types.maybe(types.integer))
-});
+export class ArrowModel {
+  constructor(d: {
+    key: string;
+    from: OperationModel;
+    to: OperationModel;
+    shape: Shape;
+  }) {
+    this.key = d.key;
+    this.from = d.from;
+    this.to = d.to;
+    this.shape = d.shape;
+  }
+  key: string;
+  from: OperationModel;
+  to: OperationModel;
+  shape: Shape;
+}
 
-export interface ArrowModelT extends Instance<typeof ArrowModel> {}
+// export const ArrowModel = types.model("Arrow", {
+//   key: types.identifier,
+//   from: types.reference(OperationModel),
+//   to: types.reference(OperationModel),
+//   shape: types.array(types.maybe(types.integer)),
+// });
 
-type ArrowViewProps = { arrow: ArrowModelT };
+// export interface ArrowModelT extends Instance<typeof ArrowModel> {}
+
+type ArrowViewProps = { arrow: ArrowModel };
 
 const triangleFromCenter = (
   x: number,
@@ -21,32 +39,7 @@ const triangleFromCenter = (
   width: number = 14
 ) => {
   const y0 = y + height;
-  return `M${x} ${y} L${x - width / 2} ${y0} L${x +
-    width / 2} ${y0} Z`;
-};
-
-const getBoxIntersection = (from: OperationModelT, to: OperationModelT) => {
-  const fwidth = from.width || 60;
-  const fheight = from.width || 60;
-  const twidth = to.width || 60;
-  const theight = to.width || 60;
-
-  const [x1, y1, x2, y2] = [
-    from.x + fwidth / 2,
-    from.y + fheight / 2,
-    to.x + twidth / 2,
-    to.y + theight / 2
-  ];
-  const dy = y2 - y1;
-  const dx = x2 - x1;
-  if (dx === 0 || dy === 0) {
-  }
-  const m = dy / dx;
-
-  const degrees = 90 + (Math.atan2(dy, dx) * 180) / Math.PI;
-  let xpos = x2 > x1 ? 1 : -1;
-  const interY = (y2 - y1) / m;
-  const interX = x2 * m + y1;
+  return `M${x} ${y} L${x - width / 2} ${y0} L${x + width / 2} ${y0} Z`;
 };
 
 export const ArrowView: React.FC<ArrowViewProps> = observer(
@@ -61,7 +54,7 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
       from.x + fwidth / 2,
       from.y + fheight / 2,
       to.x + twidth / 2,
-      to.y + theight / 2
+      to.y + theight / 2,
     ];
     const dy = y2 - y1;
     const dx = x2 - x1;
@@ -94,12 +87,12 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
         <path
           style={{ strokeWidth: 2, stroke: "black" }}
           d={`M${x1} ${y1} L${x2} ${y2}`}
-          onDoubleClick={e => {
+          onDoubleClick={(e) => {
             console.log(e);
           }}
         />
         <RectAndText
-          text={`[${arrow.shape.map(v => v || "?").join(", ")}]`}
+          text={`[${arrow.shape.map((v) => v || "?").join(", ")}]`}
           x={xm}
           y={ym}
         />
@@ -143,3 +136,27 @@ const RectAndText: React.FC<{
     </>
   );
 });
+
+// const getBoxIntersection = (from: OperationModelT, to: OperationModelT) => {
+//   const fwidth = from.width || 60;
+//   const fheight = from.width || 60;
+//   const twidth = to.width || 60;
+//   const theight = to.width || 60;
+
+//   const [x1, y1, x2, y2] = [
+//     from.x + fwidth / 2,
+//     from.y + fheight / 2,
+//     to.x + twidth / 2,
+//     to.y + theight / 2
+//   ];
+//   const dy = y2 - y1;
+//   const dx = x2 - x1;
+//   if (dx === 0 || dy === 0) {
+//   }
+//   const m = dy / dx;
+
+//   const degrees = 90 + (Math.atan2(dy, dx) * 180) / Math.PI;
+//   let xpos = x2 > x1 ? 1 : -1;
+//   const interY = (y2 - y1) / m;
+//   const interX = x2 * m + y1;
+// };

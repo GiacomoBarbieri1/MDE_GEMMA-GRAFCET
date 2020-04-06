@@ -13,7 +13,7 @@ const defaultResizeEnable = {
   topRight: false,
   bottomRight: false,
   bottomLeft: false,
-  topLeft: false
+  topLeft: false,
 };
 
 function resizableEnable(f: {
@@ -39,14 +39,14 @@ export const PropertiesView: React.FC<Props> = observer(() => {
   if (rootStore.selection != null) {
     const operation = rootStore.selection;
     inner = (
-      <div>
+      <div style={{ overflowY: "auto", maxHeight: "100%" }}>
         <input
           type="text"
           value={operation.name}
-          onInput={e => operation.setName(e.currentTarget.value)}
+          onInput={(e) => operation.setName(e.currentTarget.value)}
           onChange={() => {}}
         ></input>
-        {operation.data.form()}
+        {operation.data.form}
       </div>
     );
   } else {
@@ -67,7 +67,7 @@ export const PropertiesView: React.FC<Props> = observer(() => {
         padding: "15px",
         borderRadius: "6px 6px 0 0",
         border: "1px solid #eee",
-        margin: "0 10px"
+        margin: "0 10px",
       }}
       enable={resizableEnable({ top: true })}
     >

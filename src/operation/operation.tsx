@@ -1,47 +1,58 @@
-import { observable } from "mobx";
 import { observer } from "mobx-react-lite";
-import { types } from "mobx-state-tree";
 import React from "react";
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
 import styled from "styled-components";
 import { rootStore } from "../App";
-import { FieldSpec } from "../fields";
-import { PropertiesTable } from "../properties/properties-table";
-import { OperationModelT } from "./operation-model";
+import { OperationModel } from "./operation-model";
 
-export const createOp = <V extends { [key: string]: FieldSpec }>(
-  name: string,
-  data: V
-) => {
-  const props = Object.entries(data).reduce(
-    (acc, [k, v]) => {
-      acc[k as keyof V] = v.mobxProp() as any;
-      return acc;
-    },
-    {} as {
-      [key in keyof V]: ReturnType<V[key]["mobxProp"]>;
-    }
-  );
+export type Shape = (number | undefined)[];
 
-  return types
-    .model(name, {
-      ...props,
-      OP_TYPE: types.optional(types.literal(name), name)
-    })
-    .actions(self => ({
-      setValue<K extends string & keyof V>(name: K, value: any) {
-        self[name] = value;
-      }
-    }))
-    .views(self => {
-      const errors = observable.map<string, string>();
-      return {
-        form() {
-          return <PropertiesTable self={self} errors={errors} data={data} />;
-        }
-      };
-    });
-};
+// export const createOp = <V extends { [key: string]: FieldSpec }>(
+//   name: string,
+//   data: V,
+//   outputShape: (
+//     model: Instance<
+//       IModelType<{ [key in keyof V]: ReturnType<V[key]["mobxProp"]> }, {}>
+//     >,
+//     inputs: OperationModelT[]
+//   ) => Shape
+// ) => {
+//   const props = Object.entries(data).reduce(
+//     (acc, [k, v]) => {
+//       acc[k as keyof V] = v.mobxProp() as any;
+//       return acc;
+//     },
+//     {} as {
+//       [key in keyof V]: ReturnType<V[key]["mobxProp"]>;
+//     }
+//   );
+
+//   return types
+//     .model(name, {
+//       ...props,
+//       OP_TYPE: types.optional(types.literal(name), name),
+//       inputs: types.array(types.reference(types.late(() => OperationModel))),
+//     })
+//     .actions((self) => ({
+//       setValue<K extends string & keyof V>(name: K, value: any) {
+//         self[name] = value;
+//       },
+//     }))
+//     .views((self) => {
+//       const errors = observable.map<string, string>();
+//       return {
+//         outputShape(): Shape {
+//           return outputShape(self as any, self.inputs);
+//         },
+//         errorsMap() {
+//           return errors;
+//         },
+//         form() {
+//           return <PropertiesTable self={self} errors={errors} data={data} />;
+//         },
+//       };
+//     });
+// };
 
 const StyledOperation = styled.div`
   z-index: 1;
@@ -54,7 +65,7 @@ const StyledOperation = styled.div`
   border: 1px solid #eee;
 `;
 
-type OperationViewProps = { operation: OperationModelT };
+type OperationViewProps = { operation: OperationModel };
 export const OperationView: React.FC<OperationViewProps> = observer(
   ({ operation }) => {
     const onDrag = React.useCallback(
@@ -75,7 +86,7 @@ export const OperationView: React.FC<OperationViewProps> = observer(
     return (
       <Draggable onDrag={onDrag} position={{ x, y }} bounds="parent">
         <StyledOperation
-          ref={e => {
+          ref={(e) => {
             if (e === null) return;
             operation.setSize(e.getBoundingClientRect());
             setDivRef(e);

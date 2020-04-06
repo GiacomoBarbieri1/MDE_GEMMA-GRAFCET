@@ -49,7 +49,7 @@ export class StrFieldSpec<
         key={name}
         value={value}
         inputProps={{ style: { textAlign: "center" } }}
-        onChange={e => {
+        onChange={(e) => {
           let value = e.target.value;
           setValue(value);
 
@@ -62,7 +62,7 @@ export class StrFieldSpec<
             errors.set(name, "Min length exceded.");
           } else {
             errors.delete(name);
-            model.setValue(name, value);
+            model[name] = value as any;
           }
         }}
         error={errors.get(name) !== undefined}
@@ -93,16 +93,21 @@ export class BoolFieldSpec {
   plotField = observer(
     <
       KM extends string & keyof M,
-      M extends { setValue: (key: KM, value: any) => void; [key: string]: any }
+      M extends {
+        setValue: (key: KM, value: any) => void;
+        [key: string]: any;
+      } & { [k in KM]: boolean }
     >({
       name,
       model,
-      errors
+      errors,
     }: PP<KM, M>) => {
       return (
         <Switch
           checked={model[name]}
-          onChange={() => model.setValue(name, !model[name])}
+          onChange={() => {
+            model[name] = !model[name] as any;
+          }}
           color="primary"
         />
       );
@@ -156,7 +161,7 @@ export class NumFieldSpec {
     >({
       name,
       model,
-      errors
+      errors,
     }: PP<KM, M>) => {
       const [value, setValue] = React.useState(
         ((model[name] as any) as number).toString()
@@ -170,10 +175,10 @@ export class NumFieldSpec {
             min: this.min,
             max: this.max,
             step: this.step,
-            style: { textAlign: "center" }
+            style: { textAlign: "center" },
           }}
           type="number"
-          onChange={e => {
+          onChange={(e) => {
             setValue(e.target.value);
 
             let num: number;
@@ -185,7 +190,7 @@ export class NumFieldSpec {
 
             if (!Number.isNaN(num)) {
               errors.delete(name);
-              model.setValue(name, num);
+              model[name] = num as any;
             } else {
               errors.set(name, "invalid");
             }

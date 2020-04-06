@@ -23,9 +23,9 @@ export class ChoiceFieldSpec<
   M extends IAnyType
 > {
   choices: C;
-  default?: K;
+  default: K;
 
-  constructor(v: { choices: C; default?: K }) {
+  constructor(v: { choices: C; default: K }) {
     this.choices = v.choices;
     this.default = v.default;
     if (this.isObservableMap()) {
@@ -58,7 +58,7 @@ export class ChoiceFieldSpec<
     >({
       name,
       model,
-      errors
+      errors,
     }: PP<KM, M>) => {
       let keys;
       if (this.isObservableMap()) {
@@ -73,10 +73,12 @@ export class ChoiceFieldSpec<
         return (
           <Select
             value={model[name]}
-            onChange={e => model.setValue(name, e.target.value)}
+            onChange={(e) => {
+              model[name] = e.target.value as any; 
+            }}
             autoWidth={true}
           >
-            {keys.map(k => {
+            {keys.map((k) => {
               return <MenuItem value={k}>{k}</MenuItem>;
             })}
           </Select>
@@ -89,7 +91,7 @@ export class ChoiceFieldSpec<
               color="primary"
               aria-label="outlined primary button group"
             >
-              {keys.map(k => {
+              {keys.map((k) => {
                 const buttonStyle =
                   k === (model[name] as any)
                     ? { background: "#3f51b5", color: "white" }
@@ -98,7 +100,9 @@ export class ChoiceFieldSpec<
                 return (
                   <Button
                     key={k}
-                    onClick={() => model.setValue(name, k)}
+                    onClick={() => {
+                      model[name] = k as any;
+                    }}
                     style={buttonStyle}
                   >
                     {k}

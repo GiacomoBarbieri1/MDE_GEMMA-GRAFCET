@@ -87,7 +87,7 @@ export class PatternFieldSpec<
 
     const deps =
       this.deps !== undefined
-        ? [...this.deps.map(d => model[d]), this.pattern, model]
+        ? [...this.deps.map((d) => model[d]), this.pattern, model]
         : [this.pattern, model];
 
     React.useEffect(() => {
@@ -112,7 +112,7 @@ export class PatternFieldSpec<
         key={name}
         value={value}
         inputProps={{ style: { textAlign: "center" } }}
-        onChange={e => {
+        onChange={(e) => {
           let value = e.target.value;
           let match;
           if (this.pattern !== undefined) {
@@ -139,10 +139,10 @@ export class PatternFieldSpec<
             errors.set(name, _patternError);
           } else if (this.transform !== undefined) {
             errors.delete(name);
-            model.setValue(name, this.transform(value));
+            model[name] = this.transform(value) as any;
           } else {
             errors.delete(name);
-            model.setValue(name, value);
+            model[name] = value as any;
           }
         }}
         error={errors.get(name) !== undefined}
