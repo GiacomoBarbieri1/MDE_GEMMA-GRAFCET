@@ -17,6 +17,7 @@ export class PatternFieldSpec<
   maxLength?: number;
   minLength?: number;
   transform: Tr;
+  transformFrom: (value: T) => string;
   transformInto: MT;
   deps?: string[];
 
@@ -28,6 +29,7 @@ export class PatternFieldSpec<
     transform: Tr;
     transformInto: MT;
     deps?: string[];
+    transformFrom?: (value: T) => string;
   }) {
     this.default = v.default;
     this.pattern = v.pattern;
@@ -36,6 +38,7 @@ export class PatternFieldSpec<
     this.transform = v.transform;
     this.transformInto = v.transformInto;
     this.deps = v.deps;
+    this.transformFrom = v.transformFrom ?? JSON.stringify;
 
     if (typeof this.default === "string") {
       if (
@@ -79,11 +82,7 @@ export class PatternFieldSpec<
   };
 
   plotField = observer(({ name, model, errors }: PP<KM, M>) => {
-    const [value, setValue] = React.useState(
-      this.transform !== undefined
-        ? JSON.stringify(model[name])
-        : (model[name] as string)
-    );
+    const [value, setValue] = React.useState(this.transformFrom(model[name]));
 
     const deps =
       this.deps !== undefined
@@ -113,17 +112,13 @@ export class PatternFieldSpec<
         value={value}
         inputProps={{ style: { textAlign: "center" } }}
         onChange={(e) => {
-          let value = e.target.value;
-          let match;
-          if (this.pattern !== undefined) {
-            value = value.replace(/\s/g, "");
-            const p =
-              typeof this.pattern === "function"
-                ? this.pattern(model)
-                : this.pattern;
-            match = value.match(p as any);
-          }
+          let value = e.target.value.replace(/\s/g, "");
           setValue(value);
+          const p =
+            typeof this.pattern === "function"
+              ? this.pattern(model)
+              : this.pattern;
+          const match = value.match(p);
 
           if (this.maxLength !== undefined && value.length > this.maxLength) {
             errors.set(name, "Max length exceded.");
@@ -132,10 +127,7 @@ export class PatternFieldSpec<
             value.length < this.minLength
           ) {
             errors.set(name, "Min length exceded.");
-          } else if (
-            this.pattern !== undefined &&
-            (match === null || match?.index !== 0)
-          ) {
+          } else if (match === null || match?.index !== 0) {
             errors.set(name, _patternError);
           } else if (this.transform !== undefined) {
             errors.delete(name);
