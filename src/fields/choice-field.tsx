@@ -74,12 +74,16 @@ export class ChoiceFieldSpec<
           <Select
             value={model[name]}
             onChange={(e) => {
-              model[name] = e.target.value as any; 
+              model[name] = e.target.value as any;
             }}
             autoWidth={true}
           >
             {keys.map((k) => {
-              return <MenuItem value={k}>{k}</MenuItem>;
+              return (
+                <MenuItem key={k} value={k}>
+                  {k}
+                </MenuItem>
+              );
             })}
           </Select>
         );
