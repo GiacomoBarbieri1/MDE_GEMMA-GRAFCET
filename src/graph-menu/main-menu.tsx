@@ -35,7 +35,6 @@ const MainList = styled.ul`
 type Props = {};
 
 const listItems = {
-  Activations: ["Softmax", "Sigmoid", "Relu"],
   Model: ["Input", "Loss", "Metric", "Optimizer", "Callback"],
   Layers: [
     "Convolutional",
@@ -46,6 +45,7 @@ const listItems = {
     "Embedding",
     "Normalization",
   ],
+  Activations: ["Softmax", "Sigmoid", "Relu"],
   "Slice / Shape": [
     "Concat",
     "Gather",
