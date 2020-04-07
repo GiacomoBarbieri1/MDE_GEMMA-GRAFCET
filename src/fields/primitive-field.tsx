@@ -3,12 +3,10 @@ import TextField from "@material-ui/core/TextField";
 import { observer } from "mobx-react-lite";
 import { types } from "mobx-state-tree";
 import React from "react";
-import { PP } from "./";
+import { FieldSpec, FieldSpecI, PP2 } from "./";
 
-export class StrFieldSpec<
-  KM extends string & keyof M,
-  M extends { setValue: (key: KM, value: any) => void; [key: string]: any }
-> {
+export class StrFieldSpec<M extends { [key: string]: FieldSpec }>
+  implements FieldSpecI<M, string> {
   default: string;
   maxLength?: number;
   minLength?: number;
@@ -41,9 +39,9 @@ export class StrFieldSpec<
     }
   };
 
-  plotField = observer(({ name, model, errors }: PP<KM, M>) => {
-    const [value, setValue] = React.useState(model[name] as string);
-
+  plotField = observer(({ name, model }: PP2<M, string>) => {
+    const [value, setValue] = React.useState(model[name]);
+    const errors = model.errors;
     return (
       <TextField
         key={name}
@@ -51,7 +49,7 @@ export class StrFieldSpec<
         inputProps={{ style: { textAlign: "center" } }}
         onChange={(e) => {
           let value = e.target.value;
-          setValue(value);
+          setValue(value as any);
 
           if (this.maxLength !== undefined && value.length > this.maxLength) {
             errors.set(name, "Max length exceded.");
@@ -73,7 +71,8 @@ export class StrFieldSpec<
   });
 }
 
-export class BoolFieldSpec {
+export class BoolFieldSpec<M extends { [key: string]: FieldSpec }>
+  implements FieldSpecI<M, boolean> {
   default: boolean;
   required?: boolean;
 
@@ -90,32 +89,21 @@ export class BoolFieldSpec {
     }
   };
 
-  plotField = observer(
-    <
-      KM extends string & keyof M,
-      M extends {
-        setValue: (key: KM, value: any) => void;
-        [key: string]: any;
-      } & { [k in KM]: boolean }
-    >({
-      name,
-      model,
-      errors,
-    }: PP<KM, M>) => {
-      return (
-        <Switch
-          checked={model[name]}
-          onChange={() => {
-            model[name] = !model[name] as any;
-          }}
-          color="primary"
-        />
-      );
-    }
-  );
+  plotField = observer(({ name, model }: PP2<M, boolean>) => {
+    return (
+      <Switch
+        checked={model[name]}
+        onChange={() => {
+          model[name] = !model[name] as any;
+        }}
+        color="primary"
+      />
+    );
+  });
 }
 
-export class NumFieldSpec {
+export class NumFieldSpec<M extends { [key: string]: FieldSpec }>
+  implements FieldSpecI<M, number> {
   default: number;
   min?: number;
   max?: number;
@@ -154,64 +142,56 @@ export class NumFieldSpec {
       ? types.optional(types.number, this.default)
       : types.number;
 
-  plotField = observer(
-    <
-      KM extends string & keyof M,
-      M extends { setValue: (key: KM, value: any) => void; [key: string]: any }
-    >({
-      name,
-      model,
-      errors,
-    }: PP<KM, M>) => {
-      const [value, setValue] = React.useState(
-        ((model[name] as any) as number).toString()
-      );
-      const error = errors.get(name);
+  plotField = observer(({ name, model }: PP2<M, number>) => {
+    const [value, setValue] = React.useState(
+      ((model[name] as any) as number).toString()
+    );
+    const errors = model.errors;
+    const error = errors.get(name);
 
-      return (
-        <TextField
-          key={name}
-          value={value}
-          inputProps={{
-            min: this.min,
-            max: this.max,
-            step: this.step,
-            style: { textAlign: "center" },
-          }}
-          type="number"
-          error={error !== undefined}
-          fullWidth={true}
-          style={{ width: "80px" }}
-          onChange={(e) => {
-            let value = e.target.value;
-            if (this.min !== undefined && this.min >= 0) {
-              value = value.replace(/-/g, "");
-            }
-            if (this.isInt) {
-              value = value.replace(/\./g, "");
-            }
-            setValue(value);
+    return (
+      <TextField
+        key={name}
+        value={value}
+        inputProps={{
+          min: this.min,
+          max: this.max,
+          step: this.step,
+          style: { textAlign: "center" },
+        }}
+        type="number"
+        error={error !== undefined}
+        fullWidth={true}
+        style={{ width: "80px" }}
+        onChange={(e) => {
+          let value = e.target.value;
+          if (this.min !== undefined && this.min >= 0) {
+            value = value.replace(/-/g, "");
+          }
+          if (this.isInt) {
+            value = value.replace(/\./g, "");
+          }
+          setValue(value);
 
-            let num: number;
-            if (this.isInt) {
-              num = parseInt(value, 10);
-            } else {
-              num = parseFloat(value);
-            }
+          let num: number;
+          if (this.isInt) {
+            num = parseInt(value, 10);
+          } else {
+            num = parseFloat(value);
+          }
 
-            if (Number.isNaN(num)) {
-              errors.set(name, "Invalid");
-            } else if (this.min !== undefined && this.min > num) {
-              errors.set(name, `Smaller than minimum ${this.min}`);
-            } else if (this.max !== undefined && this.max < num) {
-              errors.set(name, `Greater than maximum ${this.max}`);
-            } else {
-              errors.delete(name);
-              model[name] = num as any;
-            }
-          }}
-        />
-      );
-    }
-  );
+          if (Number.isNaN(num)) {
+            errors.set(name, "Invalid");
+          } else if (this.min !== undefined && this.min > num) {
+            errors.set(name, `Smaller than minimum ${this.min}`);
+          } else if (this.max !== undefined && this.max < num) {
+            errors.set(name, `Greater than maximum ${this.max}`);
+          } else {
+            errors.delete(name);
+            model[name] = num as any;
+          }
+        }}
+      />
+    );
+  });
 }

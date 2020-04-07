@@ -32,7 +32,7 @@ const parseArrayFromStringWithUndefined = (value: string) => {
 const extractShapePattern = (s: any) =>
   shapeFromDim(dimensionMap[s.dimensions as keyof typeof dimensionMap]);
 
-type OperationI<V extends { [key: string]: FieldSpec }> = {
+export type OperationI<V extends { [key: string]: FieldSpec }> = {
   [key in keyof V]: SnapshotIn<ReturnType<V[key]["mobxProp"]>>;
 } & {
   NAME: string;
@@ -270,7 +270,7 @@ export class InputOp implements OperationI<typeof InputOpData> {
   }
   shape: Shape;
   dtype: keyof typeof DType;
-  
+
   nInputs: number = 0;
   validInput = (_: OperationModel): boolean => {
     return false;

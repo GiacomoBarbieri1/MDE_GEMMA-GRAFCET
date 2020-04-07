@@ -1,15 +1,16 @@
 import TextField from "@material-ui/core/TextField";
 import { observer } from "mobx-react-lite";
-import { IAnyType, types } from "mobx-state-tree";
+import { IAnyType, SnapshotIn, types } from "mobx-state-tree";
 import React from "react";
-import { PP } from "./";
+import { OperationData } from "../operation/operation-model";
+import { PP2 } from "./";
 
 const _patternError = "Pattern doesn't match.";
 export class PatternFieldSpec<
   T,
   Tr extends (value: string) => T,
   KM extends string & keyof M,
-  M extends { setValue: (key: KM, value: any) => void; [key: string]: any },
+  M extends OperationData & { [key: string]: any },
   MT extends IAnyType
 > {
   default: T;
@@ -81,9 +82,9 @@ export class PatternFieldSpec<
     return types.optional(this.transformInto, this.default);
   };
 
-  plotField = observer(({ name, model, errors }: PP<KM, M>) => {
+  plotField = observer(({ name, model }: PP2<M, SnapshotIn<MT>>) => {
     const [value, setValue] = React.useState(this.transformFrom(model[name]));
-
+    const errors = model.errors;
     const deps =
       this.deps !== undefined
         ? [...this.deps.map((d) => model[d]), this.pattern, model]

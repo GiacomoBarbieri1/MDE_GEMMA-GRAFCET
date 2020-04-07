@@ -24,8 +24,6 @@ export const PropertiesView: React.FC<Props> = observer(() => {
         ></input>
         <PropertiesTable
           self={rootStore.selection.data}
-          errors={rootStore.selection.data.errors}
-          data={rootStore.selection.data.spec}
         />
       </div>
     );

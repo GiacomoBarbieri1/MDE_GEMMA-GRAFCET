@@ -1,7 +1,7 @@
 import { action, observable } from "mobx";
 import { ConvolutionOp, DenseOp, InputOp } from "./layers";
 
-type OperationData = ConvolutionOp | DenseOp | InputOp;
+export type OperationData = ConvolutionOp | DenseOp | InputOp;
 
 export class OperationModel {
   constructor(d: {

@@ -1,41 +1,38 @@
-import { ObservableMap } from "mobx";
 import { observer } from "mobx-react-lite";
 import React from "react";
 import styled from "styled-components";
-import { FieldSpec } from "../fields";
+import { OperationData } from "../operation/operation-model";
 
-type Props = {
-  self: any;
-  errors: ObservableMap<string, string>;
-  data: {
-    [key: string]: FieldSpec;
-  };
+type Props<M extends OperationData> = {
+  self: M;
 };
 
-export const PropertiesTable = observer(({ self, errors, data }: Props) => {
-  return (
-    <form>
-      <PropertiesTableStyled>
-        <thead>
-          <tr>
-            <td>Property</td>
-            <td>Value</td>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(data).map(([k, v]) => (
-            <tr key={k}>
-              <td>{k}</td>
-              <td>
-                <v.plotField name={k} model={self} errors={errors} />
-              </td>
+export const PropertiesTable = observer(
+  <M extends OperationData>({ self }: Props<M>) => {
+    return (
+      <form>
+        <PropertiesTableStyled>
+          <thead>
+            <tr>
+              <td>Property</td>
+              <td>Value</td>
             </tr>
-          ))}
-        </tbody>
-      </PropertiesTableStyled>
-    </form>
-  );
-});
+          </thead>
+          <tbody>
+            {Object.entries(self.spec).map(([k, v]) => (
+              <tr key={k}>
+                <td>{k}</td>
+                <td>
+                  <v.plotField name={k as keyof M} model={self} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </PropertiesTableStyled>
+      </form>
+    );
+  }
+);
 
 const PropertiesTableStyled = styled.table`
   thead {
