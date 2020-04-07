@@ -33,16 +33,11 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
     const { from, to } = arrow;
     const shape = from.data.outputShape;
 
-    const fwidth = from.width || 60;
-    const fheight = from.height || 60;
-    const twidth = to.width || 60;
-    const theight = to.height || 60;
-
     const [x1, y1, x2, y2] = [
-      from.x + fwidth / 2,
-      from.y + fheight / 2,
-      to.x + twidth / 2,
-      to.y + theight / 2,
+      from.x + from.width / 2,
+      from.y + from.height / 2,
+      to.x + to.width / 2,
+      to.y + to.height / 2,
     ];
     const dy = y2 - y1;
     const dx = x2 - x1;
@@ -51,16 +46,16 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
     let changeY;
     if (dx === 0) {
       changeX = 0;
-      changeY = ((y2 > y1 ? 1 : -1) * theight) / 2;
+      changeY = ((y2 > y1 ? 1 : -1) * to.height) / 2;
     } else if (dy === 0) {
       changeY = 0;
-      changeX = ((x2 > x1 ? 1 : -1) * twidth) / 2;
+      changeX = ((x2 > x1 ? 1 : -1) * to.width) / 2;
     } else {
       const m = Math.abs(dy / dx);
       const [deltaX, deltaY] =
-        m > theight / twidth
-          ? [theight / 2 / m, theight / 2]
-          : [twidth / 2, (twidth / 2) * m];
+        m > to.height / to.width
+          ? [to.height / 2 / m, to.height / 2]
+          : [to.width / 2, (to.width / 2) * m];
       changeY = (y2 > y1 ? 1 : -1) * deltaY;
       changeX = (x2 > x1 ? 1 : -1) * deltaX;
     }
