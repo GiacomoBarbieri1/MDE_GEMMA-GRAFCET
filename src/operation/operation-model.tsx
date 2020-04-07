@@ -1,7 +1,7 @@
 import { action, observable } from "mobx";
-import { ConvolutionOp, DenseOp } from "./layers";
+import { ConvolutionOp, DenseOp, InputOp } from "./layers";
 
-type OperationData = ConvolutionOp | DenseOp;
+type OperationData = ConvolutionOp | DenseOp | InputOp;
 
 export class OperationModel {
   constructor(d: {
@@ -27,9 +27,9 @@ export class OperationModel {
   @observable
   y: number;
   @observable
-  width?: number;
+  width: number = 60;
   @observable
-  height?: number;
+  height: number = 60;
   @observable
   data: OperationData;
 
