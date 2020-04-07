@@ -104,6 +104,7 @@ export class PatternFieldSpec<
           }
         }
       }
+      // eslint-disable-next-line
     }, [value, ...deps]);
 
     return (

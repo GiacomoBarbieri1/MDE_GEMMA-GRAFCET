@@ -34,7 +34,7 @@ export const OperationView: React.FC<OperationViewProps> = observer(
       },
       [operation]
     );
-    const [_divRef, setDivRef] = React.useState<HTMLDivElement | null>(null);
+    // const [_, setDivRef] = React.useState<HTMLDivElement | null>(null);
     const { x, y, name } = operation;
     return (
       <Draggable onDrag={onDrag} position={{ x, y }} bounds="parent">
@@ -42,7 +42,6 @@ export const OperationView: React.FC<OperationViewProps> = observer(
           ref={(e) => {
             if (e === null) return;
             operation.setSize(e.getBoundingClientRect());
-            setDivRef(e);
           }}
           onClick={onClick}
         >

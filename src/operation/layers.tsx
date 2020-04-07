@@ -96,7 +96,7 @@ const ConvolutionOpData = {
 
 const replicateIfOne = (initial: number[], len: number) => {
   let v;
-  if (initial.length == 1) {
+  if (initial.length === 1) {
     v = Array(len).fill(initial[0]) as number[];
   } else {
     v = initial;
@@ -133,7 +133,7 @@ export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
 
   nInputs: number = 1;
   validInput = (op: OperationModel): boolean => {
-    return op.data.outputShape.length == dimensionMap[this.dimensions] + 1;
+    return op.data.outputShape.length === dimensionMap[this.dimensions] + 1;
   };
 
   dimensions: keyof typeof dimensionMap;
@@ -211,7 +211,7 @@ export class DenseOp implements OperationI<typeof DenseOpData> {
 
   nInputs = 1;
   validInput = (op: OperationModel): boolean => {
-    return op.data.outputShape.length == 2;
+    return op.data.outputShape.length === 2;
   };
 
   get outputShape(): Shape {
