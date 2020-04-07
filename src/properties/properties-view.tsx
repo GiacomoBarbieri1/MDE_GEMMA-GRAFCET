@@ -2,51 +2,31 @@ import { observer } from "mobx-react-lite";
 import { Resizable } from "re-resizable";
 import React from "react";
 import { rootStore } from "../App";
+import { resizableEnable } from "../utils";
+import { PropertiesTable } from "./properties-table";
 
 type Props = {};
-
-const defaultResizeEnable = {
-  top: false,
-  right: false,
-  bottom: false,
-  left: false,
-  topRight: false,
-  bottomRight: false,
-  bottomLeft: false,
-  topLeft: false,
-};
-
-function resizableEnable(f: {
-  top?: boolean;
-  right?: boolean;
-  bottom?: boolean;
-  left?: boolean;
-  topRight?: boolean;
-  bottomRight?: boolean;
-  bottomLeft?: boolean;
-  topLeft?: boolean;
-}) {
-  return Object.entries(f).reduce((p, [k, v]) => {
-    if (v !== undefined) {
-      p[k as keyof typeof defaultResizeEnable] = v;
-    }
-    return p;
-  }, defaultResizeEnable);
-}
 
 export const PropertiesView: React.FC<Props> = observer(() => {
   let inner;
   if (rootStore.selection != null) {
     const operation = rootStore.selection;
     inner = (
-      <div style={{ overflowY: "auto", maxHeight: "100%" }}>
+      <div
+        style={{ overflowY: "auto", maxHeight: "100%" }}
+        key={rootStore.selection.key}
+      >
         <input
           type="text"
           value={operation.name}
           onInput={(e) => operation.setName(e.currentTarget.value)}
           onChange={() => {}}
         ></input>
-        {operation.data.form}
+        <PropertiesTable
+          self={rootStore.selection.data}
+          errors={rootStore.selection.data.errors}
+          data={rootStore.selection.data.spec}
+        />
       </div>
     );
   } else {

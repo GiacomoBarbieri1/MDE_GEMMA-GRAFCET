@@ -16,6 +16,7 @@ export const MainCanvas: React.FC<Props> = observer(() => {
         height: "100%",
         background: "#fff",
         margin: "10px",
+        borderRadius: "6px",
       }}
     >
       {ops.map((operation) => {

@@ -1,19 +1,18 @@
 import { ObservableMap } from "mobx";
+import { observer } from "mobx-react-lite";
 import React from "react";
 import styled from "styled-components";
 import { FieldSpec } from "../fields";
 
-export const PropertiesTable = ({
-  self,
-  errors,
-  data
-}: {
+type Props = {
   self: any;
   errors: ObservableMap<string, string>;
   data: {
     [key: string]: FieldSpec;
   };
-}) => {
+};
+
+export const PropertiesTable = observer(({ self, errors, data }: Props) => {
   return (
     <form>
       <PropertiesTableStyled>
@@ -36,7 +35,7 @@ export const PropertiesTable = ({
       </PropertiesTableStyled>
     </form>
   );
-};
+});
 
 const PropertiesTableStyled = styled.table`
   thead {

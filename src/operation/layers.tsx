@@ -1,8 +1,6 @@
 import { computed, IObservableArray, observable, ObservableMap } from "mobx";
 import { types } from "mobx-state-tree";
-import React from "react";
 import { BoolFieldSpec, ChoiceFieldSpec, FieldSpec, NumFieldSpec, PatternFieldSpec } from "../fields/";
-import { PropertiesTable } from "../properties/properties-table";
 import { listToMap } from "../utils";
 import { Shape } from "./operation";
 import { OperationModel } from "./operation-model";
@@ -21,19 +19,14 @@ function shapeFromDim(dim: number) {
 const extractShapePattern = (s: any) =>
   shapeFromDim(dimensionMap[s.dimensions as keyof typeof dimensionMap]);
 
-type _OperationI<V extends { [key: string]: FieldSpec }> = {
+type OperationI<V extends { [key: string]: FieldSpec }> = {
   [key in keyof V]: ReturnType<V[key]["default"]>;
 } & {
   outputShape: Shape;
   inputs: OperationModel[];
   errors: ObservableMap<string, string>;
-  form: JSX.Element;
+  spec: V;
 };
-
-interface OperationI<V extends { [key: string]: FieldSpec }> {
-  new (): _OperationI<V>;
-  data: V;
-}
 
 const ConvolutionOpData = {
   dimensions: new ChoiceFieldSpec({
@@ -66,8 +59,10 @@ const ConvolutionOpData = {
   trainable: new BoolFieldSpec({ default: true }),
 };
 
-export class ConvolutionOp {
-  static data = ConvolutionOpData;
+export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
+  get spec() {
+    return ConvolutionOpData;
+  }
   constructor() {}
 
   @observable
@@ -94,28 +89,17 @@ export class ConvolutionOp {
   get outputShape(): Shape {
     return [];
   }
-
-  @computed
-  get form() {
-    return (
-      <PropertiesTable
-        self={this}
-        errors={this.errors}
-        data={ConvolutionOpData}
-      />
-    );
-  }
 }
-
-const _ConvolutionOp: OperationI<typeof ConvolutionOpData> = ConvolutionOp;
 
 const DenseOpData = {
   units: new NumFieldSpec({ default: 32, min: 1, isInt: true }),
   useBias: new BoolFieldSpec({ default: true }),
 };
 
-export class DenseOp {
-  static data = DenseOpData;
+export class DenseOp implements OperationI<typeof DenseOpData> {
+  get spec() {
+    return DenseOpData;
+  }
 
   constructor(
     d: {
@@ -151,16 +135,7 @@ export class DenseOp {
   inputs: IObservableArray<OperationModel>;
   @observable
   errors: ObservableMap<keyof typeof DenseOpData, string> = observable.map();
-
-  @computed
-  get form() {
-    return (
-      <PropertiesTable self={this} errors={this.errors} data={DenseOp.data} />
-    );
-  }
 }
-
-const _DenseOp: OperationI<typeof DenseOpData> = DenseOp;
 
 enum DType {
   float32 = "float32",

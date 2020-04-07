@@ -126,7 +126,6 @@ const RectAndText: React.FC<{
         y={ym}
         fill="black"
         ref={setTextRef}
-        fontFamily="source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace"
       >
         {text}
       </text>

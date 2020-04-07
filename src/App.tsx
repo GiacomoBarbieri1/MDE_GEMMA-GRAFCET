@@ -46,31 +46,15 @@ export const rootStore = new RootStoreModel({
     conv1,
     dense2,
   }),
-  arrows: observable.array([
-    // new ArrowModel({
-    //   key: "7b5d33c1-5e12-4278-b1c5-e4ae05c036bd",
-    //   from: conv1,
-    //   to: dense2,
-    //   shape: [2, 4],
-    // }),
-    // new ArrowModel({
-    //   key: "6b5d33c1-5e12-4278-b1c5-e4ae05c036bd",
-    //   from: dense1,
-    //   to: dense2,
-    //   shape: [undefined, 80],
-    // }),
-    // new ArrowModel({
-    //   key: "5b5d33c1-5e12-4278-b1c5-e4ae05c036bd",
-    //   from: conv1,
-    //   to: dense1,
-    //   shape: [undefined, 20, 5],
-    // }),
-  ]),
+  arrows: observable.array([]),
 });
 
 export function App() {
   return (
-    <div className="row" style={{ background: "rgba(250,250,250,0.7)" }}>
+    <div
+      className="row"
+      style={{ background: "rgba(250,250,250,0.7)", height: "100%" }}
+    >
       <MainMenu />
       <div
         className="col"
