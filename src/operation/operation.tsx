@@ -27,15 +27,26 @@ export const OperationView: React.FC<OperationViewProps> = observer(
       },
       [operation]
     );
+    const selectingInput = rootStore.selectingInputFor !== undefined;
+    const isValidInput =
+      selectingInput && rootStore.selectingInputFor!.data.validInput(operation);
+
     const onClick = React.useCallback(
       (_: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         console.log(operation);
-        rootStore.selectOperation(operation);
+        if (selectingInput) {
+          if (isValidInput) {
+            rootStore.assignInput(operation);
+          }
+        } else {
+          rootStore.selectOperation(operation);
+        }
       },
-      [operation]
+      [operation, selectingInput, isValidInput]
     );
     // const [_, setDivRef] = React.useState<HTMLDivElement | null>(null);
     const { x, y, name } = operation;
+
     return (
       <Draggable onDrag={onDrag} position={{ x, y }} bounds="parent">
         <StyledOperation
@@ -44,6 +55,11 @@ export const OperationView: React.FC<OperationViewProps> = observer(
             operation.setSize(e.getBoundingClientRect());
           }}
           onClick={onClick}
+          style={
+            selectingInput
+              ? { cursor: isValidInput ? "pointer" : "not-allowed" }
+              : undefined
+          }
         >
           {`Layer ${name}`}
         </StyledOperation>

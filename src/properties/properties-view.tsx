@@ -22,9 +22,7 @@ export const PropertiesView: React.FC<Props> = observer(() => {
           onInput={(e) => operation.setName(e.currentTarget.value)}
           onChange={() => {}}
         ></input>
-        <PropertiesTable
-          self={rootStore.selection.data}
-        />
+        <PropertiesTable model={rootStore.selection} />
       </div>
     );
   } else {

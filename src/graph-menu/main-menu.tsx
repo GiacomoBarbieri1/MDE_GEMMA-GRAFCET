@@ -7,6 +7,9 @@ import { observer } from "mobx-react-lite";
 import React from "react";
 import { Rnd } from "react-rnd";
 import styled from "styled-components";
+import { rootStore } from "../App";
+import { ConvolutionOp, DenseOp, InputOp } from "../operation/layers";
+import { OperationData } from "../operation/operation-model";
 import { resizableEnable } from "../utils";
 
 const MainList = styled.ul`
@@ -34,6 +37,11 @@ const MainList = styled.ul`
 
 type Props = {};
 
+const layerToClass: { [key: string]: () => OperationData } = {
+  Input: () => new InputOp(),
+  Convolutional: () => new ConvolutionOp(),
+  Dense: () => new DenseOp(),
+};
 const listItems = {
   Model: ["Input", "Loss", "Metric", "Optimizer", "Callback"],
   Layers: [
@@ -99,7 +107,17 @@ export const Item: React.FC<ItemProps> = observer(({ name, list }) => {
       <Collapse in={open} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
           {list.map((t) => (
-            <ListItem button key={t} className="nested">
+            <ListItem
+              button
+              key={t}
+              className="nested"
+              onClick={() => {
+                if (t in layerToClass) {
+                  const data = layerToClass[t]();
+                  rootStore.addOperation(data);
+                }
+              }}
+            >
               <ListItemText primary={t} />
             </ListItem>
           ))}

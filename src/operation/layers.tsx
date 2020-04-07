@@ -133,7 +133,7 @@ export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
 
   nInputs: number = 1;
   validInput = (op: OperationModel): boolean => {
-    return op.data.outputShape.length === dimensionMap[this.dimensions] + 1;
+    return op.data.outputShape.length === dimensionMap[this.dimensions] + 2;
   };
 
   dimensions: keyof typeof dimensionMap;
@@ -151,7 +151,7 @@ export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
   get outputShape(): Shape {
     if (this.inputs.length === 0 || this.errors.size > 0) return [];
     const input = this.inputs[0].data.outputShape;
-    if (input === []) return [];
+    if (input.length === 0) return [];
 
     const stride = replicateIfOne(this.stride, dimensionMap[this.dimensions]);
 
@@ -215,11 +215,11 @@ export class DenseOp implements OperationI<typeof DenseOpData> {
   };
 
   get outputShape(): Shape {
-    const input = this.inputs[0];
-    if (!input) {
-      return [undefined];
-    }
-    return [input.data.outputShape[0], this.units];
+    if (this.inputs.length === 0 || this.errors.size > 0) return [];
+    const input = this.inputs[0].data.outputShape;
+    if (input.length === 0) return [];
+    
+    return [input[0], this.units];
   }
 
   inputs: IObservableArray<OperationModel>;
