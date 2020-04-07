@@ -166,6 +166,7 @@ export class NumFieldSpec {
       const [value, setValue] = React.useState(
         ((model[name] as any) as number).toString()
       );
+      const error = errors.get(name);
 
       return (
         <TextField
@@ -178,25 +179,37 @@ export class NumFieldSpec {
             style: { textAlign: "center" },
           }}
           type="number"
+          error={error !== undefined}
+          fullWidth={true}
+          style={{ width: "80px" }}
           onChange={(e) => {
-            setValue(e.target.value);
+            let value = e.target.value;
+            if (this.min !== undefined && this.min >= 0) {
+              value = value.replace(/-/g, "");
+            }
+            if (this.isInt) {
+              value = value.replace(/\./g, "");
+            }
+            setValue(value);
 
             let num: number;
             if (this.isInt) {
-              num = parseInt(e.target.value, 10);
+              num = parseInt(value, 10);
             } else {
-              num = parseFloat(e.target.value);
+              num = parseFloat(value);
             }
 
-            if (!Number.isNaN(num)) {
+            if (Number.isNaN(num)) {
+              errors.set(name, "Invalid");
+            } else if (this.min !== undefined && this.min > num) {
+              errors.set(name, `Smaller than minimum ${this.min}`);
+            } else if (this.max !== undefined && this.max < num) {
+              errors.set(name, `Greater than maximum ${this.max}`);
+            } else {
               errors.delete(name);
               model[name] = num as any;
-            } else {
-              errors.set(name, "invalid");
             }
           }}
-          fullWidth={true}
-          style={{ width: "80px" }}
         />
       );
     }
