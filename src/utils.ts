@@ -31,5 +31,5 @@ export function resizableEnable(f: {
       p[k as keyof typeof defaultResizeEnable] = v;
     }
     return p;
-  }, defaultResizeEnable);
+  }, {...defaultResizeEnable});
 }

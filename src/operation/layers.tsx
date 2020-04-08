@@ -102,6 +102,16 @@ const replicateIfOne = (initial: number[], len: number) => {
   return v;
 };
 
+const toPythonStr = (item: Shape | boolean) => {
+  if (typeof item === "boolean") {
+    return item ? "True" : "False";
+  } else {
+    return `(${item
+      .map((d) => (d === undefined ? "None" : d.toString()))
+      .join(",")})`;
+  }
+};
+
 export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
   NAME: string = "Convolution";
   spec = ConvolutionOpData;
@@ -155,9 +165,15 @@ export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
   get pythonCode() {
     return `
     tf.keras.layers.${this.separable ? "Separable" : ""}Conv${this.dimensions}(
-      ${this.filters}, ${this.kernelSize}, strides=${this.strides},
-      padding=${this.padding}, dilation_rate=${this.dilationRate}, 
-      activation=None, use_bias=${this.useBias},${this.separable ? "\n      depth_multiplier=" + this.depthMultiplier : ""}
+      ${this.filters}, ${toPythonStr(this.kernelSize)}, strides=${toPythonStr(
+      this.strides
+    )},
+      padding="${this.padding}", dilation_rate=${toPythonStr(
+      this.dilationRate
+    )}, 
+      activation=None, use_bias=${toPythonStr(this.useBias)},${
+      this.separable ? "\n      depth_multiplier=" + this.depthMultiplier : ""
+    }
       kernel_initializer='glorot_uniform', 
       bias_initializer='zeros',
       kernel_regularizer=None, bias_regularizer=None, 
@@ -244,7 +260,7 @@ export class DenseOp implements OperationI<typeof DenseOpData> {
   get pythonCode() {
     return `
     tf.keras.layers.Dense(
-      ${this.units}, activation=None, use_bias=${this.useBias}, 
+      ${this.units}, activation=None, use_bias=${toPythonStr(this.useBias)}, 
       kernel_initializer='glorot_uniform',
       bias_initializer='zeros', kernel_regularizer=None, 
       bias_regularizer=None, activity_regularizer=None, 
@@ -314,8 +330,8 @@ export class InputOp implements OperationI<typeof InputOpData> {
   get pythonCode() {
     return `
     tf.keras.Input(
-      shape=${this.shape}, batch_size=None, name=None, 
-      dtype=${this.dtype}, sparse=False, ragged=False
+      shape=${toPythonStr(this.shape)}, batch_size=None, name=None, 
+      dtype="${this.dtype}", sparse=False, ragged=False
     )
   `;
   }

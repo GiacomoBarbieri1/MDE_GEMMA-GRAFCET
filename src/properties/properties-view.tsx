@@ -13,11 +13,15 @@ export const PropertiesView: React.FC<Props> = observer(() => {
     const operation = rootStore.selection;
     inner = (
       <div
-        style={{ overflow: "auto", maxHeight: "100%", maxWidth: "100%" }}
+        style={{
+          overflow: "auto",
+          maxHeight: "100%",
+          maxWidth: "100%",
+        }}
         key={rootStore.selection.key}
         className="row"
       >
-        <div>
+        <div style={{padding: "15px"}}>
           <input
             type="text"
             value={operation.name}
@@ -42,14 +46,12 @@ export const PropertiesView: React.FC<Props> = observer(() => {
   return (
     <Resizable
       minHeight={200}
+      defaultSize={{ height: 280, width: "auto" }}
       style={{
         position: "relative",
         background: "white",
         boxShadow: "0 1px 4px 1px #eee",
-        padding: "15px",
-        borderRadius: "6px 6px 0 0",
         border: "1px solid #eee",
-        margin: "0 10px",
       }}
       enable={resizableEnable({ top: true })}
     >

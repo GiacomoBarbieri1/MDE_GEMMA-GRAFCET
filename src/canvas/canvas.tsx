@@ -13,10 +13,11 @@ export const MainCanvas: React.FC<Props> = observer(() => {
       style={{
         position: "relative",
         border: "1px solid #eee",
-        height: "100%",
+        height: "auto",
         background: "#fff",
         margin: "10px",
         borderRadius: "6px",
+        flex: 1
       }}
     >
       {ops.map((operation) => {
