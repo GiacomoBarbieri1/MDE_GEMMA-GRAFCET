@@ -1,5 +1,5 @@
 import { ObservableMap } from "mobx";
-import { OperationI } from "../operation/layers";
+import { OperationI } from "../operation/operation-model";
 import { ChoiceFieldSpec } from "./choice-field";
 import { PatternFieldSpec } from "./pattern-field";
 import { BoolFieldSpec, NumFieldSpec, StrFieldSpec } from "./primitive-field";

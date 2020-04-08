@@ -4,7 +4,8 @@ import { MainCanvas } from "./canvas/canvas";
 import { ConfigView } from "./canvas/config-view";
 import { RootStoreModel } from "./canvas/store";
 import { MainMenu } from "./graph-menu/main-menu";
-import { ConvolutionOp, DenseOp, InputOp } from "./operation/layers";
+import { ConvolutionOp, DenseOp } from "./operation/layers/index";
+import { InputOp } from "./operation/model/input";
 import { OperationModel } from "./operation/operation-model";
 import { PropertiesView } from "./properties/properties-view";
 

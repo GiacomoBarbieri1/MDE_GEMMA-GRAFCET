@@ -8,7 +8,8 @@ import React from "react";
 import { Rnd } from "react-rnd";
 import styled from "styled-components";
 import { rootStore } from "../App";
-import { ConvolutionOp, DenseOp, InputOp } from "../operation/layers";
+import { ConvolutionOp, DenseOp } from "../operation/layers/";
+import { InputOp } from "../operation/model/input";
 import { OperationData } from "../operation/operation-model";
 import { resizableEnable } from "../utils";
 
