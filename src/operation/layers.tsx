@@ -61,6 +61,7 @@ const ConvolutionOpData = {
     choices: dimensionMap,
     default: "1D",
   }),
+  separable: new BoolFieldSpec({ default: true }),
   filters: new NumFieldSpec({ default: 32, min: 1, isInt: true }),
   kernelSize: new PatternFieldSpec({
     default: [3],
@@ -73,11 +74,7 @@ const ConvolutionOpData = {
     choices: listToMap(["VALID", "SAME", "CAUSAL"]),
     default: "SAME",
   }),
-  // filterType: new ChoiceFieldSpec({
-  //   choices: { STRIDED: "STRIDED", DILATED: "DILATED" },
-  //   default: "STRIDED",
-  // }),
-  stride: new PatternFieldSpec({
+  strides: new PatternFieldSpec({
     default: [2],
     pattern: extractShapePattern,
     deps: ["dimensions"],
@@ -91,7 +88,8 @@ const ConvolutionOpData = {
     transform: parseArrayFromString,
     transformInto: types.union(types.number, types.array(types.number)),
   }),
-  trainable: new BoolFieldSpec({ default: true }),
+  depthMultiplier: new NumFieldSpec({ default: 1, min: 0.1, step: 0.1 }),
+  useBias: new BoolFieldSpec({ default: true }),
 };
 
 const replicateIfOne = (initial: number[], len: number) => {
@@ -114,9 +112,11 @@ export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
       filters?: number;
       kernelSize?: number[];
       padding?: "VALID" | "SAME" | "CAUSAL";
-      stride?: number[];
+      strides?: number[];
       dilationRate?: number[];
       trainable?: boolean;
+      separable?: boolean;
+      depthMultiplier?: number;
       inputs?: OperationModel[];
     } = {}
   ) {
@@ -124,11 +124,14 @@ export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
     this.filters = d.filters ?? ConvolutionOpData.filters.default;
     this.kernelSize = d.kernelSize ?? ConvolutionOpData.kernelSize.default;
     this.padding = d.padding ?? ConvolutionOpData.padding.default;
-    this.stride = d.stride ?? ConvolutionOpData.stride.default;
+    this.strides = d.strides ?? ConvolutionOpData.strides.default;
     this.dilationRate =
       d.dilationRate ?? ConvolutionOpData.dilationRate.default;
-    this.trainable = d.trainable ?? ConvolutionOpData.trainable.default;
+    this.useBias = d.trainable ?? ConvolutionOpData.useBias.default;
     this.inputs = d.inputs ? observable.array(d.inputs) : observable.array([]);
+    this.separable = d.separable ?? ConvolutionOpData.useBias.default;
+    this.depthMultiplier =
+      d.depthMultiplier ?? ConvolutionOpData.depthMultiplier.default;
   }
 
   nInputs: number = 1;
@@ -136,32 +139,48 @@ export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
     return op.data.outputShape.length === dimensionMap[this.dimensions] + 2;
   };
 
+  depthMultiplier: number;
+  separable: boolean;
   dimensions: keyof typeof dimensionMap;
-  filters: number = ConvolutionOpData.filters.default;
-  kernelSize: number[] = ConvolutionOpData.kernelSize.default;
-  padding: "VALID" | "SAME" | "CAUSAL" = ConvolutionOpData.padding.default;
-  // filterType: "STRIDED" | "DILATED" = ConvolutionOpData.filterType.default;
-  stride: number[] = ConvolutionOpData.stride.default;
-  dilationRate: number[] = ConvolutionOpData.dilationRate.default;
-  trainable: boolean = ConvolutionOpData.trainable.default;
+  filters: number;
+  kernelSize: number[];
+  padding: "VALID" | "SAME" | "CAUSAL";
+  strides: number[];
+  dilationRate: number[];
+  useBias: boolean;
 
   inputs: IObservableArray<OperationModel>;
   errors = observable.map<keyof typeof ConvolutionOpData, string>();
+
+  get pythonCode() {
+    return `
+    tf.keras.layers.${this.separable ? "Separable" : ""}Conv${this.dimensions}(
+      ${this.filters}, ${this.kernelSize}, strides=${this.strides},
+      padding=${this.padding}, dilation_rate=${this.dilationRate}, 
+      activation=None, use_bias=${this.useBias},${this.separable ? "\n      depth_multiplier=" + this.depthMultiplier : ""}
+      kernel_initializer='glorot_uniform', 
+      bias_initializer='zeros',
+      kernel_regularizer=None, bias_regularizer=None, 
+      activity_regularizer=None,
+      kernel_constraint=None, bias_constraint=None,
+    )
+  `;
+  }
 
   get outputShape(): Shape {
     if (this.inputs.length === 0 || this.errors.size > 0) return [];
     const input = this.inputs[0].data.outputShape;
     if (input.length === 0) return [];
 
-    const stride = replicateIfOne(this.stride, dimensionMap[this.dimensions]);
+    const strides = replicateIfOne(this.strides, dimensionMap[this.dimensions]);
 
     const result: Shape = [input[0]];
     switch (this.padding) {
       case "CAUSAL":
       case "SAME":
-        for (let i = 0; i < stride.length; i++) {
+        for (let i = 0; i < strides.length; i++) {
           const v = input[i + 1];
-          result.push(v !== undefined ? Math.ceil(v / stride[i]) : undefined);
+          result.push(v !== undefined ? Math.ceil(v / strides[i]) : undefined);
         }
         break;
       case "VALID": {
@@ -169,13 +188,13 @@ export class ConvolutionOp implements OperationI<typeof ConvolutionOpData> {
           this.kernelSize,
           dimensionMap[this.dimensions]
         );
-        for (let i = 0; i < stride.length; i++) {
+        for (let i = 0; i < strides.length; i++) {
           const v = input[i + 1];
           if (v === undefined) {
             result.push(undefined);
             continue;
           }
-          result.push(Math.ceil((v - kernelSize[i] + 1) / stride[i]));
+          result.push(Math.ceil((v - kernelSize[i] + 1) / strides[i]));
         }
         break;
       }
@@ -218,8 +237,20 @@ export class DenseOp implements OperationI<typeof DenseOpData> {
     if (this.inputs.length === 0 || this.errors.size > 0) return [];
     const input = this.inputs[0].data.outputShape;
     if (input.length === 0) return [];
-    
+
     return [input[0], this.units];
+  }
+
+  get pythonCode() {
+    return `
+    tf.keras.layers.Dense(
+      ${this.units}, activation=None, use_bias=${this.useBias}, 
+      kernel_initializer='glorot_uniform',
+      bias_initializer='zeros', kernel_regularizer=None, 
+      bias_regularizer=None, activity_regularizer=None, 
+      kernel_constraint=None, bias_constraint=None,
+    )
+  `;
   }
 
   inputs: IObservableArray<OperationModel>;
@@ -278,6 +309,15 @@ export class InputOp implements OperationI<typeof InputOpData> {
 
   get outputShape(): Shape {
     return this.shape;
+  }
+
+  get pythonCode() {
+    return `
+    tf.keras.Input(
+      shape=${this.shape}, batch_size=None, name=None, 
+      dtype=${this.dtype}, sparse=False, ragged=False
+    )
+  `;
   }
 
   inputs: IObservableArray<OperationModel>;

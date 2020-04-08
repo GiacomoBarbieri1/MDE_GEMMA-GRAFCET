@@ -13,16 +13,22 @@ export const PropertiesView: React.FC<Props> = observer(() => {
     const operation = rootStore.selection;
     inner = (
       <div
-        style={{ overflowY: "auto", maxHeight: "100%" }}
+        style={{ overflow: "auto", maxHeight: "100%", maxWidth: "100%" }}
         key={rootStore.selection.key}
+        className="row"
       >
-        <input
-          type="text"
-          value={operation.name}
-          onInput={(e) => operation.setName(e.currentTarget.value)}
-          onChange={() => {}}
-        ></input>
-        <PropertiesTable model={rootStore.selection} />
+        <div>
+          <input
+            type="text"
+            value={operation.name}
+            onInput={(e) => operation.setName(e.currentTarget.value)}
+            onChange={() => {}}
+          ></input>
+          <PropertiesTable model={rootStore.selection} />
+        </div>
+        <div>
+          <pre>{rootStore.selection.data.pythonCode}</pre>
+        </div>
       </div>
     );
   } else {
