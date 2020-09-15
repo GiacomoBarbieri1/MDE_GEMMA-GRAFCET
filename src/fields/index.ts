@@ -1,5 +1,5 @@
 import { ObservableMap } from "mobx";
-import { OperationI } from "../operation/operation-model";
+import { OperationI } from "../node/node-model";
 import { ChoiceFieldSpec } from "./choice-field";
 import { PatternFieldSpec } from "./pattern-field";
 import { BoolFieldSpec, NumFieldSpec, StrFieldSpec } from "./primitive-field";
@@ -26,7 +26,7 @@ type FilteredKeyOf<T, TK> = keyof Pick<
 
 export type PP2<M extends { [key: string]: FieldSpec }, T> = {
   name: string & keyof M["spec"] & keyof M;
-  model: OperationI<M>;
+  model: OperationI<M, any, any>;
 };
 
 export type FieldSpec =

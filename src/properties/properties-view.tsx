@@ -1,13 +1,14 @@
 import { observer } from "mobx-react-lite";
 import { Resizable } from "re-resizable";
 import React from "react";
-import { rootStore } from "../App";
 import { resizableEnable } from "../utils";
 import { PropertiesTable } from "./properties-table";
+import { useStore } from "../App";
 
 type Props = {};
 
 export const PropertiesView: React.FC<Props> = observer(() => {
+  const rootStore = useStore();
   let inner;
   if (rootStore.selection != null) {
     const operation = rootStore.selection;
@@ -21,17 +22,21 @@ export const PropertiesView: React.FC<Props> = observer(() => {
         key={rootStore.selection.key}
         className="row"
       >
-        <div style={{padding: "15px"}}>
+        <div style={{ padding: "15px" }}>
           <input
             type="text"
             value={operation.name}
             onInput={(e) => operation.setName(e.currentTarget.value)}
             onChange={() => {}}
           ></input>
-          <PropertiesTable model={rootStore.selection} />
+          <PropertiesTable self={rootStore.selection} />
         </div>
         <div>
-          <pre>{rootStore.selection.data.pythonCode}</pre>
+          <pre>
+            {rootStore.selectedConnection !== undefined && (
+              <rootStore.selectedConnection.data.ConnectionView />
+            )}
+          </pre>
         </div>
       </div>
     );

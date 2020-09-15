@@ -1,73 +1,114 @@
-import { action, IObservableArray, observable, ObservableMap } from "mobx";
+import { action, observable, ObservableMap } from "mobx";
 import { v4 } from "uuid";
-import { OperationData, OperationModel } from "../operation/operation-model";
-import { ArrowModel } from "./arrow";
+import { NodeModel, NodeData, ConnModel } from "../node/node-model";
 
-export class RootStoreModel {
-  constructor(d: {
-    operations: ObservableMap<string, OperationModel>;
-    arrows: IObservableArray<ArrowModel>;
-  }) {
-    this.operations = d.operations;
-    this.arrows = d.arrows;
+export type DataBuilder<
+  D extends NodeData<D, G, C>,
+  G extends GlobalData<D>,
+  C extends ConnectionData<D>
+> = {
+  connectionBuilder: (connection: ConnModel<D, G, C>) => C;
+  nodeBuilder: { [key: string]: (node: NodeModel<D, G, C>) => D };
+  graphBuilder: (connection: RootStoreModel<D, G, C>) => G;
+};
+
+export interface GlobalData<D extends NodeData<D, any, any>> {
+  generateCode(): string;
+  canAddNode(nodeType: string): boolean;
+}
+
+export type ConnectionData<D> = {
+  ConnectionView: React.FunctionComponent;
+  connectionText: string;
+};
+
+export class RootStoreModel<
+  D extends NodeData<D, G, C>,
+  G extends GlobalData<D>,
+  C extends ConnectionData<D>
+> {
+  constructor(d: { builders: DataBuilder<D, G, C> }) {
+    this.builders = d.builders;
+    this.globalData = d.builders.graphBuilder(this);
   }
-  @observable
-  operations: ObservableMap<string, OperationModel>;
-  @observable
-  arrows: IObservableArray<ArrowModel>;
-  @observable
-  selection?: OperationModel;
-  @observable
-  selectingInputFor?: OperationModel;
 
+  // Builders to create graph, node and transition instances
+  builders: DataBuilder<D, G, C>;
+  // Global generic data
+  globalData: G;
+
+  // All nodes
+  @observable
+  nodes: ObservableMap<string, NodeModel<D, G, C>> = observable.map({});
+  // Selected node
+  @observable
+  selection?: NodeModel<D, G, C>;
+  // Selected connection
+  @observable
+  selectedConnection?: ConnModel<D, G, C>;
+  // Selected input for transition
+  @observable
+  selectingInputFor?: NodeModel<D, G, C>;
+
+  // Select a node
   @action
-  selectOperation = (operation: OperationModel) => {
+  selectNode = (operation: NodeModel<D, G, C>) => {
     this.selection = operation;
   };
 
+  // Select a connection
   @action
-  addOperation = (data: OperationData) => {
-    const op = new OperationModel({
-      data,
-      key: v4(),
-      name: data.NAME,
-      x: 100,
-      y: 100,
-    });
-    this.operations.set(op.key, op);
+  selectConnection = (connection: ConnModel<D, G, C>) => {
+    this.selectedConnection = connection;
+  };
+
+  // Add a node
+  @action
+  addNode = (
+    nodeType: string,
+    pos?: { x: number; y: number }
+  ): NodeModel<D, G, C> | undefined => {
+    if (this.globalData.canAddNode(nodeType)) {
+      const dataBuilder = this.builders.nodeBuilder[nodeType];
+      if (dataBuilder !== undefined) {
+        const op = new NodeModel(this, {
+          dataBuilder,
+          key: v4(),
+          name: nodeType,
+          x: pos?.x ?? 100,
+          y: pos?.y ?? 100,
+        });
+        this.nodes.set(op.key, op);
+        return op;
+      }
+    }
+  };
+
+  // Select a node
+  @action
+  selectingInput = (from: NodeModel<D, G, C>) => {
+    this.selectingInputFor = from;
+    window.addEventListener("keyup", this._selectingInputKeyListener);
   };
 
   @action
-  selectingInput = (operation: OperationModel) => {
-    this.selectingInputFor = operation;
-    window.addEventListener("keyup", this.selectingInputKeyListener);
-  };
-
-  @action
-  assignInput = (operation: OperationModel) => {
-    this.selectingInputFor!.data.inputs.push(operation);
+  assignInput = (to: NodeModel<D, G, C>): ConnModel<D, G, C> => {
+    const conn = new ConnModel(
+      this.selectingInputFor!,
+      to,
+      this.builders.connectionBuilder
+    );
+    conn.from.addOutput(conn);
     this.selectingInputFor = undefined;
+    this.selectedConnection = conn;
+    return conn;
   };
 
   @action
-  selectingInputKeyListener = (ev: KeyboardEvent) => {
+  private _selectingInputKeyListener = (ev: KeyboardEvent) => {
     if (ev.key === "Escape") {
       this.selectingInputFor = undefined;
-      window.removeEventListener("keyup", this.selectingInputKeyListener);
+      window.removeEventListener("keyup", this._selectingInputKeyListener);
     }
   };
 }
-
-// export const RootStoreModel = types
-//   .model("RootStore", {
-//     operations: types.map(OperationModel),
-//     arrows: types.array(ArrowModel),
-//     selection: types.maybeNull(types.reference(OperationModel)),
-//   })
-//   .actions((self) => ({
-//     selectOperation(operation: OperationModelT) {
-//       self.selection = operation;
-//     },
-//   }));
-
-// export interface RootStoreModelI extends Instance<typeof RootStoreModel> {}

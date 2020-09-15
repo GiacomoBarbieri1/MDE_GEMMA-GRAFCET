@@ -1,37 +1,41 @@
 import { observer } from "mobx-react-lite";
 import { Resizable } from "re-resizable";
 import React from "react";
-import { rootStore } from "../App";
-import { OperationModel } from "../operation/operation-model";
+import { useStore } from "../App";
+import { NodeModel } from "../node/node-model";
 import { resizableEnable } from "../utils";
+import { GlobalData } from "./store";
 
 type Props = {};
 
-export const ConfigView: React.FC<Props> = observer(() => {
-  const ops = [...rootStore.operations.values()];
+export const ConfigView: React.FC<Props> = observer(<
+  G extends GlobalData<any>
+>() => {
+  const rootStore = useStore<any, G, any>();
+  const ops = [...rootStore.nodes.values()];
   const connections = ops.reduce((p, c) => {
-    c.data.inputs.forEach((v) => {
-      let m = p.get(v);
+    c.inputs.forEach((v) => {
+      let m = p.get(v.to);
       if (m === undefined) {
         m = [];
-        p.set(v, m);
+        p.set(v.to, m);
       }
       m.push(c);
     });
     return p;
-  }, new Map<OperationModel, OperationModel[]>());
+  }, new Map<NodeModel<any, any, any>, NodeModel<any, any, any>[]>());
 
-  const orderedOps: OperationModel[] = [];
+  const orderedOps: NodeModel<any, any, any>[] = [];
   const counts = new Map(
     ops
       .filter((op) => {
-        const withDependencies = op.data.inputs.length !== 0;
+        const withDependencies = op.data.length !== 0;
         if (!withDependencies) {
           orderedOps.push(op);
         }
         return withDependencies;
       })
-      .map((op) => [op, op.data.inputs.length])
+      .map((op) => [op, op.data.length])
   );
   let numProcessed = 0;
   while (counts.size !== 0 && orderedOps.length !== numProcessed) {
@@ -59,7 +63,7 @@ export const ConfigView: React.FC<Props> = observer(() => {
   return (
     <Resizable
       minWidth={200}
-      defaultSize={{ height: "auto", width: 300 }}
+      defaultSize={{ height: "auto", width: 400 }}
       style={{
         position: "relative",
         background: "white",
@@ -69,7 +73,8 @@ export const ConfigView: React.FC<Props> = observer(() => {
       enable={resizableEnable({ left: true })}
     >
       <div style={{ overflow: "auto", height: "100%", padding: "0 10px" }}>
-        {ops.map((op) => {
+        <pre>{rootStore.globalData.generateCode()}</pre>
+        {/* {ops.map((op) => {
           return (
             <pre key={op.key}>
               {op.name + " = " + op.data.pythonCode + "\n"}
@@ -81,14 +86,14 @@ export const ConfigView: React.FC<Props> = observer(() => {
           if (op.data.inputs.length > 0) {
             return (
               <pre key={op.key + "input"}>
-                {`${op.name}_output = ${op.name}(${op.data.inputs
-                  .map((inp) => inp.name)
+                {`${op.name}_output = ${op.name}(${op.inputs
+                  .map((inp) => inp.to.name)
                   .join(",")});`}
               </pre>
             );
           }
           return null;
-        })}
+        })} */}
       </div>
     </Resizable>
   );

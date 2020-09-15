@@ -1,17 +1,18 @@
 import { observer } from "mobx-react-lite";
 import React from "react";
 import styled from "styled-components";
-import { rootStore } from "../App";
-import { OperationModel } from "../operation/operation-model";
+import { NodeModel, NodeData } from "../node/node-model";
+import { useStore } from "../App";
 
-type Props<M extends OperationModel> = {
-  model: M;
+type Props<D extends NodeData<D, any, any>> = {
+  self: NodeModel<D, any, any>;
 };
 
 export const PropertiesTable = observer(
-  <M extends OperationModel>({ model }: Props<M>) => {
-    const self = model.data;
-    const fullOfInputs = self.inputs.length >= self.nInputs;
+  <D extends NodeData<D, any, any>>({ self }: Props<D>) => {
+    const rootStore = useStore();
+    const fullOfInputs = self.inputs.length >= self.data.nInputs;
+    const isAddingInput = rootStore.selectingInputFor != undefined;
     return (
       <PropertiesTableStyled>
         <thead>
@@ -21,26 +22,38 @@ export const PropertiesTable = observer(
           </tr>
         </thead>
         <tbody>
-          {self.nInputs !== 0 && (
+          {self.data.nInputs !== 0 && (
             <tr>
               <td>Inputs</td>
               <td>
                 {self.inputs.map((v) => (
-                  <div key={v.key}>{v.name}</div>
+                  <div
+                    onClick={() => rootStore.selectConnection(v as any)}
+                    key={v.from.key}
+                  >
+                    {v.from.name}
+                  </div>
                 ))}
                 {!fullOfInputs && (
-                  <div onClick={() => rootStore.selectingInput(model)}>
-                    Add Input
+                  <div
+                    onClick={() => rootStore.selectingInput(self as any)}
+                    style={
+                      isAddingInput
+                        ? { background: "#eee" }
+                        : { cursor: "pointer" }
+                    }
+                  >
+                    Add Transition
                   </div>
                 )}
               </td>
             </tr>
           )}
-          {Object.entries(self.spec).map(([k, v]) => (
+          {Object.entries(self.data.spec).map(([k, v]) => (
             <tr key={k}>
               <td>{k}</td>
               <td>
-                <v.plotField name={k as keyof M} model={self} />
+                <v.plotField name={k} model={self.data as any} />
               </td>
             </tr>
           ))}

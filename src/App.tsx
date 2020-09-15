@@ -2,80 +2,86 @@ import { observable } from "mobx";
 import React from "react";
 import { MainCanvas } from "./canvas/canvas";
 import { ConfigView } from "./canvas/config-view";
-import { RootStoreModel } from "./canvas/store";
+import { RootStoreModel, GlobalData, ConnectionData } from "./canvas/store";
 import { MainMenu } from "./graph-menu/main-menu";
-import { ConvolutionOp, DenseOp } from "./operation/layers/index";
-import { InputOp } from "./operation/model/input";
-import { OperationModel } from "./operation/operation-model";
+import { NodeModel, NodeData, ConnModel } from "./node/node-model";
 import { PropertiesView } from "./properties/properties-view";
+import {
+  GemmaGraphcet,
+  ProcedureType,
+  Transition,
+  Step,
+  Condition,
+  gemmaBuilders,
+  StepType,
+} from "./step/gemma";
 
-// Regularizer, Constraint, Initializer,
-// dilationRate (number|[number]|[number, number]|[number, number, number])
-// The dilation rate to use for the dilated convolution in each dimension.
-// Should be an integer or array of two or three integers.
-
-// strides (number|number[]) The strides of the convolution in each dimension.
-// If strides is a number, strides in both dimensions are equal.
-// Specifying any stride value != 1 is incompatible with specifying any dilationRate value != 1.
-
-const input1 = new OperationModel({
-  key: "input1",
-  name: "input1",
-  x: 72,
-  y: 60,
-  data: new InputOp(),
+const rootStore = new RootStoreModel<Step, GemmaGraphcet, Transition>({
+  builders: gemmaBuilders,
 });
 
-const dense1 = new OperationModel({
-  key: "dense1",
-  name: "dense1",
-  x: 261,
-  y: 170,
-  data: new DenseOp({ inputs: [input1] }),
-});
-const conv1 = new OperationModel({
-  key: "conv1",
-  name: "conv1",
-  x: 441,
-  y: 316,
-  data: new ConvolutionOp({ inputs: [dense1] }),
-});
+const s1 = rootStore.addNode(StepType.INITIAL, { x: 72, y: 60 });
+const s2 = rootStore.addNode(StepType.MACRO, { x: 261, y: 170 });
 
-const dense2 = new OperationModel({
-  key: "dense2",
-  name: "dense2",
-  x: 211,
-  y: 410,
-  data: new DenseOp({ inputs: [conv1, dense1] }),
-});
+const _t = new ConnModel(
+  s1!,
+  s2!,
+  (c) =>
+    new Transition(c, {
+      name: "Emergency",
+      condition: new Condition("I1 & I2"),
+    })
+);
+rootStore.globalData.workingFamilyTransitions.push(_t.data);
 
-export const rootStore = new RootStoreModel({
-  operations: observable.map({
-    input1,
-    dense1,
-    conv1,
-    dense2,
-  }),
-  arrows: observable.array([]),
-});
+[
+  s1,
+  s2,
+  rootStore.addNode(StepType.ENCLOSING, { x: 441, y: 316 }),
+  rootStore.addNode(StepType.SIMPLE, { x: 211, y: 410 }),
+  rootStore.addNode(StepType.SIMPLE, { x: 441, y: 500 }),
+].forEach((s, index) => s?.setName(`S${index + 1}`));
+
+s1!.data.family = ProcedureType.A;
+s2!.data.family = ProcedureType.D;
+
+export const storeContext = React.createContext<RootStoreModel<
+  any,
+  any,
+  any
+> | null>(null);
+
+export function useStore<
+  D extends NodeData<D, G, C>,
+  G extends GlobalData<D>,
+  C extends ConnectionData<D>
+>() {
+  const store = React.useContext<RootStoreModel<D, G, C> | null>(storeContext);
+  if (!store) {
+    throw Error("useStore should be used inside a Store provider.");
+  }
+  return store;
+}
 
 export function App() {
   return (
-    <div
-      className="row"
-      style={{ background: "rgba(250,250,250,0.7)", height: "100%" }}
-    >
-      <MainMenu />
+    <storeContext.Provider value={rootStore}>
       <div
-        className="col"
-        style={{ width: "100%", background: "rgba(250,250,250,0.7)" }}
+        className="row"
+        style={{ background: "rgba(250,250,250,0.7)", height: "100%" }}
       >
-        <div className="row" style={{ minHeight: 0 }}>
-          <MainCanvas />
-          <ConfigView />
+        <MainMenu items={Object.keys(rootStore.builders.nodeBuilder)} />
+        <div
+          className="col"
+          style={{ width: "100%", background: "rgba(250,250,250,0.7)" }}
+        >
+          <div className="row" style={{ minHeight: 0, flex: 1 }}>
+            <MainCanvas />
+            <ConfigView />
+          </div>
+          <PropertiesView />
         </div>
-        <PropertiesView />
       </div>
-    </div>
+    </storeContext.Provider>
   );
 }

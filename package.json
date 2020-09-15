@@ -1,8 +1,8 @@
 {
-  "name": "neural-graph",
+  "name": "gemma-grafcet",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/neural-graph",
+  "homepage": "/gemma-grafcet",
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.27",
     "@fortawesome/free-solid-svg-icons": "^5.12.1",
@@ -29,7 +29,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "gemma": "ts-node-dev --respawn --transpile-only ./src/step/gemma.ts --experimental-modules"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -56,6 +57,7 @@
     "@types/styled-components": "^5.0.1",
     "@types/uuid": "^7.0.0",
     "@types/yup": "^0.26.32",
+    "ts-node-dev": "^1.0.0-pre.61",
     "typescript": "^3.8.3"
   }
 }

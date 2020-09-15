@@ -2,7 +2,7 @@ import TextField from "@material-ui/core/TextField";
 import { observer } from "mobx-react-lite";
 import { IAnyType, SnapshotIn, types } from "mobx-state-tree";
 import React from "react";
-import { OperationData } from "../operation/operation-model";
+import { OperationData } from "../node/node-model";
 import { PP2 } from "./";
 
 const _patternError = "Pattern doesn't match.";

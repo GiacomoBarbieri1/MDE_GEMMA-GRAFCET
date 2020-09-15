@@ -1,22 +1,14 @@
 import { observer } from "mobx-react-lite";
 import React from "react";
-import { OperationModel } from "../operation/operation-model";
+import { NodeModel, ConnModel } from "../node/node-model";
+import { useStore } from "../App";
 
 export type ArrowModel = {
-  from: OperationModel;
-  to: OperationModel;
+  from: NodeModel<any, any, any>;
+  to: NodeModel<any, any, any>;
 };
 
-// export const ArrowModel = types.model("Arrow", {
-//   key: types.identifier,
-//   from: types.reference(OperationModel),
-//   to: types.reference(OperationModel),
-//   shape: types.array(types.maybe(types.integer)),
-// });
-
-// export interface ArrowModelT extends Instance<typeof ArrowModel> {}
-
-type ArrowViewProps = { arrow: ArrowModel };
+type ArrowViewProps = { connection: ConnModel<any, any, any> };
 
 const triangleFromCenter = (
   x: number,
@@ -29,9 +21,9 @@ const triangleFromCenter = (
 };
 
 export const ArrowView: React.FC<ArrowViewProps> = observer(
-  ({ arrow }: ArrowViewProps) => {
-    const { from, to } = arrow;
-    const shape = from.data.outputShape;
+  ({ connection }: ArrowViewProps) => {
+    const rootStore = useStore();
+    const { from, to } = connection;
 
     const [x1, y1, x2, y2] = [
       from.x + from.width / 2,
@@ -71,14 +63,10 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
           style={{ strokeWidth: 2, stroke: "black" }}
           d={`M${x1} ${y1} L${x2} ${y2}`}
           onDoubleClick={(e) => {
-            console.log(e);
+            rootStore.selectConnection(connection);
           }}
         />
-        <RectAndText
-          text={`[${shape.map((v) => v || "?").join(", ")}]`}
-          x={xm}
-          y={ym}
-        />
+        <RectAndText text={connection.data.connectionText} x={xm} y={ym} />
         <path
           d={triangleFromCenter(xa, ya)}
           transform={`rotate(${degrees} ${xa} ${ya})`}

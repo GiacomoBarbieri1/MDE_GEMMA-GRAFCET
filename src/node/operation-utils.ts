@@ -1,4 +1,4 @@
-import { Shape } from "./operation";
+import { Shape } from "./node";
 
 export const dimensionMap = { "1D": 1, "2D": 2, "3D": 3 };
 function shapeFromDim(dim: number) {

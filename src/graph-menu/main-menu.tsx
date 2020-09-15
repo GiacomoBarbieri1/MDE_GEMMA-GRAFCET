@@ -7,11 +7,8 @@ import { observer } from "mobx-react-lite";
 import React from "react";
 import { Rnd } from "react-rnd";
 import styled from "styled-components";
-import { rootStore } from "../App";
-import { ConvolutionOp, DenseOp } from "../operation/layers/";
-import { InputOp } from "../operation/model/input";
-import { OperationData } from "../operation/operation-model";
 import { resizableEnable } from "../utils";
+import { useStore } from "../App";
 
 const MainList = styled.ul`
   overflow-y: scroll;
@@ -36,38 +33,10 @@ const MainList = styled.ul`
   }
 `;
 
-type Props = {};
+type Props = { items: { [key: string]: string[] } | string[] };
 
-const layerToClass: { [key: string]: () => OperationData } = {
-  Input: () => new InputOp(),
-  Convolutional: () => new ConvolutionOp(),
-  Dense: () => new DenseOp(),
-};
-const listItems = {
-  Model: ["Input", "Loss", "Metric", "Optimizer", "Callback"],
-  Layers: [
-    "Convolutional",
-    "Dense",
-    "Recurrent",
-    "Transformer",
-    "Dropout",
-    "Embedding",
-    "Normalization",
-  ],
-  Activations: ["Softmax", "Sigmoid", "Relu"],
-  "Slice / Shape": [
-    "Concat",
-    "Gather",
-    "Stack",
-    "Tile",
-    "Slice",
-    "Split",
-    "Reshape",
-    "Traspose",
-  ],
-};
-
-export const MainMenu: React.FC<Props> = observer(() => {
+export const MainMenu: React.FC<Props> = observer(({ items }) => {
+  const rootStore = useStore();
   return (
     <Rnd
       disableDragging={true}
@@ -86,9 +55,22 @@ export const MainMenu: React.FC<Props> = observer(() => {
       <input type="text" />
       <MainList>
         <List component="nav">
-          {Object.entries(listItems).map(([name, list]) => (
-            <Item key={name} name={name} list={list} />
-          ))}
+          {Array.isArray(items)
+            ? items.map((t) => (
+                <ListItem
+                  button
+                  key={t}
+                  className="nested"
+                  onClick={() => {
+                    rootStore.addNode(t);
+                  }}
+                >
+                  <ListItemText primary={t} />
+                </ListItem>
+              ))
+            : Object.entries(items).map(([name, list]) => (
+                <Item key={name} name={name} list={list} />
+              ))}
         </List>
       </MainList>
     </Rnd>
@@ -99,6 +81,7 @@ type ItemProps = { name: string; list: string[] };
 
 export const Item: React.FC<ItemProps> = observer(({ name, list }) => {
   const [open, setOpen] = React.useState(true);
+  const rootStore = useStore();
   return (
     <>
       <ListItem button onClick={() => setOpen(!open)} className="group">
@@ -113,10 +96,7 @@ export const Item: React.FC<ItemProps> = observer(({ name, list }) => {
               key={t}
               className="nested"
               onClick={() => {
-                if (t in layerToClass) {
-                  const data = layerToClass[t]();
-                  rootStore.addOperation(data);
-                }
+                rootStore.addNode(t);
               }}
             >
               <ListItemText primary={t} />
@@ -127,35 +107,3 @@ export const Item: React.FC<ItemProps> = observer(({ name, list }) => {
     </>
   );
 });
-
-/* <li>
-          <div>Aritmetic Operations</div>
-          <ul>
-            <li>Add</li>
-            <li>Sub</li>
-            <li>Mul</li>
-            <li>Div</li>
-            <li>Max</li>
-            <li>Min</li>
-            <li>Pow</li>
-            <li>Min</li>
-            <li>Exp</li>
-          </ul>
-        </li>
-
-        <li>
-          <div>Logic Operations</div>
-          <ul>
-            <li>Equal</li>
-            <li>Greater</li>
-            <li>Greater Equal</li>
-            <li>Less</li>
-            <li>Less Equal</li>
-            <li>And</li>
-            <li>Or</li>
-            <li>Not</li>
-            <li>Xor</li>
-            <li>Not Equal</li>
-            <li>Where</li>
-          </ul>
-        </li> */
