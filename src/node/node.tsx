@@ -43,7 +43,7 @@ export const NodeView: React.FC<NodeViewProps> = observer(
           rootStore.selectNode(operation);
         }
       },
-      [operation, selectingInput, isValidInput]
+      [rootStore, operation, selectingInput, isValidInput]
     );
     // const [_, setDivRef] = React.useState<HTMLDivElement | null>(null);
     const { x, y, name } = operation;

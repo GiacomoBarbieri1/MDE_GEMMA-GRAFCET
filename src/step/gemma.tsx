@@ -7,6 +7,13 @@ import React from "react";
 import { FieldSpec, StrFieldSpec, ChoiceFieldSpec } from "../fields";
 import { listToMap } from "../utils";
 
+enum StepType {
+  ENCLOSING = "ENCLOSING",
+  INITIAL = "INITIAL",
+  MACRO = "MACRO",
+  SIMPLE = "SIMPLE",
+}
+
 class GemmaGraphcet implements GlobalData<Step> {
   constructor(private graph: RootStoreModel<Step, GemmaGraphcet, Transition>) {}
 
@@ -57,12 +64,6 @@ export type Step = SimpleStep | EnclosingStep | MacroStep | InitialStep;
 type GemmaNode = NodeModel<Step, GemmaGraphcet, Transition>;
 type GemmaConn = ConnModel<Step, GemmaGraphcet, Transition>;
 
-enum StepType {
-  ENCLOSING = "ENCLOSING",
-  INITIAL = "INITIAL",
-  MACRO = "MACRO",
-  SIMPLE = "SIMPLE",
-}
 
 enum ProcedureType {
   F = "F", // Operational
@@ -108,7 +109,7 @@ abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
   }
   @computed
   get transitions(): Transition[] {
-    return this.family == ProcedureType.F
+    return this.family === ProcedureType.F
       ? this.automationSystem.workingFamilyTransitions.concat(this._transitions)
       : this._transitions;
   }

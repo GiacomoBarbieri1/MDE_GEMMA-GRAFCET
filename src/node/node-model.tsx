@@ -1,13 +1,11 @@
 import {
   action,
   computed,
-  IObservableArray,
   observable,
   ObservableMap,
 } from "mobx";
 import { SnapshotIn } from "mobx-state-tree";
 import { FieldSpec } from "../fields";
-import { Shape } from "./node";
 import { GlobalData, RootStoreModel, ConnectionData } from "../canvas/store";
 
 export type OperationI<

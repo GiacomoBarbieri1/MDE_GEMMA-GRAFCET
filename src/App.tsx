@@ -1,10 +1,9 @@
-import { observable } from "mobx";
 import React from "react";
 import { MainCanvas } from "./canvas/canvas";
 import { ConfigView } from "./canvas/config-view";
 import { RootStoreModel, GlobalData, ConnectionData } from "./canvas/store";
 import { MainMenu } from "./graph-menu/main-menu";
-import { NodeModel, NodeData, ConnModel } from "./node/node-model";
+import { NodeData, ConnModel } from "./node/node-model";
 import { PropertiesView } from "./properties/properties-view";
 import {
   GemmaGraphcet,

@@ -12,7 +12,7 @@ export const PropertiesTable = observer(
   <D extends NodeData<D, any, any>>({ self }: Props<D>) => {
     const rootStore = useStore();
     const fullOfInputs = self.inputs.length >= self.data.nInputs;
-    const isAddingInput = rootStore.selectingInputFor != undefined;
+    const isAddingInput = rootStore.selectingInputFor !== undefined;
     return (
       <PropertiesTableStyled>
         <thead>
