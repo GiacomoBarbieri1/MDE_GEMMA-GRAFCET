@@ -2,7 +2,7 @@ import TextField from "@material-ui/core/TextField";
 import { observer } from "mobx-react-lite";
 import { IAnyType, SnapshotIn, types } from "mobx-state-tree";
 import React from "react";
-import { OperationData } from "../node/node-model";
+import { NodeData } from "../node/node-model";
 import { PP2 } from "./";
 
 const _patternError = "Pattern doesn't match.";
@@ -10,7 +10,7 @@ export class PatternFieldSpec<
   T,
   Tr extends (value: string) => T,
   KM extends string & keyof M,
-  M extends OperationData & { [key: string]: any },
+  M extends NodeData<any, any, any> & { [key: string]: any },
   MT extends IAnyType
 > {
   default: T;

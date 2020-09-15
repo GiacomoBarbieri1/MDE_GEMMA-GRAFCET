@@ -10,6 +10,19 @@ import { FieldSpec } from "../fields";
 import { Shape } from "./node";
 import { GlobalData, RootStoreModel, ConnectionData } from "../canvas/store";
 
+export type OperationI<
+  V extends { [key: string]: FieldSpec },
+  D extends NodeData<D, G, any>,
+  G extends GlobalData<D>
+> = {
+  [key in keyof V]: SnapshotIn<ReturnType<V[key]["mobxProp"]>>;
+} & {
+  NAME: string;
+  spec: V;
+  nInputs: number;
+  errors: ObservableMap<keyof V, string>;
+};
+
 export const mobxDecorators = <V extends { [key: string]: FieldSpec }>(
   spec: V
 ) => {
