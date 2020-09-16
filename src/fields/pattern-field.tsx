@@ -141,7 +141,7 @@ export class PatternFieldSpec<
         }}
         error={errors.get(name) !== undefined}
         fullWidth={true}
-        style={{ width: "120px" }}
+        style={{ width: "140px" }}
       />
     );
   });

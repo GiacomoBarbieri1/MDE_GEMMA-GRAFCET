@@ -65,7 +65,7 @@ export class StrFieldSpec<M extends { [key: string]: FieldSpec }>
         }}
         error={errors.get(name) !== undefined}
         fullWidth={true}
-        style={{ width: "120px" }}
+        style={{ width: "140px" }}
       />
     );
   });

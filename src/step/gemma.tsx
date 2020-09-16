@@ -6,6 +6,7 @@ import { observer } from "mobx-react-lite";
 import React from "react";
 import { FieldSpec, StrFieldSpec, ChoiceFieldSpec } from "../fields";
 import { listToMap } from "../utils";
+import { PropertiesTable } from "../properties/properties-table";
 
 enum StepType {
   ENCLOSING = "ENCLOSING",
@@ -63,7 +64,6 @@ export type Step = SimpleStep | EnclosingStep | MacroStep | InitialStep;
 
 type GemmaNode = NodeModel<Step, GemmaGraphcet, Transition>;
 type GemmaConn = ConnModel<Step, GemmaGraphcet, Transition>;
-
 
 enum ProcedureType {
   F = "F", // Operational
@@ -191,15 +191,14 @@ class Transition {
 
   ConnectionView = observer(() => {
     return (
-      <>
-        <div>{`${this.connection.from.name} -> ${this.connection.to.name}`}</div>
+      <PropertiesTable>
         {Object.entries(this.spec).map(([k, v]) => (
           <tr key={k}>
             <td>{k}</td>
             <td>{<v.plotField name={k} model={this as any} />}</td>
           </tr>
         ))}
-      </>
+      </PropertiesTable>
     );
   });
 }

@@ -2,16 +2,20 @@ import { observer } from "mobx-react-lite";
 import { Resizable } from "re-resizable";
 import React from "react";
 import { resizableEnable } from "../utils";
-import { PropertiesTable } from "./properties-table";
+import { PropertiesTableNode } from "./properties-table";
 import { useStore } from "../App";
+import IconButton from "@material-ui/core/IconButton";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import TextField from "@material-ui/core/TextField";
 
 type Props = {};
 
 export const PropertiesView: React.FC<Props> = observer(() => {
   const rootStore = useStore();
   let inner;
-  if (rootStore.selection != null) {
-    const operation = rootStore.selection;
+  if (rootStore.selectedNode != null) {
+    const selectedNode = rootStore.selectedNode;
+    const selectedConnection = rootStore.selectedConnection;
     inner = (
       <div
         style={{
@@ -19,31 +23,55 @@ export const PropertiesView: React.FC<Props> = observer(() => {
           maxHeight: "100%",
           maxWidth: "100%",
         }}
-        key={rootStore.selection.key}
+        key={rootStore.selectedNode.key}
         className="row"
       >
         <div style={{ padding: "15px" }}>
-          <input
-            type="text"
-            value={operation.name}
-            onInput={(e) => operation.setName(e.currentTarget.value)}
-            onChange={() => {}}
-          ></input>
-          <PropertiesTable self={rootStore.selection} />
+          <div
+            className="row"
+            style={{ justifyContent: "space-between", alignItems: "center" }}
+          >
+            <TextField
+              type="text"
+              value={selectedNode.name}
+              onChange={(e) => selectedNode.setName(e.target.value)}
+              style={{ width: "150px" }}
+            ></TextField>
+            <IconButton onClick={(e) => rootStore.removeNode(selectedNode)}>
+              <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
+            </IconButton>
+          </div>
+          <PropertiesTableNode self={rootStore.selectedNode} />
         </div>
-        <div>
-          <pre>
-            {rootStore.selectedConnection !== undefined && (
-              <rootStore.selectedConnection.data.ConnectionView />
-            )}
-          </pre>
+        <div style={{ padding: "15px" }}>
+          {selectedConnection !== undefined && (
+            <div className="col">
+              <div
+                className="row"
+                style={{
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div>{`${selectedConnection.from.name} -> ${selectedConnection.to.name}`}</div>
+                <IconButton
+                  onClick={(e) =>
+                    rootStore.removeConnection(selectedConnection)
+                  }
+                >
+                  <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
+                </IconButton>
+              </div>
+              <selectedConnection.data.ConnectionView />
+            </div>
+          )}
         </div>
       </div>
     );
   } else {
     inner = (
-      <div className="row">
-        <div className="center">Not Selected</div>
+      <div style={{ width: "150px" }} className="center">
+        Not Selected
       </div>
     );
   }
