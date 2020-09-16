@@ -72,7 +72,11 @@ export function App() {
         <MainMenu items={Object.keys(rootStore.builders.nodeBuilder)} />
         <div
           className="col"
-          style={{ width: "100%", background: "rgba(250,250,250,0.7)" }}
+          style={{
+            width: "0px",
+            background: "rgba(250,250,250,0.7)",
+            flex: "1 0 auto",
+          }}
         >
           <div className="row" style={{ minHeight: 0, flex: 1 }}>
             <MainCanvas />
