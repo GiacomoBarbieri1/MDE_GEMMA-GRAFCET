@@ -62,11 +62,16 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
         <path
           style={{ strokeWidth: 2, stroke: "black" }}
           d={`M${x1} ${y1} L${x2} ${y2}`}
-          onDoubleClick={(e) => {
+          onClick={(e) => {
             rootStore.selectConnection(connection);
           }}
         />
-        <RectAndText text={connection.data.connectionText} x={xm} y={ym} />
+        <RectAndText
+          text={connection.data.connectionText}
+          x={xm}
+          y={ym}
+          onClick={(_) => rootStore.selectConnection(connection)}
+        />
         <path
           d={triangleFromCenter(xa, ya)}
           transform={`rotate(${degrees} ${xa} ${ya})`}
@@ -82,39 +87,44 @@ const RectAndText: React.FC<{
   y: number;
   rectFill?: string;
   padding?: number;
-}> = observer(({ text, x: xm, y: ym, rectFill = "#eee", padding = 3 }) => {
-  const [textRef, setTextRef] = React.useState<SVGTextElement | null>(null);
-  const [prev, setPrev] = React.useState(text);
-  const bbox = textRef?.getBBox();
-  React.useEffect(() => {
-    if (prev !== text) {
-      const id = setTimeout(() => setPrev(text), 0);
-      return () => clearTimeout(id);
-    }
-  });
+  onClick: (event: React.MouseEvent<any, MouseEvent>) => void;
+}> = observer(
+  ({ text, x: xm, y: ym, rectFill = "#eee", padding = 3, onClick }) => {
+    const [textRef, setTextRef] = React.useState<SVGTextElement | null>(null);
+    const [prev, setPrev] = React.useState(text);
+    const bbox = textRef?.getBBox();
+    React.useEffect(() => {
+      if (prev !== text) {
+        const id = setTimeout(() => setPrev(text), 0);
+        return () => clearTimeout(id);
+      }
+    });
 
-  return (
-    <>
-      {bbox !== undefined && (
-        <rect
-          width={bbox.width + padding * 2}
-          height={bbox.height + padding * 2}
-          x={xm - bbox.width / 2 - padding}
-          y={ym - bbox.height + padding}
-          fill={rectFill}
-        ></rect>
-      )}
-      <text
-        x={bbox !== undefined ? xm - bbox.width / 2 : xm}
-        y={ym}
-        fill="black"
-        ref={setTextRef}
-      >
-        {text}
-      </text>
-    </>
-  );
-});
+    return (
+      <>
+        {bbox !== undefined && (
+          <rect
+            width={bbox.width + padding * 2}
+            height={bbox.height + padding * 2}
+            x={xm - bbox.width / 2 - padding}
+            y={ym - bbox.height + padding}
+            fill={rectFill}
+            onClick={onClick}
+          ></rect>
+        )}
+        <text
+          x={bbox !== undefined ? xm - bbox.width / 2 : xm}
+          y={ym}
+          fill="black"
+          ref={setTextRef}
+          onClick={onClick}
+        >
+          {text}
+        </text>
+      </>
+    );
+  }
+);
 
 // const getBoxIntersection = (from: OperationModelT, to: OperationModelT) => {
 //   const fwidth = from.width || 60;

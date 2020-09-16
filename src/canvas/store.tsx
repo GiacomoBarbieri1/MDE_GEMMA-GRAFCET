@@ -27,6 +27,15 @@ export class RootStoreModel<
   G extends GlobalData<D>,
   C extends ConnectionData<D>
 > {
+  @action
+  removeConnection(connection: ConnModel<D, G, C>): void {
+    if (connection === this.selectedConnection) {
+      this.selectedConnection = undefined;
+    }
+    connection.from.outputs.remove(connection);
+    connection.to.inputs.remove(connection);
+  }
+
   constructor(d: { builders: DataBuilder<D, G, C> }) {
     this.builders = d.builders;
     this.globalData = d.builders.graphBuilder(this);
@@ -42,7 +51,7 @@ export class RootStoreModel<
   nodes: ObservableMap<string, NodeModel<D, G, C>> = observable.map({});
   // Selected node
   @observable
-  selection?: NodeModel<D, G, C>;
+  selectedNode?: NodeModel<D, G, C>;
   // Selected connection
   @observable
   selectedConnection?: ConnModel<D, G, C>;
@@ -52,8 +61,8 @@ export class RootStoreModel<
 
   // Select a node
   @action
-  selectNode = (operation: NodeModel<D, G, C>) => {
-    this.selection = operation;
+  selectNode = (node: NodeModel<D, G, C>) => {
+    this.selectedNode = node;
   };
 
   // Select a connection
@@ -83,6 +92,22 @@ export class RootStoreModel<
       }
     }
   };
+
+  // remove a node
+  @action
+  removeNode(node: NodeModel<D, G, C>): void {
+    if (node === this.selectedNode) {
+      this.selectedNode = undefined;
+    }
+    if (this.nodes.delete(node.key)) {
+      for (const _in of node.inputs) {
+        _in.from.outputs.remove(_in);
+      }
+      for (const _out of node.outputs) {
+        _out.to.inputs.remove(_out);
+      }
+    }
+  }
 
   // Select a node
   @action
