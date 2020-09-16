@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/gemma-grafcet/precache-manifest.79cc8250685612cf6d5a8782324e9c4d.js"
+  "/gemma-grafcet/precache-manifest.798fc6f5a3e7d9e49675cb2728725bc4.js"
 );
 
 self.addEventListener('message', (event) => {
