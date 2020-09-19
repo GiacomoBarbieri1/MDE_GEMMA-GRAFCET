@@ -207,24 +207,26 @@ const tokens = (t: string): [Token, number][] => {
         }
         break;
       case "A":
-        if (t.substring(i, i + 3) == "AND") {
+        if (t.substring(i, i + 3) === "AND") {
           omit = 2;
           add("AND");
           continue;
         }
+      // ignore: no-fallthrough
       case "O":
-        if (t.substring(i, i + 2) == "OR") {
+        if (t.substring(i, i + 2) === "OR") {
           omit = 1;
           add("OR");
           continue;
         }
+      // ignore: no-fallthrough
       case "N":
-        if (t.substring(i, i + 3) == "NOT") {
+        if (t.substring(i, i + 3) === "NOT") {
           omit = 2;
           add("NOT");
           continue;
         }
-
+      // ignore: no-fallthrough
       default:
         signal += c;
         break;
@@ -234,14 +236,4 @@ const tokens = (t: string): [Token, number][] => {
     l.push([new VarId(signal), i - signal.length + 1]);
   }
   return l;
-};
-
-const term = (t: string) => {
-  for (const c of t) {
-  }
-};
-
-const parseBool = (t: string) => {
-  for (const c of t) {
-  }
 };

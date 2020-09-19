@@ -20,6 +20,11 @@ enum StepType {
   SIMPLE = "SIMPLE",
 }
 
+enum SignalType {
+  bool = "bool",
+  num = "num",
+}
+
 class GemmaGraphcet implements GlobalData<Step> {
   constructor(private graph: RootStoreModel<Step, GemmaGraphcet, Transition>) {}
 
@@ -83,11 +88,6 @@ class GemmaGraphcet implements GlobalData<Step> {
       </div>
     );
   });
-}
-
-enum SignalType {
-  bool = "bool",
-  num = "num",
 }
 
 class Signal {
