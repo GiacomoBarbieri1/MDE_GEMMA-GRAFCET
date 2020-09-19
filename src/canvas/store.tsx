@@ -15,6 +15,7 @@ export type DataBuilder<
 export interface GlobalData<D extends NodeData<D, any, any>> {
   generateCode(): string;
   canAddNode(nodeType: string): boolean;
+  View: React.FunctionComponent;
 }
 
 export type ConnectionData<D> = {

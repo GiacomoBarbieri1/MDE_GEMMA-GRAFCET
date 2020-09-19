@@ -69,7 +69,10 @@ export function App() {
         className="row"
         style={{ background: "rgba(250,250,250,0.7)", height: "100%" }}
       >
-        <MainMenu items={Object.keys(rootStore.builders.nodeBuilder)} />
+        <div className="col">
+          <MainMenu items={Object.keys(rootStore.builders.nodeBuilder)} />
+          <rootStore.globalData.View></rootStore.globalData.View>
+        </div>
         <div
           className="col"
           style={{

@@ -58,54 +58,69 @@ export class ChoiceFieldSpec<
     } else {
       keys = Object.keys(this.choices);
     }
-
-    if (keys.length > 3) {
-      return (
-        <Select
-          value={model[name]}
-          onChange={(e) => {
-            model[name] = e.target.value as any;
-          }}
-          autoWidth={true}
-        >
-          {keys.map((k) => {
-            return (
-              <MenuItem key={k} value={k}>
-                {k}
-              </MenuItem>
-            );
-          })}
-        </Select>
-      );
-    } else {
-      return (
-        <ButtonsDiv key={name}>
-          <ButtonGroup
-            size="small"
-            color="primary"
-            aria-label="outlined primary button group"
-          >
-            {keys.map((k) => {
-              const buttonStyle =
-                k === (model[name] as any)
-                  ? { background: "#3f51b5", color: "white" }
-                  : {};
-
-              return (
-                <Button
-                  key={k}
-                  onClick={() => {
-                    model[name] = k as any;
-                  }}
-                  style={buttonStyle}
-                >
-                  {k}
-                </Button>
-              );
-            })}
-          </ButtonGroup>
-        </ButtonsDiv>
-      );
-    }
+    return (
+      <ChoiceField
+        value={model[name]}
+        setValue={(v) => (model[name] = v as any)}
+        keys={keys}
+      />
+    );
   });
 }
+
+export const ChoiceField = ({
+  keys,
+  value,
+  setValue,
+}: {
+  keys: string[];
+  value: string;
+  setValue: (v: string) => void;
+}) => {
+  if (keys.length > 3) {
+    return (
+      <Select
+        value={value}
+        onChange={(e) => {
+          setValue(e.target.value as any);
+        }}
+        autoWidth={true}
+      >
+        {keys.map((k) => {
+          return (
+            <MenuItem key={k} value={k}>
+              {k}
+            </MenuItem>
+          );
+        })}
+      </Select>
+    );
+  } else {
+    return (
+      <ButtonsDiv>
+        <ButtonGroup
+          size="small"
+          color="primary"
+          aria-label="outlined primary button group"
+        >
+          {keys.map((k) => {
+            const buttonStyle =
+              k === value ? { background: "#3f51b5", color: "white" } : {};
+
+            return (
+              <Button
+                key={k}
+                onClick={() => {
+                  setValue(k);
+                }}
+                style={buttonStyle}
+              >
+                {k}
+              </Button>
+            );
+          })}
+        </ButtonGroup>
+      </ButtonsDiv>
+    );
+  }
+};

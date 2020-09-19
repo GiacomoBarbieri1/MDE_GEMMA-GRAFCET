@@ -7,6 +7,11 @@ import React from "react";
 import { FieldSpec, StrFieldSpec, ChoiceFieldSpec } from "../fields";
 import { listToMap } from "../utils";
 import { PropertiesTable } from "../properties/properties-table";
+import TextField from "@material-ui/core/TextField";
+import Button from "@material-ui/core/Button";
+import { ChoiceField } from "../fields/choice-field";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import IconButton from "@material-ui/core/IconButton";
 
 enum StepType {
   ENCLOSING = "ENCLOSING",
@@ -38,7 +43,7 @@ class GemmaGraphcet implements GlobalData<Step> {
     return [...this.graph.nodes.values()].map((node) => node.data);
   }
 
-  signals: Signal[] = [];
+  signals = observable.array<Signal>();
 
   @computed
   get initialStep(): Step | undefined {
@@ -48,15 +53,55 @@ class GemmaGraphcet implements GlobalData<Step> {
   generateCode = (): string => {
     return templateGemmaGraphcet(this);
   };
+
+  View = observer(() => {
+    return (
+      <div style={{ padding: "5px" }}>
+        <h2>Signals</h2>
+        {this.signals.map((s, index) => (
+          <div className="row">
+            <TextField
+              type="text"
+              label="name"
+              value={s.name}
+              onChange={(e) => (s.name = e.target.value)}
+              style={{ width: "150px" }}
+            ></TextField>
+            <ChoiceField
+              keys={Object.keys(SignalType)}
+              setValue={(v) => (s.type = v as any)}
+              value={s.type}
+            />
+            <IconButton onClick={(e) => this.signals.remove(s)}>
+              <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
+            </IconButton>
+          </div>
+        ))}
+        <Button onClick={(e) => this.signals.push(new Signal({ name: "" }))}>
+          Add Signal
+        </Button>
+      </div>
+    );
+  });
+}
+
+enum SignalType {
+  bool = "bool",
+  num = "num",
 }
 
 class Signal {
+  @observable
   name: string;
+  @observable
+  type: SignalType;
+
   description?: string;
 
   constructor(d: { name: string; description?: string }) {
     this.name = d.name;
     this.description = d.description;
+    this.type = SignalType.bool;
   }
 }
 
