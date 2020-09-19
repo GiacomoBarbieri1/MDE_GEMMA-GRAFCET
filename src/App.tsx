@@ -3,46 +3,9 @@ import { MainCanvas } from "./canvas/canvas";
 import { ConfigView } from "./canvas/config-view";
 import { RootStoreModel, GlobalData, ConnectionData } from "./canvas/store";
 import { MainMenu } from "./graph-menu/main-menu";
-import { NodeData, ConnModel } from "./node/node-model";
+import { NodeData } from "./node/node-model";
 import { PropertiesView } from "./properties/properties-view";
-import {
-  GemmaGraphcet,
-  ProcedureType,
-  Transition,
-  Step,
-  Condition,
-  gemmaBuilders,
-  StepType,
-} from "./step/gemma";
-
-const rootStore = new RootStoreModel<Step, GemmaGraphcet, Transition>({
-  builders: gemmaBuilders,
-});
-
-const s1 = rootStore.addNode(StepType.INITIAL, { x: 72, y: 60 });
-const s2 = rootStore.addNode(StepType.MACRO, { x: 261, y: 170 });
-
-const _t = new ConnModel(
-  s1!,
-  s2!,
-  (c) =>
-    new Transition(c, {
-      name: "Emergency",
-      condition: new Condition("I1 & I2"),
-    })
-);
-rootStore.globalData.workingFamilyTransitions.push(_t.data);
-
-[
-  s1,
-  s2,
-  rootStore.addNode(StepType.ENCLOSING, { x: 441, y: 316 }),
-  rootStore.addNode(StepType.SIMPLE, { x: 211, y: 410 }),
-  rootStore.addNode(StepType.SIMPLE, { x: 441, y: 500 }),
-].forEach((s, index) => s?.setName(`S${index + 1}`));
-
-s1!.data.family = ProcedureType.A;
-s2!.data.family = ProcedureType.D;
+import { make5NodesGraph } from "./step/gemma";
 
 export const storeContext = React.createContext<RootStoreModel<
   any,
@@ -62,6 +25,8 @@ export function useStore<
   return store;
 }
 
+const rootStore = make5NodesGraph();
+
 export function App() {
   return (
     <storeContext.Provider value={rootStore}>
@@ -71,7 +36,6 @@ export function App() {
       >
         <div className="col">
           <MainMenu items={Object.keys(rootStore.builders.nodeBuilder)} />
-          <rootStore.globalData.View></rootStore.globalData.View>
         </div>
         <div
           className="col"

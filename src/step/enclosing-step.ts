@@ -1,4 +1,4 @@
-import { EnclosingStep } from "./gemma";
+import { EnclosingStep } from "./step";
 
 export const enclosingStepTemplate = (model: EnclosingStep) =>
   `

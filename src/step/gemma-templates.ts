@@ -1,12 +1,12 @@
+import { GemmaGraphcet } from "./gemma";
 import {
   EnclosingStep,
   MacroStep,
   SimpleStep,
   InitialStep,
-  GemmaGraphcet,
   StepType,
-  Transition,
-} from "./gemma";
+} from "./step";
+import { Transition } from "./transition";
 
 class H {
   static textOrEmpty = (cond: boolean, text: string) => (cond ? text : "");

@@ -1,4 +1,4 @@
-import { MacroStep } from "./gemma";
+import { MacroStep } from "./step";
 
 export const macroStepTemplate = (model: MacroStep) =>
   `
