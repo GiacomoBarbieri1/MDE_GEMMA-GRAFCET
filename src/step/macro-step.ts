@@ -4,7 +4,7 @@ export const macroStepTemplate = (model: MacroStep) =>
   `
 // Variable declaration
 VAR_INPUT
-  Initionalization:BOOL;
+  Initialization:BOOL;
 END_VAR
 
 VAR_OUTPUT

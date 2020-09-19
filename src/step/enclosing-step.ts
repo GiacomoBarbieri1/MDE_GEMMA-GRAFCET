@@ -4,7 +4,7 @@ export const enclosingStepTemplate = (model: EnclosingStep) =>
   `
 // Variable declaration
 VAR_INPUT
-  Initionalization:BOOL;
+  Initialization:BOOL;
 END_VAR
 
 // FB behavior

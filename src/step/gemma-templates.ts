@@ -20,7 +20,7 @@ const templateTransitions = (
 ${transitions
   .map((t, index) => {
     return `
-${index === 0 ? "IF" : "ELSEIF"} ${t.condition.expression} THEN
+${index === 0 ? "IF" : "ELSIF"} ${t.condition.expression} THEN
   State:=${t.to.id};\
   ${isNested ? "\n  Entry:=TRUE;" : ""}`;
   })
@@ -49,7 +49,7 @@ ${templateFBEntry(model)}
 ${transitions
   .map((t, index) => {
     return `\
-${index === 0 ? "IF" : "ELSEIF"} ${t.condition.expression}${
+${index === 0 ? "IF" : "ELSIF"} ${t.condition.expression}${
       transitions.length - model.innerTransitionsLength <= index
         ? ` AND ${model.name}.Complete`
         : ""
