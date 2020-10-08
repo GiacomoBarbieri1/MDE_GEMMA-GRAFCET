@@ -1,12 +1,8 @@
-import {
-  action,
-  computed,
-  observable,
-  ObservableMap,
-} from "mobx";
+import { action, computed, observable, ObservableMap } from "mobx";
 import { SnapshotIn } from "mobx-state-tree";
 import { FieldSpec } from "../fields";
-import { GlobalData, RootStoreModel, ConnectionData } from "../canvas/store";
+import { GlobalData, RootStoreModel, JsonType } from "../canvas/store";
+import { ConnectionJson, NodeJson } from "../canvas/persistence";
 
 export type OperationI<
   V extends { [key: string]: FieldSpec },
@@ -43,7 +39,15 @@ export interface NodeData<
   spec: { [key: string]: FieldSpec };
   // TODO: ObservableMap<keyof V, string>
   errors: ObservableMap<string, string>;
+  View: React.FC;
+  toJson: JsonType;
 }
+
+export type ConnectionData<D> = {
+  ConnectionView: React.FunctionComponent;
+  connectionText: string;
+  toJson: JsonType;
+};
 
 export class ConnModel<
   D extends NodeData<D, G, C>,
@@ -53,12 +57,31 @@ export class ConnModel<
   constructor(
     public from: NodeModel<D, G, C>,
     public to: NodeModel<D, G, C>,
-    dataBuilder: (connection: ConnModel<D, G, C>) => C
+    dataBuilder: (connection: ConnModel<D, G, C>, json?: JsonType) => C,
+    json?: JsonType
   ) {
-    this.data = dataBuilder(this);
+    this.data = dataBuilder(this, json);
+  }
+
+  get graph(): RootStoreModel<D, G, any> {
+    return this.from.graph;
+  }
+
+  @computed
+  get isSelected(): boolean {
+    return this.from.graph.selectedConnection === this;
   }
 
   data: C;
+
+  @computed
+  get toJson(): ConnectionJson {
+    return {
+      from: this.from.key,
+      to: this.to.key,
+      data: this.data.toJson,
+    };
+  }
 }
 
 export class NodeModel<
@@ -73,14 +96,15 @@ export class NodeModel<
       name: string;
       x: number;
       y: number;
-      dataBuilder: (node: NodeModel<D, G, C>) => D;
+      dataBuilder: (node: NodeModel<D, G, C>, json?: JsonType) => D;
+      data?: JsonType
     }
   ) {
     this.key = d.key;
     this.name = d.name;
     this.x = d.x;
     this.y = d.y;
-    this.data = d.dataBuilder(this);
+    this.data = d.dataBuilder(this, d.data);
   }
 
   @observable
@@ -110,7 +134,7 @@ export class NodeModel<
     return this.outputs.map((c) => c.to);
   }
 
-  @action   
+  @action
   addInput(conn: ConnModel<D, G, C>) {
     this.inputs.push(conn);
     conn.from.outputs.push(conn);
@@ -136,4 +160,17 @@ export class NodeModel<
   setName = (name: string) => {
     this.name = name;
   };
+
+  @computed
+  get toJson(): NodeJson {
+    return {
+      key: this.key,
+      name: this.name,
+      x: this.x,
+      y: this.y,
+      width: this.width,
+      height: this.height,
+      data: this.data.toJson,
+    };
+  }
 }

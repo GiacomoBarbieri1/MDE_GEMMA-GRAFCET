@@ -23,7 +23,7 @@ const triangleFromCenter = (
 export const ArrowView: React.FC<ArrowViewProps> = observer(
   ({ connection }: ArrowViewProps) => {
     const rootStore = useStore();
-    const { from, to } = connection;
+    const { from, to, isSelected } = connection;
 
     const [x1, y1, x2, y2] = [
       from.x + from.width / 2,
@@ -69,6 +69,7 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
         <RectAndText
           text={connection.data.connectionText}
           x={xm}
+          rectFill={isSelected ? "#eeedff": "#eee"}
           y={ym}
           onClick={(_) => rootStore.selectConnection(connection)}
         />
@@ -110,6 +111,7 @@ const RectAndText: React.FC<{
             y={ym - bbox.height + padding}
             fill={rectFill}
             onClick={onClick}
+            style={{ cursor: "pointer" }}
           ></rect>
         )}
         <text
@@ -118,6 +120,7 @@ const RectAndText: React.FC<{
           fill="black"
           ref={setTextRef}
           onClick={onClick}
+          style={{ cursor: "pointer" }}
         >
           {text}
         </text>
