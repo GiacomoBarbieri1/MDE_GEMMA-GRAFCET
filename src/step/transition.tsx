@@ -1,9 +1,13 @@
-import { computed, observable } from "mobx";
+import { action, computed, observable } from "mobx";
 import { observer } from "mobx-react-lite";
-import React from "react";
+import React, { useRef } from "react";
+import { JsonType } from "../canvas/store";
 import { FieldSpec, StrFieldSpec } from "../fields";
+import { ChoiceField } from "../fields/choice-field";
 import { ConnModel } from "../node/node-model";
 import { PropertiesTable } from "../properties/properties-table";
+import { parseBoolExpression } from "./antlr_parser";
+import { getCustomTokens, VarId } from "./custom_parser";
 import { GemmaGraphcet } from "./gemma";
 import { Step } from "./step";
 
@@ -18,6 +22,15 @@ export class Transition {
   }
   @observable
   conditionExpression: string;
+  @observable
+  priority: number;
+  @computed
+  get priorityChoices() {
+    return [...Array(this.connection.from.outputs.length)].map(
+      (v, i) => "" + (i + 1)
+    );
+  }
+
   errors = observable.map<string, string>();
 
   spec: { [key: string]: FieldSpec } = {
@@ -27,16 +40,40 @@ export class Transition {
   constructor(
     private connection: GemmaConn,
     d?: {
-      name: string;
-      condition: Condition;
+      name?: string;
+      conditionExpression?: string;
+      priority?: number;
     }
   ) {
     this.name = d?.name ?? "";
     // this.condition = d?.condition ?? new Condition("");
     this.conditionExpression =
-      d?.condition.expression ?? this.spec["conditionExpression"].default;
-    console.log(this.conditionExpression);
+      d?.conditionExpression ?? this.spec["conditionExpression"].default;
+    this.priority = d?.priority ?? connection.from.outputs.length + 1;
   }
+
+  @action.bound
+  setPriority = (v: string): void => {
+    const priority = parseInt(v);
+    if (this.priority === priority) {
+      return;
+    }
+    const transitions = this.connection.from.outputs;
+    if (this.priority > priority) {
+      transitions
+        .filter(
+          (t) => t.data.priority >= priority && t.data.priority < this.priority
+        )
+        .forEach((t) => t.data.priority++);
+    } else {
+      transitions
+        .filter(
+          (t) => t.data.priority <= priority && t.data.priority > this.priority
+        )
+        .forEach((t) => t.data.priority--);
+    }
+    this.priority = priority;
+  };
 
   get from(): Step {
     return this.connection.from.data;
@@ -48,37 +85,95 @@ export class Transition {
 
   @computed
   get connectionText(): string {
-    return this.conditionExpression;
+    const cond = this.conditionExpression.substring(0, 20);
+    return `${this.priority}: ${cond}${
+      this.conditionExpression.length > 20 ? "..." : ""
+    }`;
+  }
+
+  @computed
+  get toJson(): JsonType {
+    return {
+      conditionExpression: this.conditionExpression,
+      priority: this.priority,
+    };
+  }
+
+  @computed
+  get expressionErrors(): string[] {
+    const gemma = this.connection.graph.globalData;
+    try {
+      const { tree, errors } = parseBoolExpression(this.conditionExpression, {
+        boolSignals: gemma.boolSignals.map((s) => s.name),
+        numSignals: gemma.numSignals.map((s) => s.name),
+      });
+      console.log(tree);
+
+      return errors;
+    } catch (e) {
+      console.log(`EEEEEEEEEEEEEEEE ${e}`);
+    }
+    return [];
   }
 
   ConnectionView = observer(() => {
     return (
-      <PropertiesTable>
-        <tr key="conditionExpression">
-          <td>conditionExpression</td>
-          <td>{<ConditionInput m={this} />}</td>
-        </tr>
-      </PropertiesTable>
+      <>
+        <PropertiesTable key="table">
+          <tr key="priority">
+            <td>Priority</td>
+            <td>
+              <ChoiceField
+                keys={this.priorityChoices}
+                value={"" + this.priority}
+                setValue={this.setPriority}
+              />
+            </td>
+          </tr>
+          <tr key="condition">
+            <td>Condition</td>
+            <td>{<ConditionInput m={this} />}</td>
+          </tr>
+        </PropertiesTable>
+        <div>
+          <h4 style={{ margin: "0" }}>Errors</h4>
+          {this.expressionErrors.length === 0 && "No errors"}
+          <ul style={{ color: "indianred", marginTop: "0" }} key="errors">
+            {this.expressionErrors.map((err, index) => (
+              <li key={index}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      </>
     );
   });
 }
 
 const ConditionInput = observer(
   ({ m }: { m: { conditionExpression: string } }) => {
-    const _tokens = tokens(m.conditionExpression);
+    const _tokens = getCustomTokens(m.conditionExpression);
     let prevIndex = 0;
+    let _spanStyleRef = useRef<HTMLSpanElement>(null);
+    const sharedStyle: React.CSSProperties = {
+      font: "400 15px monospace",
+      width: "180px",
+      height: "60px",
+      overflow: "auto",
+      borderRadius: "5px",
+    };
 
     return (
       <div style={{ width: "180px", position: "relative" }} className="center">
         <span
           style={{
-            font: "400 15px monospace",
+            ...sharedStyle,
             position: "absolute",
             top: 0,
-            margin: "3px",
-            width: "180px",
+            padding: "3px",
             textAlign: "initial",
+            whiteSpace: "pre-line",
           }}
+          ref={_spanStyleRef}
         >
           {_tokens.map(([c, textIndex], index) => {
             let color: string;
@@ -90,9 +185,7 @@ const ConditionInput = observer(
               color = "brown";
             }
             const whiteSpace = textIndex - prevIndex;
-            console.log(whiteSpace);
-            const text =
-              (whiteSpace !== 0 ? " ".repeat(whiteSpace) : "") + c.toString();
+            const text = " ".repeat(whiteSpace) + c.toString();
             prevIndex = textIndex + c.toString().length;
             return (
               <span key={index} style={{ color }}>
@@ -102,21 +195,24 @@ const ConditionInput = observer(
           })}
         </span>
         <textarea
+          onScroll={(s) => {
+            _spanStyleRef.current!.scrollTo(0, s.currentTarget.scrollTop);
+          }}
           style={{
-            font: "400 15px monospace",
+            ...sharedStyle,
+            background: "transparent",
             color: "transparent",
             caretColor: "black",
-            width: "180px",
             position: "relative",
-            background: "transparent",
+            resize: "none",
           }}
+          spellCheck={false}
           value={m.conditionExpression}
           onSelect={(e) => {
-            console.log(e.currentTarget.selectionStart);
+            // console.log(e.currentTarget.selectionStart);
           }}
           onChange={(e) => {
             m.conditionExpression = e.currentTarget.value;
-            // console.log(tokens(e.currentTarget.value));
           }}
         ></textarea>
       </div>
@@ -128,97 +224,14 @@ export class Condition {
   constructor(public expression: string) {}
 }
 
-class VarId {
-  constructor(public text: string) {}
+// const processParsedExpression = (exp: ExpressionContext): {} => {
+//   const toProcess = [...exp.children];
+//   const numIds = [];
+//   const boolIds = [];
 
-  toString(): string {
-    return this.text;
-  }
-}
+//   while (toProcess.length !== 0) {
+//     const n = toProcess.pop()!;
+//   }
 
-type Token =
-  | "("
-  | ")"
-  | "AND"
-  | "OR"
-  | "NOT"
-  | "<"
-  | ">"
-  | "="
-  | "<="
-  | ">="
-  | VarId;
-
-const tokens = (t: string): [Token, number][] => {
-  const l: [Token, number][] = [];
-  let i = -1;
-  let omit = 0;
-  let signal = "";
-  const addSignal = () => {
-    if (signal.length !== 0) {
-      l.push([new VarId(signal), i - signal.length]);
-      signal = "";
-    }
-  };
-  const add = (v: Token) => {
-    addSignal();
-    l.push([v, i]);
-  };
-
-  for (const c of t) {
-    i++;
-    if (omit !== 0) {
-      omit--;
-      continue;
-    }
-    switch (c) {
-      case " ":
-        addSignal();
-        break;
-      case ")":
-      case "(":
-      case "<":
-      case ">":
-        add(c);
-        break;
-      case "=":
-        const prevToken = l[l.length - 1];
-        const prev = prevToken[0];
-        const strPrev = prev instanceof VarId ? prev.text : prev;
-        if (["<", ">"].includes(strPrev) && prevToken[1] === i - 1) {
-          l[l.length - 1][0] = (prev + "=") as any;
-        } else {
-          add(c);
-        }
-        break;
-      case "A":
-        if (t.substring(i, i + 3) === "AND") {
-          omit = 2;
-          add("AND");
-          continue;
-        }
-      // ignore: no-fallthrough
-      case "O":
-        if (t.substring(i, i + 2) === "OR") {
-          omit = 1;
-          add("OR");
-          continue;
-        }
-      // ignore: no-fallthrough
-      case "N":
-        if (t.substring(i, i + 3) === "NOT") {
-          omit = 2;
-          add("NOT");
-          continue;
-        }
-      // ignore: no-fallthrough
-      default:
-        signal += c;
-        break;
-    }
-  }
-  if (signal.length !== 0) {
-    l.push([new VarId(signal), i - signal.length + 1]);
-  }
-  return l;
-};
+//   return {};
+// };
