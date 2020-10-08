@@ -7,6 +7,7 @@ import { useStore } from "../App";
 import IconButton from "@material-ui/core/IconButton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import TextField from "@material-ui/core/TextField";
+import "./properties-view.css";
 
 type Props = {};
 
@@ -24,11 +25,14 @@ export const PropertiesView: React.FC<Props> = observer(() => {
           maxHeight: "100%",
           maxWidth: "100%",
           justifyContent: "space-around",
+          backgroundColor: "#fafafa",
+          display: "flex",
+          
         }}
         key={rootStore.selectedNode.key}
         className="row"
       >
-        <div style={{ padding: "15px" }}>
+        <div className="properties-view">
           <div
             className="row"
             style={{ justifyContent: "space-between", alignItems: "center" }}
@@ -45,7 +49,7 @@ export const PropertiesView: React.FC<Props> = observer(() => {
           </div>
           <PropertiesTableNode self={rootStore.selectedNode} />
         </div>
-        <div style={{ padding: "15px" }}>
+        <div className="properties-view">
           {selectedConnection !== undefined && (
             <div className="col">
               <div
@@ -68,7 +72,7 @@ export const PropertiesView: React.FC<Props> = observer(() => {
             </div>
           )}
         </div>
-        <div style={{ padding: "15px", minWidth: "200px" }}>
+        <div style={{ minWidth: "270px" }} className="properties-view">
           <rootStore.globalData.View />
         </div>
       </div>

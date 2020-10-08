@@ -23,6 +23,7 @@ code {
   display: flex;
   flex-direction: row;
   max-height: 100%;
+  min-height: 0px;
 }
 
 .col {
@@ -30,6 +31,7 @@ code {
   display: flex;
   flex-direction: column;
   max-width: 100%;
+  min-width: 0px;
 }
 
 .center{

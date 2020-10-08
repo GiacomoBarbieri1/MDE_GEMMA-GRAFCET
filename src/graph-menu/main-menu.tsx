@@ -41,7 +41,7 @@ export const MainMenu: React.FC<Props> = observer(({ items }) => {
     <Rnd
       disableDragging={true}
       maxWidth={300}
-      minWidth={200}
+      minWidth={150}
       style={{
         position: "relative",
         maxHeight: "100%",

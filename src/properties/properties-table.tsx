@@ -91,6 +91,8 @@ const PropertiesTableStyled = styled.table`
     margin: auto auto;
     padding-left: 10px;
     text-align: center;
+    display: flex;
+    justify-content: center;
     align-self: center;
   }
 `;

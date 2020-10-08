@@ -63,7 +63,7 @@ export const ConfigView: React.FC<Props> = observer(<
   return (
     <Resizable
       minWidth={200}
-      defaultSize={{ height: "auto", width: 400 }}
+      defaultSize={{ height: "auto", width: 250 }}
       style={{
         position: "relative",
         background: "white",
