@@ -12,59 +12,61 @@ const StyledNode = styled.div`
   cursor: pointer;
   position: absolute;
   box-shadow: 0 1px 4px 1px #eee;
-  padding: 6px;
   background: #fff;
   border-radius: 6;
-  border: 1px solid #eee;
+  border: 1.5px solid;
 `;
 
-type NodeViewProps = { operation: NodeModel<any, any, any> };
-export const NodeView: React.FC<NodeViewProps> = observer(
-  ({ operation }) => {
-    const rootStore = useStore();
-    const onDrag = React.useCallback(
-      (_: DraggableEvent, data: DraggableData) => {
-        operation.move(data.deltaX, data.deltaY);
-      },
-      [operation]
-    );
-    const selectingInput = rootStore.selectingInputFor !== undefined;
-    const isValidInput =
-      selectingInput && rootStore.selectingInputFor!.data.isValidInput(operation);
+type NodeViewProps = { node: NodeModel<any, any, any> };
+export const NodeView: React.FC<NodeViewProps> = observer(({ node }) => {
+  const rootStore = useStore();
+  const onDrag = React.useCallback(
+    (_: DraggableEvent, data: DraggableData) => {
+      node.move(data.deltaX, data.deltaY);
+    },
+    [node]
+  );
+  const selectingInput = rootStore.selectingInputFor !== undefined;
+  const isValidInput =
+    selectingInput && rootStore.selectingInputFor!.data.isValidInput(node);
+  const isSelected = rootStore.selectedNode === node;
 
-    const onClick = React.useCallback(
-      (_: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        console.log(operation);
-        if (selectingInput) {
-          if (isValidInput) {
-            rootStore.assignInput(operation);
-          }
-        } else {
-          rootStore.selectNode(operation);
+  const onClick = React.useCallback(
+    (_: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      console.log(node);
+      if (selectingInput) {
+        if (isValidInput) {
+          rootStore.assignInput(node);
         }
-      },
-      [rootStore, operation, selectingInput, isValidInput]
-    );
-    // const [_, setDivRef] = React.useState<HTMLDivElement | null>(null);
-    const { x, y, name } = operation;
+      } else {
+        rootStore.selectNode(node);
+      }
+    },
+    [rootStore, node, selectingInput, isValidInput]
+  );
+  // const [_, setDivRef] = React.useState<HTMLDivElement | null>(null);
+  const { x, y } = node;
 
-    return (
-      <Draggable onDrag={onDrag} position={{ x, y }} bounds="parent">
-        <StyledNode
-          ref={(e) => {
-            if (e === null) return;
-            operation.setSize(e.getBoundingClientRect());
-          }}
-          onClick={onClick}
-          style={
-            selectingInput
-              ? { cursor: isValidInput ? "pointer" : "not-allowed" }
-              : undefined
-          }
-        >
-          {`Layer ${name}`}
-        </StyledNode>
-      </Draggable>
-    );
+  let style: React.CSSProperties = {};
+  if (isSelected) {
+    style["boxShadow"] = "rgb(110 110 110) 1px 1.5px 3px 1px";
   }
-);
+  if (selectingInput) {
+    style["cursor"] = isValidInput ? "pointer" : "not-allowed";
+  }
+
+  return (
+    <Draggable onDrag={onDrag} position={{ x, y }} bounds="parent">
+      <StyledNode
+        ref={(e) => {
+          if (e === null) return;
+          node.setSize(e.getBoundingClientRect());
+        }}
+        onClick={onClick}
+        style={style}
+      >
+        <node.data.View />
+      </StyledNode>
+    </Draggable>
+  );
+});

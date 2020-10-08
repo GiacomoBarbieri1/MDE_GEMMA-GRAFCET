@@ -25,7 +25,7 @@ export const MainCanvas: React.FC<Props> = observer(() => {
       >
         {ops.map((operation) => {
           console.log(operation);
-          return <NodeView operation={operation} key={operation.key} />;
+          return <NodeView node={operation} key={operation.key} />;
         })}
         <svg style={{ width: "100%", height: "100%" }}>
           {ops
