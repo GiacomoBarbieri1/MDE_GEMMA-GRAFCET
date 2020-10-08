@@ -1,20 +1,20 @@
 import {
-  MacroStep,
-  Step,
   GemmaGraphcet,
-  Transition,
   gemmaBuilders,
-  Condition,
-  ProcedureType,
-  StepType,
 } from "./gemma";
 import { NodeModel, ConnModel } from "../node/node-model";
 import { RootStoreModel } from "../canvas/store";
-
+import { StepType, Step } from "./step";
+import { Transition } from "./transition";
+import { IndexedDB } from "../canvas/persistence";
+jest.mock("../canvas/persistence");
 export {};
+
+const mockedClass = <jest.Mock<IndexedDB>>IndexedDB;
 
 describe("Graph Api", () => {
   const rootStore = new RootStoreModel<Step, GemmaGraphcet, Transition>({
+    db: mockedClass(),
     builders: gemmaBuilders,
   });
 
@@ -80,6 +80,7 @@ describe("Graph Api", () => {
 
 describe("Validation", () => {
   const rootStore = new RootStoreModel<Step, GemmaGraphcet, Transition>({
+    db: mockedClass(),
     builders: gemmaBuilders,
   });
 
