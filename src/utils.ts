@@ -26,10 +26,55 @@ export function resizableEnable(f: {
   bottomLeft?: boolean;
   topLeft?: boolean;
 }) {
-  return Object.entries(f).reduce((p, [k, v]) => {
-    if (v !== undefined) {
-      p[k as keyof typeof defaultResizeEnable] = v;
+  return Object.entries(f).reduce(
+    (p, [k, v]) => {
+      if (v !== undefined) {
+        p[k as keyof typeof defaultResizeEnable] = v;
+      }
+      return p;
+    },
+    { ...defaultResizeEnable }
+  );
+}
+
+export function downloadToClient(
+  content: BlobPart,
+  fileName: string,
+  contentType: string
+) {
+  let a = document.createElement("a");
+  let file = new Blob([content], { type: contentType });
+  a.href = URL.createObjectURL(file);
+  a.download = fileName;
+  a.click();
+}
+
+export function importJson(
+  event: React.ChangeEvent<HTMLInputElement>
+): Promise<string | ArrayBuffer | null | undefined> {
+  const files = event.target.files;
+  return new Promise((resolve, _) => {
+    if (files !== null) {
+      const file = files[0];
+      if (file.type !== "application/json") {
+        window.alert(
+          "Debes seleccionar un archivo válido, la extensión debe ser '.json'."
+        );
+        return resolve(undefined);
+      }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          resolve(e.target?.result);
+        };
+        reader.onabort = (e) => {
+          resolve(undefined);
+        };
+        reader.onerror = (e) => {
+          resolve(undefined);
+        };
+        reader.readAsText(file);
+    } else {
+      resolve(undefined);
     }
-    return p;
-  }, {...defaultResizeEnable});
+  });
 }
