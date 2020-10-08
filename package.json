@@ -11,7 +11,10 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "antlr4ts": "^0.5.0-alpha.3",
     "formik": "^2.1.4",
+    "idb": "^5.0.6",
+    "jszip": "^3.5.0",
     "mobx": "^5.15.4",
     "mobx-react-lite": "^1.5.2",
     "mobx-state-tree": "^3.15.0",
@@ -30,7 +33,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "gemma": "ts-node-dev --respawn --transpile-only ./src/step/gemma.ts --experimental-modules"
+    "gemma": "ts-node-dev --respawn --transpile-only ./src/step/gemma.ts --experimental-modules",
+    "antlr4ts": "antlr4ts -visitor ./src/step/SimpleBoolean.g4 -o ./src/grammar/"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -57,6 +61,7 @@
     "@types/styled-components": "^5.0.1",
     "@types/uuid": "^7.0.0",
     "@types/yup": "^0.26.32",
+    "antlr4ts-cli": "^0.5.0-alpha.3",
     "ts-node-dev": "^1.0.0-pre.61",
     "typescript": "^3.8.3"
   }
