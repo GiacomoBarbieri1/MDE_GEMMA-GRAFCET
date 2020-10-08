@@ -1,10 +1,13 @@
+import React from "react";
 import { computed, observable } from "mobx";
+import { observer } from "mobx-react-lite";
 import { StrFieldSpec } from "../fields";
 import { ChoiceFieldSpec } from "../fields/choice-field";
 import { NodeData, NodeModel } from "../node/node-model";
 import { listToMap } from "../utils";
 import { GemmaGraphcet } from "./gemma";
 import { Transition } from "./transition";
+import { JsonType } from "../canvas/store";
 
 export type Step = SimpleStep | EnclosingStep | MacroStep | InitialStep;
 export enum StepType {
@@ -23,6 +26,7 @@ export enum ProcedureType {
 }
 
 abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
+  abstract type: StepType;
   nInputs = Number.POSITIVE_INFINITY;
   errors = observable.map<string, string>();
 
@@ -30,7 +34,7 @@ abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
     private node: GemmaNode,
     d?: {
       description?: string;
-      family: ProcedureType;
+      family?: ProcedureType;
     }
   ) {
     this.description = d?.description ?? "";
@@ -52,7 +56,9 @@ abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
 
   @computed
   private get _transitions(): Transition[] {
-    return this.node.outputs.map((t) => t.data);
+    return this.node.outputs
+      .map((t) => t.data)
+      .sort((a, b) => a.priority - b.priority);
   }
   @computed
   get innerTransitionsLength(): number {
@@ -80,6 +86,57 @@ abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
   isValidInput(n: GemmaNode): boolean {
     return this.node.inputNodes.every((t) => t.data !== n.data);
   }
+  @computed
+  get toJson(): JsonType {
+    return {
+      family: this.family, 
+      description: this.description, 
+      type: this.type
+    };
+  }
+
+  View = observer(() => {
+    let style: React.CSSProperties = {};
+    let innerStyle: React.CSSProperties = { padding: "12px" };
+    switch (this.type) {
+      case StepType.ENCLOSING:
+        style = { padding: "0 0",  display: "flex" };
+        // TODO: 
+        return (
+          <div style={style}>
+            <span />
+            <div style={{ ...innerStyle, }}>
+              {this.node.name}
+            </div>
+            <span />
+          </div>
+        );
+      case StepType.MACRO:
+        style = { padding: "5px 0" };
+        innerStyle = {
+          border: "1.5px solid",
+          borderRight: "0",
+          borderLeft: "0",
+          padding: "5px 12px",
+        };
+        break;
+      case StepType.INITIAL:
+        style = { padding: "5px" };
+        innerStyle = {
+          border: "1.5px solid",
+          padding: "7px",
+        };
+        break;
+      default:
+        break;
+    }
+
+    return (
+      <div style={style}>
+        <div style={innerStyle}>{this.node.name}</div>
+      </div>
+    );
+  });
 }
 
 export class SimpleStep extends BaseStep {
