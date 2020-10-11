@@ -7,6 +7,7 @@ import {
   ObservableMap,
 } from "mobx";
 import { v4 } from "uuid";
+import { SourceDirectory } from "../codegen/file-system";
 import {
   NodeModel,
   NodeData,
@@ -14,6 +15,7 @@ import {
   ConnectionData,
 } from "../node/node-model";
 import { downloadToClient } from "../utils";
+import JSZip from "jszip";
 import { ConnectionJson, GraphJson, IndexedDB, NodeJson } from "./persistence";
 
 export type DataBuilder<
@@ -84,22 +86,35 @@ export class RootStoreModel<
     this.nodes = observable.map(nodes ?? {});
 
     d.json?.connections.forEach((c) => {
-      // TODO:
       const from = this.nodes.get(c.from);
       const to = this.nodes.get(c.to);
       if (from !== undefined && to !== undefined) {
         this.addConnection(from, to, c.data);
       }
     });
+    if (this.nodes.size !== 0) {
+      this.selectedNode = this.nodes.values().next().value;
+      if (this.selectedNode!.outputs.length !== 0) {
+        this.selectedConnection = this.selectedNode!.outputs[0];
+      } else if (this.selectedNode!.inputs.length !== 0) {
+        this.selectedConnection = this.selectedNode!.inputs[0];
+      } else {
+        for (const _n of this.nodes.values()) {
+          if (_n.outputs.length !== 0) {
+            this.selectedConnection = _n.outputs[0];
+            break;
+          }
+        }
+      }
+    }
   }
 
+  key: string;
   // Builders to create graph, node and transition instances
   builders: DataBuilder<D, G, C>;
   // Global generic data
   globalData: G;
   db: IndexedDB;
-
-  key: string;
 
   @observable
   resetStore: boolean = false;
@@ -112,7 +127,8 @@ export class RootStoreModel<
   // Selected connection
   @observable
   selectedConnection?: ConnModel<D, G, C>;
-  // Selected input for transition
+
+  // Selected input for connection
   @observable
   selectingInputFor?: NodeModel<D, G, C>;
 
@@ -148,7 +164,7 @@ export class RootStoreModel<
     }
   };
 
-  // remove a node
+  // Remove a node
   @action
   removeNode(node: NodeModel<D, G, C>): void {
     if (node === this.selectedNode) {
@@ -173,12 +189,8 @@ export class RootStoreModel<
     connection.to.inputs.remove(connection);
   }
 
-  @computed
-  get toJson(): GraphJson {
-    return { data: this.globalData.toJson, key: this.key };
-  }
+  // Select input-output / add connection
 
-  // Select a node
   @action
   selectingInput = (from: NodeModel<D, G, C>) => {
     this.selectingInputFor = from;
@@ -200,6 +212,14 @@ export class RootStoreModel<
   };
 
   @action
+  private _selectingInputKeyListener = (ev: KeyboardEvent) => {
+    if (ev.key === "Escape") {
+      this.selectingInputFor = undefined;
+      window.removeEventListener("keyup", this._selectingInputKeyListener);
+    }
+  };
+
+  @action
   addConnection = (
     from: NodeModel<D, G, C>,
     to: NodeModel<D, G, C>,
@@ -209,6 +229,13 @@ export class RootStoreModel<
     conn.from.addOutput(conn);
     return conn;
   };
+
+  // Serialization
+
+  @computed
+  get toJson(): GraphJson {
+    return { data: this.globalData.toJson, key: this.key };
+  }
 
   async saveModel() {
     const nodes = [...this.nodes.entries()];
@@ -245,11 +272,28 @@ export class RootStoreModel<
     return json;
   }
 
-  @action
-  private _selectingInputKeyListener = (ev: KeyboardEvent) => {
-    if (ev.key === "Escape") {
-      this.selectingInputFor = undefined;
-      window.removeEventListener("keyup", this._selectingInputKeyListener);
-    }
-  };
+  async downloadSourceCode() {
+    const _addToZip = (root: JSZip, dir: SourceDirectory) => {
+      const newRoot = root.folder(dir.name)!;
+
+      for (const item of dir.items) {
+        item.when({
+          file: (f) => newRoot.file(f.name, f.content),
+          dir: (d) => _addToZip(newRoot, d),
+        });
+      }
+    };
+
+    const zip = new JSZip();
+    const sourceCode = this.globalData.generateSourceCode;
+    _addToZip(zip, sourceCode);
+
+    const content = await zip.generateAsync({ type: "blob" });
+
+    downloadToClient(
+      content,
+      "gemma-grafcet-source-code.zip",
+      "application/zip"
+    );
+  }
 }

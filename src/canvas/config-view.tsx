@@ -1,3 +1,4 @@
+import Button from "@material-ui/core/Button";
 import { observer } from "mobx-react-lite";
 import { Resizable } from "re-resizable";
 import React from "react";
@@ -72,28 +73,26 @@ export const ConfigView: React.FC<Props> = observer(<
       }}
       enable={resizableEnable({ left: true })}
     >
-      <div style={{ overflow: "auto", height: "100%", padding: "0 10px" }}>
-        <pre>{rootStore.globalData.generateCode()}</pre>
-        {/* {ops.map((op) => {
-          return (
-            <pre key={op.key}>
-              {op.name + " = " + op.data.pythonCode + "\n"}
-            </pre>
-          );
-        })}
-
-        {orderedOps.map((op) => {
-          if (op.data.inputs.length > 0) {
-            return (
-              <pre key={op.key + "input"}>
-                {`${op.name}_output = ${op.name}(${op.inputs
-                  .map((inp) => inp.to.name)
-                  .join(",")});`}
-              </pre>
-            );
-          }
-          return null;
-        })} */}
+      <div className="col" style={{ height: "100%" }}>
+        <div style={{ borderBottom: "rgb(221 220 220) solid 1.5px" }}>
+          <Button
+            onClick={async (_) => {
+              rootStore.downloadSourceCode();
+            }}
+          >
+            Download Code
+          </Button>
+        </div>
+        <div
+          style={{
+            overflow: "auto",
+            height: "100%",
+            padding: "0 10px",
+            flex: 1,
+          }}
+        >
+          <pre>{rootStore.globalData.generateMainFile}</pre>
+        </div>
       </div>
     </Resizable>
   );
