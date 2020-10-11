@@ -30,7 +30,8 @@ type JsonTypeItem = number | string | boolean | JsonType;
 export type JsonType = { [key: string]: JsonTypeItem | JsonTypeItem[] };
 
 export interface GlobalData<D extends NodeData<D, any, any>> {
-  generateCode(): string;
+  generateMainFile: string;
+  generateSourceCode: SourceDirectory;
   canAddNode(nodeType: string): boolean;
   View: React.FunctionComponent;
   toJson: JsonType;

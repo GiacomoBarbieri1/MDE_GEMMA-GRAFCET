@@ -1,4 +1,4 @@
-import { GemmaGraphcet } from "./gemma";
+import { GemmaGraphcet, Signal } from "./gemma";
 import {
   EnclosingStep,
   MacroStep,
@@ -67,6 +67,14 @@ ${templateFBEntry(model)}
 
 ${templateTransitions(model.transitions, { isNested: true })}`;
 };
+
+export const templateGlobals = (signals: Array<Signal>) : string => {
+  return `\
+VAR_GLOBAL
+    ${signals.map((s) => `${s.name} : ${s.type}${s.defaultValue.trim().length === 0 ? '': ' :=' + s.defaultValue};`).join("\n    ")}
+END_VAR
+`;
+}
 
 export const templateGemmaGraphcet = (model: GemmaGraphcet): string => {
   return `

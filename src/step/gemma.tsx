@@ -1,4 +1,4 @@
-import { templateGemmaGraphcet } from "./gemma-templates";
+import { templateGemmaGraphcet, templateGlobals } from "./gemma-templates";
 import {
   GlobalData,
   RootStoreModel,
@@ -7,7 +7,7 @@ import {
 } from "../canvas/store";
 import { computed, IObservableArray, observable } from "mobx";
 import { observer } from "mobx-react-lite";
-import React from "react";
+import React, { useState } from "react";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
 import { ChoiceField } from "../fields/choice-field";
@@ -25,6 +25,13 @@ import {
 } from "./step";
 import { ConnModel, NodeModel } from "../node/node-model";
 import { IndexedDB } from "../canvas/persistence";
+import Table from "@material-ui/core/Table";
+import TableBody from "@material-ui/core/TableBody";
+import TableCell from "@material-ui/core/TableCell";
+import TableHead from "@material-ui/core/TableHead";
+import TableRow from "@material-ui/core/TableRow";
+import "./gemma-styles.css";
+import { SourceDirectory, SourceFile } from "../codegen/file-system";
 
 enum SignalType {
   bool = "bool",
@@ -94,9 +101,21 @@ export class GemmaGraphcet implements GlobalData<Step> {
     return this.steps.find((s) => s.type === StepType.INITIAL);
   }
 
-  generateCode = (): string => {
+  @computed
+  get generateMainFile(): string {
     return templateGemmaGraphcet(this);
-  };
+  }
+
+  @computed
+  get generateSourceCode(): SourceDirectory {
+    const main = templateGemmaGraphcet(this);
+    const globals = templateGlobals(this.signals);
+
+    return new SourceDirectory("gemma_grafcet", [
+      new SourceFile("main.txt", main),
+      new SourceFile("GVL.txt", globals),
+    ]);
+  }
 
   @computed
   get toJson(): JsonType {
@@ -106,44 +125,83 @@ export class GemmaGraphcet implements GlobalData<Step> {
   }
 
   View = observer(() => {
+    const [showDelete, setShowDelete] = useState(false);
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
-        <h2 style={{ margin: "0 0 10px 0" }}>Signals</h2>
-        {this.signals.map((s, index) => (
-          <div
-            className="row"
-            style={{ display: "flex", alignItems: "center", padding: "3px 0" }}
-          >
-            <TextField
-              type="text"
-              label="name"
-              value={s.name}
-              onChange={(e) => (s.name = e.target.value)}
-              style={{ width: "150px" }}
-            ></TextField>
-            <div style={{ padding: "0 12px 0 12px" }}>
-              <ChoiceField
-                keys={Object.keys(SignalType)}
-                setValue={(v) => (s.type = v as any)}
-                value={s.type}
-              />
-            </div>
-            <TextField
-              type="text"
-              label="default"
-              value={s.defaultValue}
-              onChange={(e) => (s.defaultValue = e.target.value)}
-              style={{ width: "100px" }}
-            ></TextField>
-            <span style={{ flex: 1 }} />
-            <IconButton onClick={(e) => this.signals.remove(s)}>
-              <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
-            </IconButton>
-          </div>
-        ))}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <h2 style={{ margin: "5px 0 10px 0" }}>Signals</h2>
+          <Button onClick={(_) => setShowDelete(!showDelete)}>
+            {showDelete ? "Hide Delete" : "Show Delete"}
+            <FontAwesomeIcon
+              style={{ paddingLeft: "7px" }}
+              icon={"trash-alt"}
+              color={"#000"}
+            />
+          </Button>
+        </div>
+        <Table
+          id="signals-table"
+          size="small"
+          aria-label="a dense table"
+          stickyHeader={true}
+        >
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Default</TableCell>
+              {showDelete && <TableCell>Delete</TableCell>}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {this.signals.map((s, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  <TextField
+                    type="text"
+                    value={s.name}
+                    onChange={(e) => (s.name = e.target.value)}
+                    style={{ width: "110px" }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <ChoiceField
+                    keys={Object.keys(SignalType)}
+                    setValue={(v) => (s.type = v as any)}
+                    value={s.type}
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    type="text"
+                    value={s.defaultValue}
+                    onChange={(e) => (s.defaultValue = e.target.value)}
+                    style={{ width: "80px" }}
+                  />
+                </TableCell>
+                {showDelete && (
+                  <TableCell align="center">
+                    <IconButton
+                      onClick={(e) => this.signals.remove(s)}
+                      size="small"
+                    >
+                      <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
+                    </IconButton>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
         <Button
           style={{ alignSelf: "flex-end" }}
-          onClick={(e) => this.signals.push(new Signal({ name: "" }))}
+          onClick={(e) => this.signals.push(new Signal())}
         >
           Add Signal
         </Button>
@@ -182,26 +240,18 @@ export class Signal {
     }
   }
 
-  constructor(d: { name?: string; description?: string; type?: SignalType; defaultValue?: string }) {
-    this.name = d.name ?? "";
-    this.description = d.description;
-    this.type = d.type ?? SignalType.bool;
-    this.defaultValue = d.defaultValue ?? "";
+  constructor(d?: {
+    name?: string;
+    description?: string;
+    type?: SignalType;
+    defaultValue?: string;
+  }) {
+    this.name = d?.name ?? "";
+    this.description = d?.description;
+    this.type = d?.type ?? SignalType.bool;
+    this.defaultValue = d?.defaultValue ?? "";
   }
 }
-
-// const _nBuilder = {
-//   [StepType.SIMPLE]: (n, json) => {
-//     const type = json !== undefined ? json["type"] : undefined;
-//     if (typeof type === "string" && Object.keys(StepType).includes(type)) {
-//       return new SimpleStep(n);
-//     }
-//     return new SimpleStep(n);
-//   },
-//   [StepType.MACRO]: (n, json) => new MacroStep(n),
-//   [StepType.ENCLOSING]: (n, json) => new EnclosingStep(n),
-//   [StepType.INITIAL]: (n, json) => new InitialStep(n),
-// };
 
 export const gemmaBuilders: DataBuilder<Step, GemmaGraphcet, Transition> = {
   graphBuilder: (g, json) => new GemmaGraphcet(g, json),
@@ -225,11 +275,9 @@ export const gemmaBuilders: DataBuilder<Step, GemmaGraphcet, Transition> = {
   connectionBuilder: (c, json) => new Transition(c, json),
 };
 
-export const make5NodesGraph = (db: IndexedDB): RootStoreModel<
-  Step,
-  GemmaGraphcet,
-  Transition
-> => {
+export const make5NodesGraph = (
+  db: IndexedDB
+): RootStoreModel<Step, GemmaGraphcet, Transition> => {
   const rootStore = new RootStoreModel<Step, GemmaGraphcet, Transition>({
     db,
     builders: gemmaBuilders,
@@ -269,11 +317,9 @@ export const make5NodesGraph = (db: IndexedDB): RootStoreModel<
   return rootStore;
 };
 
-export const makeBaseGemmaTemplate = (db: IndexedDB): RootStoreModel<
-  Step,
-  GemmaGraphcet,
-  Transition
-> => {
+export const makeBaseGemmaTemplate = (
+  db: IndexedDB
+): RootStoreModel<Step, GemmaGraphcet, Transition> => {
   const rootStore = new RootStoreModel<Step, GemmaGraphcet, Transition>({
     db,
     builders: gemmaBuilders,
