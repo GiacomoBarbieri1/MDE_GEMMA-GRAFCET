@@ -61,7 +61,7 @@ export function App() {
   }, [store, _isReset]);
 
   if (!store) {
-    return <div className="center">Cargando...</div>;
+    return <div className="center">Loading...</div>;
   }
 
   return (
@@ -83,52 +83,7 @@ export function App() {
         >
           <div className="row" style={{ minHeight: 0, flex: 1 }}>
             <div className="col">
-              <div className="row" style={{ justifyContent: "flex-end" }}>
-                <Button
-                  onClick={(e) => {
-                    store.saveModel();
-                  }}
-                >
-                  Save
-                </Button>
-                <Button
-                  onClick={(e) => {
-                    store.downloadModel();
-                  }}
-                >
-                  Export
-                </Button>
-                <Button>
-                  <label
-                    htmlFor="import-file-input"
-                    style={{ margin: 0, width: "100%", cursor: "pointer" }}
-                  >
-                    Import
-                  </label>
-                  <input
-                    type="file"
-                    id="import-file-input"
-                    accept="application/json"
-                    style={{ display: "none" }}
-                    onChange={async (e) => {
-                      const json = await importJson(e);
-                      if (typeof json === "string") {
-                        try {
-                          const val = JSON.parse(json);
-                          const _store = new RootStoreModel({
-                            db: globalDB!,
-                            json: val,
-                            builders: gemmaBuilders,
-                          });
-                          setStore(_store);
-                        } catch (e) {
-                          console.log(e);
-                        }
-                      }
-                    }}
-                  />
-                </Button>
-              </div>
+              <TopMenu store={store} globalDB={globalDB!} setStore={setStore} />
               <MainCanvas />
             </div>
             <ConfigView />
@@ -137,5 +92,70 @@ export function App() {
         </div>
       </div>
     </storeContext.Provider>
+  );
+}
+
+function TopMenu({
+  store,
+  setStore,
+  globalDB,
+}: {
+  store: RootStore;
+  globalDB: IndexedDB;
+  setStore: (store: RootStore) => void;
+}) {
+  return (
+    <div
+      className="row"
+      style={{
+        justifyContent: "flex-end",
+        borderBottom: "rgb(221 220 220) solid 1.5px",
+      }}
+    >
+      <Button
+        onClick={(e) => {
+          store.saveModel();
+        }}
+      >
+        Save
+      </Button>
+      <Button
+        onClick={(e) => {
+          store.downloadModel();
+        }}
+      >
+        Export
+      </Button>
+      <Button>
+        <label
+          htmlFor="import-file-input"
+          style={{ margin: 0, width: "100%", cursor: "pointer" }}
+        >
+          Import
+        </label>
+        <input
+          type="file"
+          id="import-file-input"
+          accept="application/json"
+          style={{ display: "none" }}
+          onChange={async (e) => {
+            const json = await importJson(e);
+            if (typeof json === "string") {
+              try {
+                const val = JSON.parse(json);
+                const _store = new RootStoreModel({
+                  db: globalDB,
+                  json: val,
+                  builders: gemmaBuilders,
+                });
+                setStore(_store);
+              } catch (e) {
+                console.log(e);
+              }
+            }
+          }}
+        />
+      </Button>
+    </div>
   );
 }
