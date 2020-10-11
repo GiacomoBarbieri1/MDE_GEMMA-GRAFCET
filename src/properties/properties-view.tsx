@@ -6,7 +6,6 @@ import { PropertiesTableNode } from "./properties-table";
 import { useStore } from "../App";
 import IconButton from "@material-ui/core/IconButton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import TextField from "@material-ui/core/TextField";
 import "./properties-view.css";
 
 type Props = {};
@@ -27,29 +26,24 @@ export const PropertiesView: React.FC<Props> = observer(() => {
           justifyContent: "space-around",
           backgroundColor: "#fafafa",
           display: "flex",
-          
         }}
-        key={rootStore.selectedNode.key}
         className="row"
       >
-        <div className="properties-view">
+        <div className="properties-view" key="node-properties">
           <div
             className="row"
             style={{ justifyContent: "space-between", alignItems: "center" }}
           >
-            <TextField
-              type="text"
-              value={selectedNode.name}
-              onChange={(e) => selectedNode.setName(e.target.value)}
-              style={{ width: "150px" }}
-            ></TextField>
+            <h2 style={{ margin: "5px 0px 10px" }}>
+              {`Step: ${selectedNode.name}`}
+            </h2>
             <IconButton onClick={(e) => rootStore.removeNode(selectedNode)}>
               <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
             </IconButton>
           </div>
           <PropertiesTableNode self={rootStore.selectedNode} />
         </div>
-        <div className="properties-view">
+        <div className="properties-view" key="connection-properties">
           {selectedConnection !== undefined && (
             <div className="col">
               <div
@@ -59,7 +53,9 @@ export const PropertiesView: React.FC<Props> = observer(() => {
                   alignItems: "center",
                 }}
               >
-                <div>{`${selectedConnection.from.name} -> ${selectedConnection.to.name}`}</div>
+                <h2 style={{ margin: "5px 0px 10px" }}>
+                  {`Transition: ${selectedConnection.from.name} -> ${selectedConnection.to.name}`}
+                </h2>
                 <IconButton
                   onClick={(e) =>
                     rootStore.removeConnection(selectedConnection)
@@ -72,7 +68,11 @@ export const PropertiesView: React.FC<Props> = observer(() => {
             </div>
           )}
         </div>
-        <div style={{ minWidth: "270px" }} className="properties-view">
+        <div
+          style={{ minWidth: "270px" }}
+          className="properties-view"
+          key="graph-properties"
+        >
           <rootStore.globalData.View />
         </div>
       </div>
