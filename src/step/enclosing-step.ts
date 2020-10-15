@@ -1,7 +1,9 @@
 import { EnclosingStep } from "./step";
 
 export const enclosingStepTemplate = (model: EnclosingStep) =>
-  `
+  `\
+FUNCTION_BLOCK ${model.name}_FB
+
 // Variable declaration
 VAR_INPUT
   Initialization:BOOL;

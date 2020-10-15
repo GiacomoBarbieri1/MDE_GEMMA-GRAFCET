@@ -68,13 +68,20 @@ ${templateFBEntry(model)}
 ${templateTransitions(model.transitions, { isNested: true })}`;
 };
 
-export const templateGlobals = (signals: Array<Signal>) : string => {
+export const templateGlobals = (signals: Array<Signal>): string => {
   return `\
 VAR_GLOBAL
-    ${signals.map((s) => `${s.name} : ${s.type}${s.defaultValue.trim().length === 0 ? '': ' :=' + s.defaultValue};`).join("\n    ")}
+    ${signals
+      .map(
+        (s) =>
+          `${s.name} : ${s.type}${
+            s.defaultValue.trim().length === 0 ? "" : " :=" + s.defaultValue
+          };`
+      )
+      .join("\n    ")}
 END_VAR
 `;
-}
+};
 
 export const templateGemmaGraphcet = (model: GemmaGraphcet): string => {
   return `
@@ -92,6 +99,7 @@ END_VAR
 // Program behavior
 CASE State OF
   ${model.steps
+    .filter((s) => s.type !== StepType.CONTAINER)
     .map((step) => {
       return `
   ${step.id}: //State ${step.name}
@@ -104,6 +112,8 @@ CASE State OF
           return templateGemmaGraphcetSimpleStep(step);
         case StepType.MACRO:
           return templateGemmaGraphcetMacroStep(step);
+        default:
+          throw "";
       }
     })().replace(/\n/g, "\n    ")}
   `;

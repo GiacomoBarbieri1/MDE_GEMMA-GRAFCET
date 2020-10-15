@@ -1,7 +1,9 @@
 import { MacroStep } from "./step";
 
 export const macroStepTemplate = (model: MacroStep) =>
-  `
+  `\
+FUNCTION_BLOCK ${model.name}_FB
+
 // Variable declaration
 VAR_INPUT
   Initialization:BOOL;
