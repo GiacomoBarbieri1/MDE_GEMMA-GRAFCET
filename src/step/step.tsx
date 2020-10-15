@@ -15,6 +15,7 @@ export enum StepType {
   INITIAL = "INITIAL",
   MACRO = "MACRO",
   SIMPLE = "SIMPLE",
+  CONTAINER = "CONTAINER",
 }
 
 type GemmaNode = NodeModel<Step, GemmaGraphcet, Transition>;
@@ -26,7 +27,9 @@ export enum ProcedureType {
 }
 
 abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
+  @observable
   abstract type: StepType;
+
   nInputs = Number.POSITIVE_INFINITY;
   errors = observable.map<string, string>();
 
@@ -49,6 +52,20 @@ abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
   description: string;
   @observable
   family: ProcedureType;
+  @computed
+  get parent(): GemmaNode | undefined {
+    if (this.type === StepType.CONTAINER) {
+      return undefined;
+    }
+    switch (this.family) {
+      case ProcedureType.A:
+        return this.automationSystem.aFamily;
+      case ProcedureType.D:
+        return this.automationSystem.dFamily;
+      case ProcedureType.F:
+        return this.automationSystem.fFamily;
+    }
+  }
 
   get automationSystem(): GemmaGraphcet {
     return this.node.graph.globalData;
@@ -76,38 +93,71 @@ abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
   }
 
   spec = {
-    family: new ChoiceFieldSpec({
-      default: ProcedureType.F,
-      choices: listToMap(Object.values(ProcedureType)),
+    type: new ChoiceFieldSpec({
+      default: StepType.SIMPLE,
+      choices: listToMap(
+        Object.values(StepType).filter((t) => t !== StepType.CONTAINER)
+      ),
+      onChange: (n: StepType) => {
+        if (n === StepType.INITIAL) {
+          const otherIntial = this.automationSystem.steps.find(
+            (s) => s.type === StepType.INITIAL && s !== this
+          );
+          if (otherIntial !== undefined) {
+            otherIntial.type = StepType.SIMPLE;
+          }
+        }
+      },
     }),
-    description: new StrFieldSpec({ default: "" }),
+    description: new StrFieldSpec({ default: "", multiline: true}),
   };
 
   isValidInput(n: GemmaNode): boolean {
     return this.node.inputNodes.every((t) => t.data !== n.data);
   }
+
   @computed
   get toJson(): JsonType {
     return {
-      family: this.family, 
-      description: this.description, 
-      type: this.type
+      family: this.family,
+      description: this.description,
+      type: this.type,
     };
   }
 
-  View = observer(() => {
+  View = observer(({ children }) => {
+    const _color = {
+      [ProcedureType.A]: "#ecf5ff",
+      [ProcedureType.D]: "#ffd6d6",
+      [ProcedureType.F]: "#ebffec",
+    };
+
+    if (this.type === StepType.CONTAINER) {
+      return (
+        <div
+          style={{
+            position: "relative",
+            border: "1px solid #eee",
+            background: _color[this.family],
+            flex: 1,
+            width: 400,
+            height: 400,
+          }}
+        >
+          {children}
+        </div>
+      );
+    }
     let style: React.CSSProperties = {};
     let innerStyle: React.CSSProperties = { padding: "12px" };
     switch (this.type) {
       case StepType.ENCLOSING:
-        style = { padding: "0 0",  display: "flex" };
-        // TODO: 
+        style = { padding: "0 0", display: "flex" };
+        // TODO:
         return (
           <div style={style}>
             <span />
-            <div style={{ ...innerStyle, }}>
-              {this.node.name}
-            </div>
+            <div style={{ ...innerStyle }}>{this.node.name}</div>
             <span />
           </div>
         );
@@ -141,6 +191,10 @@ abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
 
 export class SimpleStep extends BaseStep {
   type = StepType.SIMPLE;
+}
+
+export class ContainerStep extends BaseStep {
+  type = StepType.CONTAINER;
 }
 
 export class InitialStep extends BaseStep {

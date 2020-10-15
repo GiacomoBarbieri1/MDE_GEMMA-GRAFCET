@@ -41,6 +41,7 @@ export interface NodeData<
   errors: ObservableMap<string, string>;
   View: React.FC;
   toJson: JsonType;
+  parent?: NodeModel<D, G, C>;
 }
 
 export type ConnectionData<D> = {
@@ -97,7 +98,7 @@ export class NodeModel<
       x: number;
       y: number;
       dataBuilder: (node: NodeModel<D, G, C>, json?: JsonType) => D;
-      data?: JsonType
+      data?: JsonType;
     }
   ) {
     this.key = d.key;

@@ -18,7 +18,8 @@ const StyledNode = styled.div`
 `;
 
 type NodeViewProps = { node: NodeModel<any, any, any> };
-export const NodeView: React.FC<NodeViewProps> = observer(({ node }) => {
+export const NodeView: React.FC<NodeViewProps> = observer((params) => {
+  const { node, children } = params;
   const rootStore = useStore();
   const onDrag = React.useCallback(
     (_: DraggableEvent, data: DraggableData) => {
@@ -56,7 +57,15 @@ export const NodeView: React.FC<NodeViewProps> = observer(({ node }) => {
   }
 
   return (
-    <Draggable onDrag={onDrag} position={{ x, y }} bounds="parent">
+    <Draggable
+      onDrag={onDrag}
+      position={{
+        // TODO: improve x, y with support for nested children
+        x: x - (node.data.parent?.x ?? 0),
+        y: y - (node.data.parent?.y ?? 0),
+      }}
+      bounds="parent"
+    >
       <StyledNode
         ref={(e) => {
           if (e === null) return;
@@ -65,7 +74,7 @@ export const NodeView: React.FC<NodeViewProps> = observer(({ node }) => {
         onClick={onClick}
         style={style}
       >
-        <node.data.View />
+        <node.data.View children={children} />
       </StyledNode>
     </Draggable>
   );
