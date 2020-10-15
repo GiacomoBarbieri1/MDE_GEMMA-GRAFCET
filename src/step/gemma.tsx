@@ -22,6 +22,7 @@ import {
   InitialStep,
   MacroStep,
   ProcedureType,
+  ContainerStep,
 } from "./step";
 import { ConnModel, NodeModel } from "../node/node-model";
 import { IndexedDB } from "../canvas/persistence";
@@ -32,6 +33,10 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import "./gemma-styles.css";
 import { SourceDirectory, SourceFile } from "../codegen/file-system";
+import { enclosingStepTemplate } from "./enclosing-step";
+import { macroStepTemplate } from "./macro-step";
+import { NodeView } from "../node/node";
+import { Divider } from "@material-ui/core";
 
 enum SignalType {
   bool = "bool",
@@ -64,12 +69,30 @@ export class GemmaGraphcet implements GlobalData<Step> {
     this.signals = observable.array<Signal>(signals);
   }
 
-  canAddNode(nodeType: string): boolean {
+  canAddNode = (nodeType: string): boolean => {
     if (nodeType === StepType.INITIAL) {
       return !this._hasInitialStep();
     }
     return true;
+  };
+
+  initState(): void {
+    this.fFamily = this.graph.addNode(StepType.CONTAINER, { x: 600, y: 0 })!;
+    this.fFamily.setName("F family");
+    this.fFamily.data.family = ProcedureType.F;
+
+    this.aFamily = this.graph.addNode(StepType.CONTAINER, { x: 0, y: 0 })!;
+    this.aFamily.setName("A family");
+    this.aFamily.data.family = ProcedureType.A;
+
+    this.dFamily = this.graph.addNode(StepType.CONTAINER, { x: 0, y: 500 })!;
+    this.dFamily.setName("D family");
+    this.dFamily.data.family = ProcedureType.D;
   }
+
+  fFamily?: NodeModel<Step, GemmaGraphcet, Transition>;
+  aFamily?: NodeModel<Step, GemmaGraphcet, Transition>;
+  dFamily?: NodeModel<Step, GemmaGraphcet, Transition>;
 
   private _hasInitialStep(): boolean {
     return [...this.graph.nodes.values()].some(
@@ -110,11 +133,22 @@ export class GemmaGraphcet implements GlobalData<Step> {
   get generateSourceCode(): SourceDirectory {
     const main = templateGemmaGraphcet(this);
     const globals = templateGlobals(this.signals);
-
-    return new SourceDirectory("gemma_grafcet", [
+    const files = [
       new SourceFile("main.txt", main),
       new SourceFile("GVL.txt", globals),
-    ]);
+    ];
+
+    for (const s of this.steps.values()) {
+      if (s.type === StepType.ENCLOSING) {
+        files.push(
+          new SourceFile(s.name + "_FB.txt", enclosingStepTemplate(s))
+        );
+      } else if (s.type === StepType.MACRO) {
+        files.push(new SourceFile(s.name + "_FB.txt", macroStepTemplate(s)));
+      }
+    }
+
+    return new SourceDirectory("gemma_grafcet", files);
   }
 
   @computed
@@ -135,7 +169,7 @@ export class GemmaGraphcet implements GlobalData<Step> {
             justifyContent: "space-between",
           }}
         >
-          <h2 style={{ margin: "5px 0 10px 0" }}>Signals</h2>
+          <h3 style={{ margin: "5px 0 10px 5px" }}>Signals</h3>
           <Button onClick={(_) => setShowDelete(!showDelete)}>
             {showDelete ? "Hide Delete" : "Show Delete"}
             <FontAwesomeIcon
@@ -208,6 +242,50 @@ export class GemmaGraphcet implements GlobalData<Step> {
       </div>
     );
   });
+
+  CanvasView = observer(() => {
+    const nodes = [...this.graph.nodes.values()];
+    const _nodesFromFamily = (family: ProcedureType) => {
+      return nodes
+        .filter(
+          (n) => n.data.family === family && n.data.type !== StepType.CONTAINER
+        )
+        .map((n) => {
+          return <NodeView node={n} key={n.key} />;
+        });
+    };
+
+    const _color = {
+      [ProcedureType.A]: { color: "#ecf5ff", size: { w: 600, h: 500 } },
+      [ProcedureType.D]: { color: "#ffd6d6", size: { w: 600, h: 500 } },
+      [ProcedureType.F]: { color: "#ebffec", size: { w: 600, h: 1000 } },
+    };
+
+    return (
+      <div style={{ width: "100%", height: "100%", position: "absolute" }}>
+        {nodes
+          .filter((n) => n.data.type === StepType.CONTAINER)
+          .map((n) => {
+            const _d = _color[n.data.family]!;
+            return (
+              <div
+                style={{
+                  background: _d.color,
+                  width: _d.size.w,
+                  height: _d.size.h,
+                  position: "absolute",
+                  top: n.y,
+                  left: n.x,
+                }}
+                key={n.key}
+              >
+                {_nodesFromFamily(n.data.family)}
+              </div>
+            );
+          })}
+      </div>
+    );
+  });
 }
 
 export class Signal {
@@ -268,6 +346,8 @@ export const gemmaBuilders: DataBuilder<Step, GemmaGraphcet, Transition> = {
           return new MacroStep(n, json);
         case StepType.SIMPLE:
           return new SimpleStep(n, json);
+        case StepType.CONTAINER:
+          return new ContainerStep(n, json);
       }
     }
     return new SimpleStep(n);
@@ -340,17 +420,17 @@ export const makeBaseGemmaTemplate = (
       A7: { type: StepType.MACRO, x: 160, y: 200 },
     },
     [ProcedureType.D]: {
-      D1: { type: StepType.MACRO, x: 60, y: 600 },
-      D2: { type: StepType.SIMPLE, x: 90, y: 500 },
-      D3: { type: StepType.ENCLOSING, x: 200, y: 500 },
+      D1: { type: StepType.MACRO, x: 60, y: 800 },
+      D2: { type: StepType.SIMPLE, x: 90, y: 700 },
+      D3: { type: StepType.ENCLOSING, x: 200, y: 700 },
     },
     [ProcedureType.F]: {
-      F1: { type: StepType.MACRO, x: 500, y: 500 },
-      F2: { type: StepType.MACRO, x: 500, y: 200 },
-      F3: { type: StepType.MACRO, x: 640, y: 200 },
-      F4: { type: StepType.ENCLOSING, x: 650, y: 60 },
-      F5: { type: StepType.ENCLOSING, x: 650, y: 350 },
-      F6: { type: StepType.ENCLOSING, x: 650, y: 500 },
+      F1: { type: StepType.MACRO, x: 800, y: 500 },
+      F2: { type: StepType.MACRO, x: 800, y: 200 },
+      F3: { type: StepType.MACRO, x: 840, y: 200 },
+      F4: { type: StepType.ENCLOSING, x: 850, y: 60 },
+      F5: { type: StepType.ENCLOSING, x: 850, y: 350 },
+      F6: { type: StepType.ENCLOSING, x: 850, y: 500 },
     },
   };
 

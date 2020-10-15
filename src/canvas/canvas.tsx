@@ -23,40 +23,7 @@ export const MainCanvas: React.FC<Props> = observer(() => {
           width: "1200px",
         }}
       >
-        <div
-          className="row"
-          style={{ width: "100%", height: "100%", position: "absolute" }}
-        >
-          <div className="col" style={{ flex: 1 }}>
-            <div
-              style={{
-                position: "relative",
-                border: "1px solid #eee",
-                background: "#ecf5ff",
-                flex: 1,
-              }}
-            />
-            <div
-              style={{
-                position: "relative",
-                border: "1px solid #eee",
-                background: "#ffd6d6",
-                flex: 1,
-              }}
-            />
-          </div>
-          <div
-            style={{
-              position: "relative",
-              border: "1px solid #eee",
-              background: "#ebffec",
-              flex: 1,
-            }}
-          />
-        </div>
-        {ops.map((operation) => {
-          return <NodeView node={operation} key={operation.key} />;
-        })}
+        <rootStore.globalData.CanvasView/>
         <svg style={{ width: "100%", height: "100%", position: "absolute" }}>
           {ops
             .flatMap((op) => op.inputs)

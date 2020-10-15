@@ -36,7 +36,9 @@ export interface GlobalData<D extends NodeData<D, any, any>> {
   generateSourceCode: SourceDirectory;
   canAddNode(nodeType: string): boolean;
   View: React.FunctionComponent;
+  CanvasView: React.FunctionComponent;
   toJson: JsonType;
+  initState?: () => void;
 }
 
 type FullGraphJson = {
@@ -106,6 +108,9 @@ export class RootStoreModel<
           }
         }
       }
+    }
+    if (this.globalData.initState !== undefined){ 
+      this.globalData.initState();
     }
   }
 
