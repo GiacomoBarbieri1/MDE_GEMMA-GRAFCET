@@ -31,7 +31,7 @@ export const PropertiesTableNode = observer(
   <D extends NodeData<D, any, any>>({ self }: Props<D>) => {
     const rootStore = useStore();
     return (
-      <div className="row">
+      <div className="col">
         <PropertiesTable>
           {Object.entries(self.data.spec).map(([k, v]) => (
             <tr key={k}>
@@ -42,35 +42,39 @@ export const PropertiesTableNode = observer(
             </tr>
           ))}
         </PropertiesTable>
-        <div style={{ margin: "0 3px", textAlign: "center" }}>
+        <div style={{ margin: "0 3px" }}>
           {self.data.nInputs !== 0 && (
-            <div className="col" key="inputs">
-              <h3 style={{ margin: "3px 0 5px 0" }}>Inputs</h3>
+            <div className="row" key="inputs">
+              <h4 style={{ margin: "3px 0 5px 0", width: "100px" }}>Inputs:</h4>
               <div>
                 {self.inputs.map((v) => (
                   <Button
                     onClick={() => rootStore.selectConnection(v as any)}
                     key={v.from.key}
-                    style={{ padding: "5px" }}
+                    variant="outlined"
+                    size="small"
                   >
                     {v.from.name}
                   </Button>
                 ))}
+                {self.inputs.length === 0 && "No inputs"}
               </div>
             </div>
           )}
-          <div key="outputs">
-            <h3 style={{ margin: "3px 0 5px 0" }}>Outputs</h3>
+          <div key="outputs" className="row">
+            <h4 style={{ margin: "3px 0 5px 0", width: "100px" }}>Outputs:</h4>
             <div>
               {self.outputs.map((v) => (
                 <Button
                   onClick={() => rootStore.selectConnection(v as any)}
                   key={v.to.key}
-                  style={{ padding: "5px" }}
+                  variant="outlined"
+                  size="small"
                 >
                   {v.to.name}
                 </Button>
               ))}
+              {self.outputs.length === 0 && "No outputs"}
             </div>
           </div>
         </div>

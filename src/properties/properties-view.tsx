@@ -34,9 +34,9 @@ export const PropertiesView: React.FC<Props> = observer(() => {
             className="row"
             style={{ justifyContent: "space-between", alignItems: "center" }}
           >
-            <h2 style={{ margin: "5px 0px 10px" }}>
+            <h3 style={{ margin: "5px 0px 10px 5px" }}>
               {`Step: ${selectedNode.name}`}
-            </h2>
+            </h3>
             <IconButton onClick={(e) => rootStore.removeNode(selectedNode)}>
               <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
             </IconButton>
@@ -53,9 +53,9 @@ export const PropertiesView: React.FC<Props> = observer(() => {
                   alignItems: "center",
                 }}
               >
-                <h2 style={{ margin: "5px 0px 10px" }}>
+                <h3 style={{ margin: "5px 0 10px 5px" }}>
                   {`Transition: ${selectedConnection.from.name} -> ${selectedConnection.to.name}`}
-                </h2>
+                </h3>
                 <IconButton
                   onClick={(e) =>
                     rootStore.removeConnection(selectedConnection)
