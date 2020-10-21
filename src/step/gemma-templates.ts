@@ -55,7 +55,7 @@ ${transitions
   .map((t, index) => {
     return `\
 ${index === 0 ? "IF" : "ELSIF"} ${templateCondition(t)}${
-      transitions.length - model.innerTransitionsLength <= index
+      transitions.length - model.innerTransitionsLength <= index && !t.isNegated
         ? ` AND ${model.name}.Complete`
         : ""
     } THEN

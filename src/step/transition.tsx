@@ -1,3 +1,4 @@
+import Switch from "@material-ui/core/Switch";
 import { action, computed, observable } from "mobx";
 import { observer } from "mobx-react-lite";
 import React, { useRef } from "react";
@@ -9,7 +10,7 @@ import { PropertiesTable } from "../properties/properties-table";
 import { parseBoolExpression } from "./antlr_parser";
 import { CustomToken, getCustomTokens, VarId } from "./custom_parser";
 import { GemmaGrafcet } from "./gemma";
-import { Step } from "./step";
+import { Step, StepType } from "./step";
 
 type GemmaConn = ConnModel<Step, GemmaGrafcet, Transition>;
 
@@ -18,6 +19,8 @@ export class Transition {
   conditionExpression: string;
   @observable
   priority: number;
+  @observable
+  isNegated: boolean;
   @computed
   get priorityChoices() {
     return [...Array(this.connection.from.outputs.length)].map(
@@ -36,10 +39,12 @@ export class Transition {
     d?: {
       conditionExpression?: string;
       priority?: number;
+      isNegated?: boolean;
     }
   ) {
     this.conditionExpression = d?.conditionExpression ?? "";
     this.priority = d?.priority ?? connection.from.outputs.length + 1;
+    this.isNegated = d?.isNegated ?? false;
   }
 
   @action.bound
@@ -76,9 +81,9 @@ export class Transition {
   @computed
   get connectionText(): string {
     const cond = this.conditionExpression.substring(0, 20);
-    return `${this.priority}: ${cond}${
-      this.conditionExpression.length > 20 ? "..." : ""
-    }`;
+    return `${this.priority}${
+      this.isNegated && this.from.type === StepType.MACRO ? "\u00AF" : ""
+    }: ${cond}${this.conditionExpression.length > 20 ? "..." : ""}`;
   }
 
   @computed
@@ -86,6 +91,7 @@ export class Transition {
     return {
       conditionExpression: this.conditionExpression,
       priority: this.priority,
+      isNegated: this.isNegated,
     };
   }
 
@@ -125,6 +131,22 @@ export class Transition {
             <td>Condition</td>
             <td>{<ConditionInput m={this} />}</td>
           </tr>
+          {this.from.type === StepType.MACRO && (
+            <tr key="isNegated">
+              <td>Is Negated</td>
+              <td>
+                {
+                  <Switch
+                    checked={this.isNegated}
+                    onChange={() => {
+                      this.isNegated = !this.isNegated;
+                    }}
+                    color="primary"
+                  />
+                }
+              </td>
+            </tr>
+          )}
         </PropertiesTable>
         <div>
           <h4 style={{ margin: "0" }}>Errors</h4>

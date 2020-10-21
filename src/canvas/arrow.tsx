@@ -62,7 +62,7 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
         <path
           style={{ strokeWidth: 2, stroke: "black" }}
           d={`M${x1} ${y1} L${x2} ${y2}`}
-          onClick={(e) => {
+          onClick={(_) => {
             rootStore.selectConnection(connection);
           }}
         />
