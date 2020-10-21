@@ -5,7 +5,7 @@ import { StrFieldSpec } from "../fields";
 import { ChoiceFieldSpec } from "../fields/choice-field";
 import { NodeData, NodeModel } from "../node/node-model";
 import { listToMap } from "../utils";
-import { GemmaGraphcet } from "./gemma";
+import { GemmaGrafcet } from "./gemma";
 import { Transition } from "./transition";
 import { JsonType } from "../canvas/store";
 
@@ -18,7 +18,7 @@ export enum StepType {
   CONTAINER = "CONTAINER",
 }
 
-type GemmaNode = NodeModel<Step, GemmaGraphcet, Transition>;
+type GemmaNode = NodeModel<Step, GemmaGrafcet, Transition>;
 
 export enum ProcedureType {
   F = "F", // Operational
@@ -26,7 +26,7 @@ export enum ProcedureType {
   A = "A", // Stop
 }
 
-abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
+abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   @observable
   abstract type: StepType;
 
@@ -67,7 +67,7 @@ abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
     }
   }
 
-  get automationSystem(): GemmaGraphcet {
+  get automationSystem(): GemmaGrafcet {
     return this.node.graph.globalData;
   }
 
@@ -100,16 +100,16 @@ abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
       ),
       onChange: (n: StepType) => {
         if (n === StepType.INITIAL) {
-          const otherIntial = this.automationSystem.steps.find(
+          const otherInitial = this.automationSystem.steps.find(
             (s) => s.type === StepType.INITIAL && s !== this
           );
-          if (otherIntial !== undefined) {
-            otherIntial.type = StepType.SIMPLE;
+          if (otherInitial !== undefined) {
+            otherInitial.type = StepType.SIMPLE;
           }
         }
       },
     }),
-    description: new StrFieldSpec({ default: "", multiline: true}),
+    description: new StrFieldSpec({ default: "", multiline: true }),
   };
 
   isValidInput(n: GemmaNode): boolean {
@@ -150,15 +150,18 @@ abstract class BaseStep implements NodeData<Step, GemmaGraphcet, Transition> {
     }
     let style: React.CSSProperties = {};
     let innerStyle: React.CSSProperties = { padding: "12px" };
+    const nodeHeight = this.node.height - 2;
     switch (this.type) {
       case StepType.ENCLOSING:
         style = { padding: "0 0", display: "flex" };
         // TODO:
         return (
-          <div style={style}>
-            <span />
-            <div style={{ ...innerStyle }}>{this.node.name}</div>
-            <span />
+          <div style={{ ...style, position: "relative" }}>
+            <_EnclosingDecoration left={true} nodeHeight={nodeHeight} />
+            <div style={{ ...innerStyle, padding: "12px 18px" }}>
+              {this.node.name}
+            </div>
+            <_EnclosingDecoration left={false} nodeHeight={nodeHeight} />
           </div>
         );
       case StepType.MACRO:
@@ -208,3 +211,32 @@ export class EnclosingStep extends BaseStep {
 export class MacroStep extends BaseStep {
   type = StepType.MACRO;
 }
+
+const _EnclosingDecoration = ({
+  nodeHeight,
+  left,
+}: {
+  nodeHeight: number;
+  left: boolean;
+}) => {
+  return (
+    <svg
+      style={{
+        width: "10px",
+        height: "" + nodeHeight + "px",
+        position: "absolute",
+        right: left ? undefined: 0
+      }}
+    >
+      <path
+        d={
+          left
+            ? `M 10 0 L 0 ${nodeHeight / 2} L 10 ${nodeHeight}`
+            : `M 0 0 L 10 ${nodeHeight / 2} L 0 ${nodeHeight}`
+        }
+        stroke="black"
+        fill="transparent"
+      ></path>
+    </svg>
+  );
+};
