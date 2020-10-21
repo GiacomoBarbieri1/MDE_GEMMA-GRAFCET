@@ -1,12 +1,6 @@
 import { VarId } from "./custom_parser";
 import { GemmaGrafcet, Signal } from "./gemma";
-import {
-  EnclosingStep,
-  MacroStep,
-  SimpleStep,
-  InitialStep,
-  StepType,
-} from "./step";
+import { EnclosingStep, MacroStep, SimpleStep, StepType } from "./step";
 import { Transition } from "./transition";
 
 export class H {
@@ -41,9 +35,7 @@ ${index === 0 ? "IF" : "ELSIF"} ${templateCondition(t)} THEN
 ${transitions.length === 0 ? "" : "\nEND_IF"}`;
 };
 
-const templateGemmaGrafcetSimpleStep = (
-  model: SimpleStep | InitialStep
-): string => {
+const templateGemmaGrafcetSimpleStep = (model: SimpleStep): string => {
   return templateTransitions(model.transitions, { isNested: false });
 };
 
@@ -120,7 +112,6 @@ CASE State OF
       switch (step.type) {
         case StepType.ENCLOSING:
           return templateGemmaGrafcetEnclosingStep(step);
-        case StepType.INITIAL:
         case StepType.SIMPLE:
           return templateGemmaGrafcetSimpleStep(step);
         case StepType.MACRO:

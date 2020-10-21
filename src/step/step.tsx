@@ -1,5 +1,5 @@
 import React from "react";
-import { computed, observable } from "mobx";
+import { computed, observable, reaction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { ChoiceFieldSpec } from "../fields/choice-field";
 import { NodeData, NodeModel } from "../node/node-model";
@@ -7,11 +7,11 @@ import { listToMap } from "../utils";
 import { GemmaGrafcet } from "./gemma";
 import { Transition } from "./transition";
 import { JsonType } from "../canvas/store";
+import { BoolFieldSpec } from "../fields/primitive-field";
 
-export type Step = SimpleStep | EnclosingStep | MacroStep | InitialStep;
+export type Step = SimpleStep | EnclosingStep | MacroStep;
 export enum StepType {
   ENCLOSING = "ENCLOSING",
-  INITIAL = "INITIAL",
   MACRO = "MACRO",
   SIMPLE = "SIMPLE",
   CONTAINER = "CONTAINER",
@@ -37,10 +37,26 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
     d?: {
       description?: string;
       family?: ProcedureType;
+      isInitial?: boolean;
     }
   ) {
     this.description = d?.description ?? "";
     this.family = d?.family ?? ProcedureType.F;
+    this.isInitial = d?.isInitial ?? false;
+    reaction(
+      (_) => this.isInitial,
+      (isInitial, _) => {
+        console.log(isInitial);
+        if (isInitial) {
+          const otherInitial = this.automationSystem.steps.find(
+            (s) => s.isInitial && s !== this
+          );
+          if (otherInitial !== undefined) {
+            otherInitial.isInitial = false;
+          }
+        }
+      }
+    );
   }
 
   @computed
@@ -49,6 +65,8 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   }
   @observable
   description: string;
+  @observable
+  isInitial: boolean;
   @observable
   family: ProcedureType;
   @computed
@@ -64,7 +82,6 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
       case ProcedureType.F:
         return this.automationSystem.fFamily;
     }
-    throw new Error("");
   }
 
   get automationSystem(): GemmaGrafcet {
@@ -93,21 +110,12 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   }
 
   spec = {
+    isInitial: new BoolFieldSpec({ default: false, required: true }),
     type: new ChoiceFieldSpec({
       default: StepType.SIMPLE,
       choices: listToMap(
         Object.values(StepType).filter((t) => t !== StepType.CONTAINER)
       ),
-      onChange: (n: StepType) => {
-        if (n === StepType.INITIAL) {
-          const otherInitial = this.automationSystem.steps.find(
-            (s) => s.type === StepType.INITIAL && s !== this
-          );
-          if (otherInitial !== undefined) {
-            otherInitial.type = StepType.SIMPLE;
-          }
-        }
-      },
     }),
   };
 
@@ -121,6 +129,7 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
       family: this.family,
       description: this.description,
       type: this.type,
+      isInitial: this.isInitial,
     };
   }
 
@@ -149,37 +158,39 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
     }
     let style: React.CSSProperties = {};
     let innerStyle: React.CSSProperties = { padding: "12px" };
-    const nodeHeight = this.node.height - 2;
-    switch (this.type) {
-      case StepType.ENCLOSING:
-        style = { padding: "0 0", display: "flex" };
-        return (
-          <div style={{ ...style, position: "relative" }}>
-            <EnclosingDecoration left={true} nodeHeight={nodeHeight} />
-            <div style={{ ...innerStyle, padding: "12px 18px" }}>
-              {this.node.name}
+    if (this.isInitial) {
+      style = { padding: "5px" };
+      innerStyle = {
+        border: "1.5px solid",
+        padding: "7px",
+      };
+    } else {
+      const nodeHeight = this.node.height - 2;
+
+      switch (this.type) {
+        case StepType.ENCLOSING:
+          style = { padding: "0 0", display: "flex" };
+          return (
+            <div style={{ ...style, position: "relative" }}>
+              <EnclosingDecoration left={true} nodeHeight={nodeHeight} />
+              <div style={{ ...innerStyle, padding: "12px 18px" }}>
+                {this.node.name}
+              </div>
+              <EnclosingDecoration left={false} nodeHeight={nodeHeight} />
             </div>
-            <EnclosingDecoration left={false} nodeHeight={nodeHeight} />
-          </div>
-        );
-      case StepType.MACRO:
-        style = { padding: "5px 0" };
-        innerStyle = {
-          border: "1.5px solid",
-          borderRight: "0",
-          borderLeft: "0",
-          padding: "5px 12px",
-        };
-        break;
-      case StepType.INITIAL:
-        style = { padding: "5px" };
-        innerStyle = {
-          border: "1.5px solid",
-          padding: "7px",
-        };
-        break;
-      default:
-        break;
+          );
+        case StepType.MACRO:
+          style = { padding: "5px 0" };
+          innerStyle = {
+            border: "1.5px solid",
+            borderRight: "0",
+            borderLeft: "0",
+            padding: "5px 12px",
+          };
+          break;
+        default:
+          break;
+      }
     }
 
     return (
@@ -196,10 +207,6 @@ export class SimpleStep extends BaseStep {
 
 export class ContainerStep extends BaseStep {
   type = StepType.CONTAINER;
-}
-
-export class InitialStep extends BaseStep {
-  type = StepType.INITIAL;
 }
 
 export class EnclosingStep extends BaseStep {

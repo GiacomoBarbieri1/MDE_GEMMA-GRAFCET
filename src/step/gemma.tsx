@@ -19,7 +19,6 @@ import {
   SimpleStep,
   EnclosingStep,
   StepType,
-  InitialStep,
   MacroStep,
   ProcedureType,
   ContainerStep,
@@ -124,9 +123,6 @@ export class GemmaGrafcet implements GlobalData<Step> {
   }
 
   canAddNode = (nodeType: string): boolean => {
-    if (nodeType === StepType.INITIAL) {
-      return !this._hasInitialStep();
-    }
     return true;
   };
 
@@ -149,9 +145,7 @@ export class GemmaGrafcet implements GlobalData<Step> {
   dFamily?: NodeModel<Step, GemmaGrafcet, Transition>;
 
   private _hasInitialStep(): boolean {
-    return [...this.graph.nodes.values()].some(
-      (n) => n.data.type === StepType.INITIAL
-    );
+    return [...this.graph.nodes.values()].some((n) => n.data.isInitial);
   }
 
   workingFamilyTransitions: Transition[] = [];
@@ -175,7 +169,7 @@ export class GemmaGrafcet implements GlobalData<Step> {
 
   @computed
   get initialStep(): Step | undefined {
-    return this.steps.find((s) => s.type === StepType.INITIAL);
+    return this.steps.find((s) => s.isInitial);
   }
 
   @computed
@@ -473,8 +467,6 @@ export const gemmaBuilders: DataBuilder<Step, GemmaGrafcet, Transition> = {
       switch (type) {
         case StepType.ENCLOSING:
           return new EnclosingStep(n, json);
-        case StepType.INITIAL:
-          return new InitialStep(n, json);
         case StepType.MACRO:
           return new MacroStep(n, json);
         case StepType.SIMPLE:
@@ -496,7 +488,10 @@ export const make5NodesGraph = (
     builders: gemmaBuilders,
   });
 
-  const s1 = rootStore.addNode(StepType.INITIAL, { x: 72, y: 60 });
+  const s1 = rootStore.addNode(StepType.SIMPLE, { x: 72, y: 60 });
+  if (s1 !== undefined) {
+    s1.data.isInitial = true;
+  }
   const s2 = rootStore.addNode(StepType.MACRO, { x: 261, y: 170 });
 
   const _t = new ConnModel(
@@ -543,7 +538,7 @@ export const makeBaseGemmaTemplate = (
     };
   } = {
     [ProcedureType.A]: {
-      A6: { type: StepType.INITIAL, x: 60, y: 60 },
+      A6: { type: StepType.SIMPLE, x: 60, y: 60 },
       A1: { type: StepType.SIMPLE, x: 200, y: 25 },
       A2: { type: StepType.SIMPLE, x: 180, y: 300 },
       A3: { type: StepType.SIMPLE, x: 270, y: 300 },
@@ -576,6 +571,9 @@ export const makeBaseGemmaTemplate = (
       n?.setName(k);
       n!.data.family = family as ProcedureType;
       nodes[k] = n!;
+      if (k === "A6") {
+        n!.data.isInitial = true;
+      }
     }
   }
 
