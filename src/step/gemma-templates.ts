@@ -1,4 +1,5 @@
-import { GemmaGraphcet, Signal } from "./gemma";
+import { VarId } from "./custom_parser";
+import { GemmaGrafcet, Signal } from "./gemma";
 import {
   EnclosingStep,
   MacroStep,
@@ -8,9 +9,23 @@ import {
 } from "./step";
 import { Transition } from "./transition";
 
-class H {
+export class H {
   static textOrEmpty = (cond: boolean, text: string) => (cond ? text : "");
+  static stepDocumentation = (description: string) =>
+    description.length === 0 ? "" : "\n//" + description.replace(/\n/g, "\n//");
 }
+
+const templateCondition = (t: Transition): string => {
+  return t.expressionTokens
+    .map(([tok, position]) => {
+      if (tok instanceof VarId) {
+        return "GVL." + tok.text;
+      } else {
+        return tok;
+      }
+    })
+    .join(" ");
+};
 
 const templateTransitions = (
   transitions: Transition[],
@@ -20,7 +35,7 @@ const templateTransitions = (
 ${transitions
   .map((t, index) => {
     return `
-${index === 0 ? "IF" : "ELSIF"} ${t.condition.expression} THEN
+${index === 0 ? "IF" : "ELSIF"} ${templateCondition(t)} THEN
   State:=${t.to.id};\
   ${isNested ? "\n  Entry:=TRUE;" : ""}`;
   })
@@ -28,7 +43,7 @@ ${index === 0 ? "IF" : "ELSIF"} ${t.condition.expression} THEN
 ${transitions.length === 0 ? "" : "\nEND_IF"}`;
 };
 
-const templateGemmaGraphcetSimpleStep = (
+const templateGemmaGrafcetSimpleStep = (
   model: SimpleStep | InitialStep
 ): string => {
   return templateTransitions(model.transitions, { isNested: false });
@@ -41,7 +56,7 @@ IF Entry THEN
 END_IF
 ${model.name}(Initialization:=ENTRY);`;
 
-const templateGemmaGraphcetMacroStep = (model: MacroStep): string => {
+const templateGemmaGrafcetMacroStep = (model: MacroStep): string => {
   const transitions = model.transitions;
   return `
 ${templateFBEntry(model)}
@@ -49,7 +64,7 @@ ${templateFBEntry(model)}
 ${transitions
   .map((t, index) => {
     return `\
-${index === 0 ? "IF" : "ELSIF"} ${t.condition.expression}${
+${index === 0 ? "IF" : "ELSIF"} ${templateCondition(t)}${
       transitions.length - model.innerTransitionsLength <= index
         ? ` AND ${model.name}.Complete`
         : ""
@@ -61,7 +76,7 @@ ${index === 0 ? "IF" : "ELSIF"} ${t.condition.expression}${
 ${H.textOrEmpty(transitions.length !== 0, "\nEND_IF")}`;
 };
 
-const templateGemmaGraphcetEnclosingStep = (model: EnclosingStep): string => {
+const templateGemmaGrafcetEnclosingStep = (model: EnclosingStep): string => {
   return `\
 ${templateFBEntry(model)}
 
@@ -83,7 +98,7 @@ END_VAR
 `;
 };
 
-export const templateGemmaGraphcet = (model: GemmaGraphcet): string => {
+export const templateGemmaGrafcet = (model: GemmaGrafcet): string => {
   return `
 // Variable declaration
 VAR
@@ -106,12 +121,12 @@ CASE State OF
     ${(() => {
       switch (step.type) {
         case StepType.ENCLOSING:
-          return templateGemmaGraphcetEnclosingStep(step);
+          return templateGemmaGrafcetEnclosingStep(step);
         case StepType.INITIAL:
         case StepType.SIMPLE:
-          return templateGemmaGraphcetSimpleStep(step);
+          return templateGemmaGrafcetSimpleStep(step);
         case StepType.MACRO:
-          return templateGemmaGraphcetMacroStep(step);
+          return templateGemmaGrafcetMacroStep(step);
         default:
           throw "";
       }

@@ -1,11 +1,11 @@
-import { templateGemmaGraphcet, templateGlobals } from "./gemma-templates";
+import { templateGemmaGrafcet, templateGlobals } from "./gemma-templates";
 import {
   GlobalData,
   RootStoreModel,
   DataBuilder,
   JsonType,
 } from "../canvas/store";
-import { computed, IObservableArray, observable } from "mobx";
+import { action, computed, IObservableArray, observable } from "mobx";
 import { observer } from "mobx-react-lite";
 import React, { useState } from "react";
 import TextField from "@material-ui/core/TextField";
@@ -36,7 +36,14 @@ import { SourceDirectory, SourceFile } from "../codegen/file-system";
 import { enclosingStepTemplate } from "./enclosing-step";
 import { macroStepTemplate } from "./macro-step";
 import { NodeView } from "../node/node";
-import { Divider } from "@material-ui/core";
+import { Tooltip } from "@material-ui/core";
+
+enum SignalTypeBase {
+  bool = "bool",
+  int = "int",
+  uint = "uint",
+  real = "real",
+}
 
 enum SignalType {
   bool = "bool",
@@ -55,9 +62,56 @@ enum SignalType {
   lreal = "lreal",
 }
 
-export class GemmaGraphcet implements GlobalData<Step> {
+enum SignalTypeSize {
+  s = "s",
+  i = "i",
+  l = "l",
+  d = "d",
+}
+
+const signalTypeToPrimitives = (
+  type?: SignalType
+): { base: SignalTypeBase; size: SignalTypeSize } | undefined => {
+  if (type === undefined) {
+    return undefined;
+  }
+  switch (type) {
+    case SignalType.bool:
+      return { base: SignalTypeBase.bool, size: SignalTypeSize.i };
+    case SignalType.real:
+      return { base: SignalTypeBase.real, size: SignalTypeSize.i };
+    case SignalType.lreal:
+      return { base: SignalTypeBase.real, size: SignalTypeSize.l };
+  }
+  let base: SignalTypeBase;
+  let index: number;
+  if (type.startsWith("u")) {
+    base = SignalTypeBase.uint;
+    index = 1;
+  } else {
+    base = SignalTypeBase.int;
+    index = 0;
+  }
+
+  const size = type.charAt(index) as SignalTypeSize;
+
+  if (!Object.keys(SignalTypeSize).includes(size)) {
+    return undefined;
+  }
+
+  return { base, size };
+};
+
+const signalSizeMap: { [key in SignalTypeBase]: SignalTypeSize[] } = {
+  [SignalType.bool]: [SignalTypeSize.i],
+  [SignalType.int]: [...Object.keys(SignalTypeSize)] as SignalTypeSize[],
+  [SignalType.uint]: [...Object.keys(SignalTypeSize)] as SignalTypeSize[],
+  [SignalType.real]: [SignalTypeSize.i, SignalTypeSize.l],
+};
+
+export class GemmaGrafcet implements GlobalData<Step> {
   constructor(
-    private graph: RootStoreModel<Step, GemmaGraphcet, Transition>,
+    private graph: RootStoreModel<Step, GemmaGrafcet, Transition>,
     json?: JsonType
   ) {
     let signals: Signal[] = [];
@@ -90,9 +144,9 @@ export class GemmaGraphcet implements GlobalData<Step> {
     this.dFamily.data.family = ProcedureType.D;
   }
 
-  fFamily?: NodeModel<Step, GemmaGraphcet, Transition>;
-  aFamily?: NodeModel<Step, GemmaGraphcet, Transition>;
-  dFamily?: NodeModel<Step, GemmaGraphcet, Transition>;
+  fFamily?: NodeModel<Step, GemmaGrafcet, Transition>;
+  aFamily?: NodeModel<Step, GemmaGrafcet, Transition>;
+  dFamily?: NodeModel<Step, GemmaGrafcet, Transition>;
 
   private _hasInitialStep(): boolean {
     return [...this.graph.nodes.values()].some(
@@ -126,12 +180,12 @@ export class GemmaGraphcet implements GlobalData<Step> {
 
   @computed
   get generateMainFile(): string {
-    return templateGemmaGraphcet(this);
+    return templateGemmaGrafcet(this);
   }
 
   @computed
   get generateSourceCode(): SourceDirectory {
-    const main = templateGemmaGraphcet(this);
+    const main = templateGemmaGrafcet(this);
     const globals = templateGlobals(this.signals);
     const files = [
       new SourceFile("main.txt", main),
@@ -189,53 +243,32 @@ export class GemmaGraphcet implements GlobalData<Step> {
             <TableRow>
               <TableCell>Name</TableCell>
               <TableCell>Type</TableCell>
+              <TableCell>Size</TableCell>
               <TableCell>Default</TableCell>
               {showDelete && <TableCell>Delete</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
             {this.signals.map((s, index) => (
-              <TableRow key={index}>
-                <TableCell>
-                  <TextField
-                    type="text"
-                    value={s.name}
-                    onChange={(e) => (s.name = e.target.value)}
-                    style={{ width: "110px" }}
-                  />
-                </TableCell>
-                <TableCell>
-                  <ChoiceField
-                    keys={Object.keys(SignalType)}
-                    setValue={(v) => (s.type = v as any)}
-                    value={s.type}
-                  />
-                </TableCell>
-                <TableCell>
-                  <TextField
-                    type="text"
-                    value={s.defaultValue}
-                    onChange={(e) => (s.defaultValue = e.target.value)}
-                    style={{ width: "80px" }}
-                  />
-                </TableCell>
-                {showDelete && (
-                  <TableCell align="center">
-                    <IconButton
-                      onClick={(e) => this.signals.remove(s)}
-                      size="small"
-                    >
-                      <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
-                    </IconButton>
-                  </TableCell>
-                )}
-              </TableRow>
+              <SignalRow
+                signal={s}
+                key={index}
+                showDelete={showDelete}
+                removeSignal={(s) => this.signals.remove(s)}
+                error={
+                  this.signals.findIndex(
+                    (s2) => s2.name === s.name && s !== s2
+                  ) !== -1
+                    ? "Duplicate name"
+                    : undefined
+                }
+              />
             ))}
           </TableBody>
         </Table>
         <Button
           style={{ alignSelf: "flex-end" }}
-          onClick={(e) => this.signals.push(new Signal())}
+          onClick={(_) => this.signals.push(new Signal())}
         >
           Add Signal
         </Button>
@@ -288,13 +321,111 @@ export class GemmaGraphcet implements GlobalData<Step> {
   });
 }
 
+const SignalRow = observer(
+  ({
+    signal: s,
+    showDelete,
+    removeSignal,
+    error,
+  }: {
+    signal: Signal;
+    showDelete: boolean;
+    removeSignal: (s: Signal) => void;
+    error?: string;
+  }) => (
+    <TableRow>
+      <TableCell>
+        <Tooltip title={error !== undefined ? error : ""}>
+          <TextField
+            type="text"
+            value={s.name}
+            onChange={(e) => (s.name = e.target.value)}
+            style={{ width: "110px" }}
+            error={error !== undefined}
+          />
+        </Tooltip>
+      </TableCell>
+      <TableCell>
+        <ChoiceField
+          keys={Object.keys(SignalTypeBase)}
+          setValue={(v) => s.setTypeBase(v as any)}
+          value={s.typeBase}
+        />
+      </TableCell>
+      <TableCell>
+        <ChoiceField
+          keys={signalSizeMap[s.typeBase]}
+          setValue={(v) => (s.typeSize = v as any)}
+          value={s.typeSize}
+          maxButton={0}
+        />
+      </TableCell>
+      <TableCell>
+        <TextField
+          type="text"
+          value={s.defaultValue}
+          onChange={(e) => {
+            s.defaultValue = e.target.value.replace(/\s/g, "");
+          }}
+          style={{ width: "80px" }}
+          error={
+            s.didBlur
+              ? !regexSignalDefaultValid[s.typeBase].test(s.defaultValue)
+              : false
+          }
+          onBlur={(_) => (s.didBlur = true)}
+        />
+      </TableCell>
+      {showDelete && (
+        <TableCell align="center">
+          <IconButton onClick={(_) => removeSignal(s)} size="small">
+            <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
+          </IconButton>
+        </TableCell>
+      )}
+    </TableRow>
+  )
+);
+
+const regexSignalDefaultValid = {
+  [SignalTypeBase.bool]: /^(TRUE|FALSE)$/,
+  [SignalTypeBase.int]: /^-?[1-9][0-9]*$/,
+  [SignalTypeBase.uint]: /^[1-9][0-9]*$/,
+  [SignalTypeBase.real]: /^-?[0-9]*\.?[0-9]+$/,
+};
+
 export class Signal {
+  @observable
+  didBlur: boolean = false;
+
   @observable
   name: string;
   @observable
-  type: SignalType;
-  @observable
   defaultValue: string;
+  @observable
+  typeSize: SignalTypeSize;
+  @observable
+  typeBase: SignalTypeBase;
+  @computed
+  get type(): SignalType {
+    if (this.typeBase === SignalTypeBase.bool) {
+      return SignalType.bool;
+    }
+    const sizeStr = this.typeSize === SignalTypeSize.i ? "" : this.typeSize!;
+    if (this.typeBase.startsWith("u")) {
+      return ("u" + sizeStr + this.typeBase.substring(1)) as SignalType;
+    } else {
+      return (sizeStr + this.typeBase) as SignalType;
+    }
+  }
+
+  @action.bound
+  setTypeBase = (base: SignalTypeBase) => {
+    this.typeBase = base;
+    if (!signalSizeMap[base].includes(this.typeSize)) {
+      this.typeSize = signalSizeMap[base][0];
+    }
+  };
 
   description?: string;
 
@@ -326,13 +457,15 @@ export class Signal {
   }) {
     this.name = d?.name ?? "";
     this.description = d?.description;
-    this.type = d?.type ?? SignalType.bool;
+    const typePrim = signalTypeToPrimitives(d?.type);
+    this.typeBase = typePrim?.base ?? SignalTypeBase.bool;
+    this.typeSize = typePrim?.size ?? SignalTypeSize.i;
     this.defaultValue = d?.defaultValue ?? "";
   }
 }
 
-export const gemmaBuilders: DataBuilder<Step, GemmaGraphcet, Transition> = {
-  graphBuilder: (g, json) => new GemmaGraphcet(g, json),
+export const gemmaBuilders: DataBuilder<Step, GemmaGrafcet, Transition> = {
+  graphBuilder: (g, json) => new GemmaGrafcet(g, json),
   nodeBuilder: (n, json) => {
     console.log(json);
     const type = json !== undefined ? json["type"] : undefined;
@@ -357,8 +490,8 @@ export const gemmaBuilders: DataBuilder<Step, GemmaGraphcet, Transition> = {
 
 export const make5NodesGraph = (
   db: IndexedDB
-): RootStoreModel<Step, GemmaGraphcet, Transition> => {
-  const rootStore = new RootStoreModel<Step, GemmaGraphcet, Transition>({
+): RootStoreModel<Step, GemmaGrafcet, Transition> => {
+  const rootStore = new RootStoreModel<Step, GemmaGrafcet, Transition>({
     db,
     builders: gemmaBuilders,
   });
@@ -371,7 +504,6 @@ export const make5NodesGraph = (
     s2!,
     (c) =>
       new Transition(c, {
-        name: "Emergency",
         conditionExpression: "I1 & I2",
       })
   );
@@ -399,8 +531,8 @@ export const make5NodesGraph = (
 
 export const makeBaseGemmaTemplate = (
   db: IndexedDB
-): RootStoreModel<Step, GemmaGraphcet, Transition> => {
-  const rootStore = new RootStoreModel<Step, GemmaGraphcet, Transition>({
+): RootStoreModel<Step, GemmaGrafcet, Transition> => {
+  const rootStore = new RootStoreModel<Step, GemmaGrafcet, Transition>({
     db,
     builders: gemmaBuilders,
   });
@@ -435,7 +567,7 @@ export const makeBaseGemmaTemplate = (
   };
 
   const nodes: {
-    [key: string]: NodeModel<Step, GemmaGraphcet, Transition>;
+    [key: string]: NodeModel<Step, GemmaGrafcet, Transition>;
   } = {};
 
   for (const [family, nn] of Object.entries(nodesRaw)) {
@@ -475,7 +607,6 @@ export const makeBaseGemmaTemplate = (
     nodes["D1"]!,
     (c) =>
       new Transition(c, {
-        name: "Emergency",
         conditionExpression: "I1 & I2",
       })
   );

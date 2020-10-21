@@ -1,5 +1,5 @@
 import {
-  GemmaGraphcet,
+  GemmaGrafcet,
   gemmaBuilders,
 } from "./gemma";
 import { NodeModel, ConnModel } from "../node/node-model";
@@ -13,7 +13,7 @@ export {};
 const mockedClass = <jest.Mock<IndexedDB>>IndexedDB;
 
 describe("Graph Api", () => {
-  const rootStore = new RootStoreModel<Step, GemmaGraphcet, Transition>({
+  const rootStore = new RootStoreModel<Step, GemmaGrafcet, Transition>({
     db: mockedClass(),
     builders: gemmaBuilders,
   });
@@ -79,7 +79,7 @@ describe("Graph Api", () => {
 // });
 
 describe("Validation", () => {
-  const rootStore = new RootStoreModel<Step, GemmaGraphcet, Transition>({
+  const rootStore = new RootStoreModel<Step, GemmaGrafcet, Transition>({
     db: mockedClass(),
     builders: gemmaBuilders,
   });
