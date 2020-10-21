@@ -21,7 +21,7 @@ export class Transition {
   @computed
   get priorityChoices() {
     return [...Array(this.connection.from.outputs.length)].map(
-      (v, i) => "" + (i + 1)
+      (_, i) => "" + (i + 1)
     );
   }
 
@@ -98,7 +98,7 @@ export class Transition {
   get expressionErrors(): string[] {
     const gemma = this.connection.graph.globalData;
     try {
-      const { tree, errors } = parseBoolExpression(this.conditionExpression, {
+      const { errors } = parseBoolExpression(this.conditionExpression, {
         boolSignals: gemma.boolSignals.map((s) => s.name),
         numSignals: gemma.numSignals.map((s) => s.name),
       });

@@ -11,13 +11,11 @@ import { Transition } from "./transition";
 
 export class H {
   static textOrEmpty = (cond: boolean, text: string) => (cond ? text : "");
-  static stepDocumentation = (description: string) =>
-    description.length === 0 ? "" : "\n//" + description.replace(/\n/g, "\n//");
 }
 
 const templateCondition = (t: Transition): string => {
   return t.expressionTokens
-    .map(([tok, position]) => {
+    .map(([tok, _]) => {
       if (tok instanceof VarId) {
         return "GVL." + tok.text;
       } else {
@@ -128,7 +126,7 @@ CASE State OF
         case StepType.MACRO:
           return templateGemmaGrafcetMacroStep(step);
         default:
-          throw "";
+          throw new Error("");
       }
     })().replace(/\n/g, "\n    ")}
   `;

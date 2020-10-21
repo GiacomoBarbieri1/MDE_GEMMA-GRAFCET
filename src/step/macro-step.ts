@@ -1,10 +1,8 @@
-import { H } from "./gemma-templates";
 import { MacroStep } from "./step";
 
 export const macroStepTemplate = (model: MacroStep) =>
   `\
-FUNCTION_BLOCK ${model.name}_FB\
-${H.stepDocumentation(model.description)}
+FUNCTION_BLOCK ${model.name}_FB
 
 // Variable declaration
 VAR_INPUT

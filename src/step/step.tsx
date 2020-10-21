@@ -1,7 +1,6 @@
 import React from "react";
 import { computed, observable } from "mobx";
 import { observer } from "mobx-react-lite";
-import { StrFieldSpec } from "../fields";
 import { ChoiceFieldSpec } from "../fields/choice-field";
 import { NodeData, NodeModel } from "../node/node-model";
 import { listToMap } from "../utils";
@@ -65,6 +64,7 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
       case ProcedureType.F:
         return this.automationSystem.fFamily;
     }
+    throw new Error("");
   }
 
   get automationSystem(): GemmaGrafcet {
@@ -109,7 +109,6 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
         }
       },
     }),
-    description: new StrFieldSpec({ default: "", multiline: true }),
   };
 
   isValidInput(n: GemmaNode): boolean {
@@ -154,14 +153,13 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
     switch (this.type) {
       case StepType.ENCLOSING:
         style = { padding: "0 0", display: "flex" };
-        // TODO:
         return (
           <div style={{ ...style, position: "relative" }}>
-            <_EnclosingDecoration left={true} nodeHeight={nodeHeight} />
+            <EnclosingDecoration left={true} nodeHeight={nodeHeight} />
             <div style={{ ...innerStyle, padding: "12px 18px" }}>
               {this.node.name}
             </div>
-            <_EnclosingDecoration left={false} nodeHeight={nodeHeight} />
+            <EnclosingDecoration left={false} nodeHeight={nodeHeight} />
           </div>
         );
       case StepType.MACRO:
@@ -212,7 +210,7 @@ export class MacroStep extends BaseStep {
   type = StepType.MACRO;
 }
 
-const _EnclosingDecoration = ({
+const EnclosingDecoration = ({
   nodeHeight,
   left,
 }: {
@@ -225,7 +223,7 @@ const _EnclosingDecoration = ({
         width: "10px",
         height: "" + nodeHeight + "px",
         position: "absolute",
-        right: left ? undefined: 0
+        right: left ? undefined : 0,
       }}
     >
       <path
