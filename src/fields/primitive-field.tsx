@@ -10,11 +10,18 @@ export class StrFieldSpec<M extends { [key: string]: FieldSpec }>
   default: string;
   maxLength?: number;
   minLength?: number;
+  multiline: boolean;
 
-  constructor(v: { default: string; maxLength?: number; minLength?: number }) {
+  constructor(v: {
+    default: string;
+    maxLength?: number;
+    minLength?: number;
+    multiline?: boolean;
+  }) {
     this.default = v.default;
     this.maxLength = v.maxLength;
     this.minLength = v.minLength;
+    this.multiline = v.multiline ?? false;
 
     if (typeof this.default === "string") {
       if (
@@ -42,32 +49,48 @@ export class StrFieldSpec<M extends { [key: string]: FieldSpec }>
   plotField = observer(({ name, model }: PP2<M, string>) => {
     const [value, setValue] = React.useState(model[name]);
     const errors = model.errors;
-    return (
-      <TextField
-        key={name}
-        value={value}
-        inputProps={{ style: { textAlign: "center" } }}
-        onChange={(e) => {
-          let value = e.target.value;
-          setValue(value as any);
+    const onChange = (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
+      let value = e.target.value;
+      setValue(value as any);
 
-          if (this.maxLength !== undefined && value.length > this.maxLength) {
-            errors.set(name, "Max length exceded.");
-          } else if (
-            this.minLength !== undefined &&
-            value.length < this.minLength
-          ) {
-            errors.set(name, "Min length exceded.");
-          } else {
-            errors.delete(name);
-            model[name] = value as any;
-          }
-        }}
-        error={errors.get(name) !== undefined}
-        fullWidth={true}
-        style={{ width: "140px" }}
-      />
-    );
+      if (this.maxLength !== undefined && value.length > this.maxLength) {
+        errors.set(name, "Max length exceded.");
+      } else if (
+        this.minLength !== undefined &&
+        value.length < this.minLength
+      ) {
+        errors.set(name, "Min length exceded.");
+      } else {
+        errors.delete(name);
+        model[name] = value as any;
+      }
+    };
+
+    if (this.multiline) {
+      return (
+        <textarea
+          key={name}
+          className="multiline-input"
+          value={value}
+          onChange={onChange}
+        ></textarea>
+      );
+    } else {
+      return (
+        <TextField
+          key={name}
+          value={value}
+          fullWidth={true}
+          margin="dense"
+          inputProps={{ style: { textAlign: "center" } }}
+          error={errors.get(name) !== undefined}
+          style={{ width: "140px" }}
+          onChange={onChange}
+        />
+      );
+    }
   });
 }
 
