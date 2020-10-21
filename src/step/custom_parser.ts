@@ -6,7 +6,7 @@ export class VarId {
   }
 }
 
-type Token =
+export type CustomToken =
   | "("
   | ")"
   | "AND"
@@ -17,10 +17,11 @@ type Token =
   | "="
   | "<="
   | ">="
+  | "\n"
   | VarId;
 
-export const getCustomTokens = (t: string): [Token, number][] => {
-  const l: [Token, number][] = [];
+export const getCustomTokens = (t: string): [CustomToken, number][] => {
+  const l: [CustomToken, number][] = [];
   let i = -1;
   let omit = 0;
   let signal = "";
@@ -30,7 +31,7 @@ export const getCustomTokens = (t: string): [Token, number][] => {
       signal = "";
     }
   };
-  const add = (v: Token) => {
+  const add = (v: CustomToken) => {
     addSignal();
     l.push([v, i]);
   };
@@ -45,6 +46,7 @@ export const getCustomTokens = (t: string): [Token, number][] => {
       case " ":
         addSignal();
         break;
+      case "\n":
       case ")":
       case "(":
       case "<":
@@ -105,13 +107,13 @@ type ParseR = { ok: boolean };
 //   };
 // };
 
-type Item = (Token | Union)[];
+type Item = (CustomToken | Union)[];
 
 type ExpType = "VarId" | "comp" | "and" | "simpleExp" | "numOP";
 
 class Union {
   constructor(
-    items: Partial<{ [key in ExpType]: (Token | "SELF" | Union)[] }>
+    items: Partial<{ [key in ExpType]: (CustomToken | "SELF" | Union)[] }>
   ) {
     this.variants = Object.values(items).map((l) => {
       return l!.map((v) => (v === "SELF" ? this : v));

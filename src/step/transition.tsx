@@ -7,19 +7,13 @@ import { ChoiceField } from "../fields/choice-field";
 import { ConnModel } from "../node/node-model";
 import { PropertiesTable } from "../properties/properties-table";
 import { parseBoolExpression } from "./antlr_parser";
-import { getCustomTokens, VarId } from "./custom_parser";
-import { GemmaGraphcet } from "./gemma";
+import { CustomToken, getCustomTokens, VarId } from "./custom_parser";
+import { GemmaGrafcet } from "./gemma";
 import { Step } from "./step";
 
-type GemmaConn = ConnModel<Step, GemmaGraphcet, Transition>;
+type GemmaConn = ConnModel<Step, GemmaGrafcet, Transition>;
 
 export class Transition {
-  name: string;
-  // condition: Condition;
-  @computed
-  get condition(): Condition {
-    return new Condition(this.conditionExpression);
-  }
   @observable
   conditionExpression: string;
   @observable
@@ -40,15 +34,11 @@ export class Transition {
   constructor(
     private connection: GemmaConn,
     d?: {
-      name?: string;
       conditionExpression?: string;
       priority?: number;
     }
   ) {
-    this.name = d?.name ?? "";
-    // this.condition = d?.condition ?? new Condition("");
-    this.conditionExpression =
-      d?.conditionExpression ?? this.spec["conditionExpression"].default;
+    this.conditionExpression = d?.conditionExpression ?? "";
     this.priority = d?.priority ?? connection.from.outputs.length + 1;
   }
 
@@ -100,6 +90,11 @@ export class Transition {
   }
 
   @computed
+  get expressionTokens(): [CustomToken, number][] {
+    return getCustomTokens(this.conditionExpression);
+  }
+
+  @computed
   get expressionErrors(): string[] {
     const gemma = this.connection.graph.globalData;
     try {
@@ -107,12 +102,8 @@ export class Transition {
         boolSignals: gemma.boolSignals.map((s) => s.name),
         numSignals: gemma.numSignals.map((s) => s.name),
       });
-      console.log(tree);
-
       return errors;
-    } catch (e) {
-      console.log(`EEEEEEEEEEEEEEEE ${e}`);
-    }
+    } catch (e) {}
     return [];
   }
 
@@ -150,23 +141,23 @@ export class Transition {
 }
 
 const ConditionInput = observer(
-  ({ m }: { m: { conditionExpression: string } }) => {
-    const _tokens = getCustomTokens(m.conditionExpression);
+  ({
+    m,
+  }: {
+    m: {
+      conditionExpression: string;
+      expressionTokens: [CustomToken, number][];
+    };
+  }) => {
     let prevIndex = 0;
     let _spanStyleRef = useRef<HTMLSpanElement>(null);
-    const sharedStyle: React.CSSProperties = {
-      font: "400 15px monospace",
-      width: "180px",
-      height: "60px",
-      overflow: "auto",
-      borderRadius: "5px",
-    };
+    const font = "400 15px monospace";
 
     return (
       <div style={{ width: "180px", position: "relative" }} className="center">
         <span
           style={{
-            ...sharedStyle,
+            font,
             position: "absolute",
             top: 0,
             padding: "3px",
@@ -175,7 +166,7 @@ const ConditionInput = observer(
           }}
           ref={_spanStyleRef}
         >
-          {_tokens.map(([c, textIndex], index) => {
+          {m.expressionTokens.map(([c, textIndex], index) => {
             let color: string;
             if (c instanceof VarId) {
               color = "black";
@@ -198,19 +189,16 @@ const ConditionInput = observer(
           onScroll={(s) => {
             _spanStyleRef.current!.scrollTo(0, s.currentTarget.scrollTop);
           }}
+          className="multiline-input"
           style={{
-            ...sharedStyle,
+            font,
             background: "transparent",
             color: "transparent",
             caretColor: "black",
             position: "relative",
-            resize: "none",
           }}
           spellCheck={false}
           value={m.conditionExpression}
-          onSelect={(e) => {
-            // console.log(e.currentTarget.selectionStart);
-          }}
           onChange={(e) => {
             m.conditionExpression = e.currentTarget.value;
           }}
@@ -219,19 +207,3 @@ const ConditionInput = observer(
     );
   }
 );
-
-export class Condition {
-  constructor(public expression: string) {}
-}
-
-// const processParsedExpression = (exp: ExpressionContext): {} => {
-//   const toProcess = [...exp.children];
-//   const numIds = [];
-//   const boolIds = [];
-
-//   while (toProcess.length !== 0) {
-//     const n = toProcess.pop()!;
-//   }
-
-//   return {};
-// };
