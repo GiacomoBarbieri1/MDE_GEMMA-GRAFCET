@@ -29,7 +29,11 @@ export const PropertiesView: React.FC<Props> = observer(() => {
         }}
         className="row"
       >
-        <div className="properties-view" key="node-properties">
+        <div
+          className="properties-view"
+          key="node-properties"
+          id="node-properties"
+        >
           <div
             className="row"
             style={{ justifyContent: "space-between", alignItems: "center" }}
@@ -43,7 +47,11 @@ export const PropertiesView: React.FC<Props> = observer(() => {
           </div>
           <PropertiesTableNode self={rootStore.selectedNode} />
         </div>
-        <div className="properties-view" key="connection-properties">
+        <div
+          className="properties-view"
+          key="connection-properties"
+          id="connection-properties"
+        >
           {selectedConnection !== undefined && (
             <div className="col">
               <div

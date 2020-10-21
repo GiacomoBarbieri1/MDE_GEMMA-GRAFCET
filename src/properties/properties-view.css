@@ -1,6 +1,10 @@
 .properties-view{
   background-color: white;
   border-radius: 5px;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: scroll;
   flex: 1;
+}
+#node-properties, #connection-properties {
+  padding: 0 0 0 5px;
 }
