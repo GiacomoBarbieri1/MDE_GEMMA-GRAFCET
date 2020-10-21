@@ -25,10 +25,12 @@ export class ChoiceFieldSpec<
 > {
   choices: C;
   default: K;
+  onChange?: (n: V) => void;
 
-  constructor(v: { choices: C; default: K }) {
+  constructor(v: { choices: C; default: K; onChange?: (n: V) => void }) {
     this.choices = v.choices;
     this.default = v.default;
+    this.onChange = v.onChange;
     if (this.isObservableMap()) {
       if ((this.choices as any).get(this.default) === null) {
         throw Error("");
@@ -61,7 +63,10 @@ export class ChoiceFieldSpec<
     return (
       <ChoiceField
         value={model[name]}
-        setValue={(v) => (model[name] = v as any)}
+        setValue={(v) => {
+          model[name] = v as any;
+          if (this.onChange !== undefined) this.onChange(v as any);
+        }}
         keys={keys}
       />
     );
@@ -72,12 +77,14 @@ export const ChoiceField = ({
   keys,
   value,
   setValue,
+  maxButton,
 }: {
   keys: string[];
   value: string;
   setValue: (v: string) => void;
+  maxButton?: number
 }) => {
-  if (keys.length > 3) {
+  if (keys.length > (maxButton ?? 3)) {
     return (
       <Select
         value={value}
@@ -85,6 +92,8 @@ export const ChoiceField = ({
           setValue(e.target.value as any);
         }}
         autoWidth={true}
+        style={{minHeight: "35px", marginBottom: "3px"}}
+        disabled={keys.length <= 1}
       >
         {keys.map((k) => {
           return (
