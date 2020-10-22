@@ -1,8 +1,4 @@
-import {
-  GemmaGrafcet,
-  gemmaBuilders,
-} from "./gemma";
-import { NodeModel, ConnModel } from "../node/node-model";
+import { GemmaGrafcet, gemmaBuilders } from "./gemma";
 import { RootStoreModel } from "../canvas/store";
 import { StepType, Step } from "./step";
 import { Transition } from "./transition";
@@ -18,7 +14,7 @@ describe("Graph Api", () => {
     builders: gemmaBuilders,
   });
 
-  const s1 = rootStore.addNode(StepType.INITIAL, { x: 72, y: 60 });
+  const s1 = rootStore.addNode(StepType.SIMPLE, { x: 72, y: 60 });
   const s2 = rootStore.addNode(StepType.MACRO, { x: 261, y: 170 });
   const _badId = rootStore.addNode("Not Valid Id", { x: 261, y: 170 });
 
@@ -84,12 +80,12 @@ describe("Validation", () => {
     builders: gemmaBuilders,
   });
 
-  const n1 = rootStore.addNode(StepType.INITIAL);
-  const n2 = rootStore.addNode(StepType.INITIAL);
+  const n1 = rootStore.addNode(StepType.SIMPLE);
+  const n2 = rootStore.addNode(StepType.SIMPLE);
   const n3 = rootStore.addNode(StepType.ENCLOSING);
 
   test("can add node", () => {
-    expect(rootStore.globalData.canAddNode(StepType.INITIAL)).toBeFalsy();
+    expect(rootStore.globalData.canAddNode(StepType.SIMPLE)).toBeFalsy();
     expect(n1 !== undefined).toBeTruthy();
     expect(n2).toBeUndefined();
     expect(rootStore.nodes.size).toBe(2);

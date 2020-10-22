@@ -109,7 +109,7 @@ export class RootStoreModel<
         }
       }
     }
-    if (this.globalData.initState !== undefined){ 
+    if (this.globalData.initState !== undefined) {
       this.globalData.initState();
     }
   }
@@ -171,7 +171,7 @@ export class RootStoreModel<
 
   // Remove a node
   @action
-  removeNode(node: NodeModel<D, G, C>): void {
+  removeNode = (node: NodeModel<D, G, C>): void => {
     if (node === this.selectedNode) {
       this.selectedNode = undefined;
     }
@@ -183,16 +183,16 @@ export class RootStoreModel<
         _out.to.inputs.remove(_out);
       }
     }
-  }
+  };
 
   @action
-  removeConnection(connection: ConnModel<D, G, C>): void {
+  removeConnection = (connection: ConnModel<D, G, C>): void => {
     if (connection === this.selectedConnection) {
       this.selectedConnection = undefined;
     }
     connection.from.outputs.remove(connection);
     connection.to.inputs.remove(connection);
-  }
+  };
 
   // Select input-output / add connection
 
@@ -242,7 +242,7 @@ export class RootStoreModel<
     return { data: this.globalData.toJson, key: this.key };
   }
 
-  async saveModel() {
+  saveModel = async () => {
     const nodes = [...this.nodes.entries()];
     await this.db.clearDB();
     await Promise.all([
@@ -256,9 +256,9 @@ export class RootStoreModel<
         nodes.flatMap(([_, value]) => value.outputs).map((t) => t.toJson)
       ),
     ]);
-  }
+  };
 
-  downloadModel(): FullGraphJson {
+  downloadModel = (): FullGraphJson => {
     const nodes = [...this.nodes.entries()];
     const json = {
       graph: this.toJson,
@@ -268,16 +268,15 @@ export class RootStoreModel<
         .map((t) => t.toJson),
     };
 
-    console.log(json);
     downloadToClient(
       JSON.stringify(json),
       "gemma-model.json",
       "application/json"
     );
     return json;
-  }
+  };
 
-  async downloadSourceCode() {
+  downloadSourceCode = async () => {
     const _addToZip = (root: JSZip, dir: SourceDirectory) => {
       const newRoot = root.folder(dir.name)!;
 
@@ -300,5 +299,5 @@ export class RootStoreModel<
       "gemma-grafcet-source-code.zip",
       "application/zip"
     );
-  }
+  };
 }

@@ -82,7 +82,11 @@ export class Transition {
   get connectionText(): string {
     const cond = this.conditionExpression.substring(0, 20);
     return `${this.priority}${
-      this.isNegated && this.from.type === StepType.MACRO ? "\u00AF" : ""
+      this.isNegated &&
+      (this.from.type === StepType.MACRO ||
+        this.from.type === StepType.ENCLOSING)
+        ? "\u00AF"
+        : ""
     }: ${cond}${this.conditionExpression.length > 20 ? "..." : ""}`;
   }
 
@@ -131,9 +135,10 @@ export class Transition {
             <td>Condition</td>
             <td>{<ConditionInput m={this} />}</td>
           </tr>
-          {this.from.type === StepType.MACRO && (
+          {(this.from.type === StepType.MACRO ||
+            this.from.type === StepType.ENCLOSING) && (
             <tr key="isNegated">
-              <td>Is Negated</td>
+              <td>Negated</td>
               <td>
                 {
                   <Switch

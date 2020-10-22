@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import React from "react";
-import { NodeModel, ConnModel } from "../node/node-model";
+import { NodeModel, ConnModel, NodeData } from "../node/node-model";
 import { useStore } from "../App";
 
 export type ArrowModel = {
@@ -19,18 +19,41 @@ const triangleFromCenter = (
   const y0 = y + height;
   return `M${x} ${y} L${x - width / 2} ${y0} L${x + width / 2} ${y0} Z`;
 };
+const getStartPositionConnection = (
+  from: NodeModel<any, any, any>
+): { x: number; y: number } => {
+  const connectionStartPosition = (from.data as NodeData<any, any, any>)
+    .connectionStartPosition;
+
+  if (connectionStartPosition !== undefined) {
+    const b = connectionStartPosition();
+    if (b !== undefined) {
+      let x = from.x;
+      let y = from.y;
+      if ("top" in b) {
+        y += b.top;
+      } else {
+        y += from.height - b.bottom;
+      }
+
+      if ("left" in b) {
+        x += b.left;
+      } else {
+        y += from.width - b.right;
+      }
+      return { x, y };
+    }
+  }
+  return { x: from.x + from.width / 2, y: from.y + from.height / 2 };
+};
 
 export const ArrowView: React.FC<ArrowViewProps> = observer(
   ({ connection }: ArrowViewProps) => {
     const rootStore = useStore();
     const { from, to, isSelected } = connection;
+    const { x: x1, y: y1 } = getStartPositionConnection(from);
 
-    const [x1, y1, x2, y2] = [
-      from.x + from.width / 2,
-      from.y + from.height / 2,
-      to.x + to.width / 2,
-      to.y + to.height / 2,
-    ];
+    const [x2, y2] = [to.x + to.width / 2, to.y + to.height / 2];
     const dy = y2 - y1;
     const dx = x2 - x1;
 
@@ -69,7 +92,7 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
         <RectAndText
           text={connection.data.connectionText}
           x={xm}
-          rectFill={isSelected ? "#eeedff": "#eee"}
+          rectFill={isSelected ? "#eeedff" : "#eee"}
           y={ym}
           onClick={(_) => rootStore.selectConnection(connection)}
         />

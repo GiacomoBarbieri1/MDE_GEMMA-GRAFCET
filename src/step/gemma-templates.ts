@@ -46,8 +46,21 @@ IF Entry THEN
 END_IF
 ${model.name}(Initialization:=ENTRY);`;
 
-const templateGemmaGrafcetMacroStep = (model: MacroStep): string => {
+const templateGemmaGrafcetNestedStep = (
+  model: MacroStep | EnclosingStep
+): string => {
   const transitions = model.transitions;
+  const _evaluateComplete = (t: Transition, index: number): boolean => {
+    const _isInner = transitions.length - model.innerTransitionsLength <= index;
+    switch (model.type) {
+      case StepType.MACRO:
+        return _isInner && !t.isNegated;
+      case StepType.ENCLOSING:
+        return _isInner && t.isNegated;
+    }
+    throw new Error("");
+  };
+
   return `
 ${templateFBEntry(model)}
 
@@ -55,22 +68,13 @@ ${transitions
   .map((t, index) => {
     return `\
 ${index === 0 ? "IF" : "ELSIF"} ${templateCondition(t)}${
-      transitions.length - model.innerTransitionsLength <= index && !t.isNegated
-        ? ` AND ${model.name}.Complete`
-        : ""
+      _evaluateComplete(t, index) ? ` AND ${model.name}.Complete` : ""
     } THEN
   State:=${t.to.id};
   Entry:=TRUE;`;
   })
   .join("\n")}\
 ${H.textOrEmpty(transitions.length !== 0, "\nEND_IF")}`;
-};
-
-const templateGemmaGrafcetEnclosingStep = (model: EnclosingStep): string => {
-  return `\
-${templateFBEntry(model)}
-
-${templateTransitions(model.transitions, { isNested: true })}`;
 };
 
 export const templateGlobals = (signals: Array<Signal>): string => {
@@ -110,12 +114,11 @@ CASE State OF
   ${step.id}: //State ${step.name}
     ${(() => {
       switch (step.type) {
-        case StepType.ENCLOSING:
-          return templateGemmaGrafcetEnclosingStep(step);
         case StepType.SIMPLE:
           return templateGemmaGrafcetSimpleStep(step);
+        case StepType.ENCLOSING:
         case StepType.MACRO:
-          return templateGemmaGrafcetMacroStep(step);
+          return templateGemmaGrafcetNestedStep(step);
         default:
           throw new Error("");
       }

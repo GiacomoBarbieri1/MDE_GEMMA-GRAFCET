@@ -2,14 +2,13 @@ import React from "react";
 import { computed, observable, reaction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { ChoiceFieldSpec } from "../fields/choice-field";
-import { NodeData, NodeModel } from "../node/node-model";
+import { ConnectionPosition, NodeData, NodeModel } from "../node/node-model";
 import { listToMap } from "../utils";
 import { GemmaGrafcet } from "./gemma";
 import { Transition } from "./transition";
 import { JsonType } from "../canvas/store";
 import { BoolFieldSpec } from "../fields/primitive-field";
 
-export type Step = SimpleStep | EnclosingStep | MacroStep;
 export enum StepType {
   ENCLOSING = "ENCLOSING",
   MACRO = "MACRO",
@@ -25,9 +24,11 @@ export enum ProcedureType {
   A = "A", // Stop
 }
 
-abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
+export type Step = SimpleStep | EnclosingStep | MacroStep | ContainerStep;
+
+export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   @observable
-  abstract type: StepType;
+  type: StepType;
 
   nInputs = Number.POSITIVE_INFINITY;
   errors = observable.map<string, string>();
@@ -38,11 +39,13 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
       description?: string;
       family?: ProcedureType;
       isInitial?: boolean;
+      type?: StepType;
     }
   ) {
     this.description = d?.description ?? "";
     this.family = d?.family ?? ProcedureType.F;
     this.isInitial = d?.isInitial ?? false;
+    this.type = d?.type ?? StepType.SIMPLE;
     reaction(
       (_) => this.isInitial,
       (isInitial, _) => {
@@ -88,6 +91,13 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
     return this.node.graph.globalData;
   }
 
+  connectionStartPosition = (): undefined | ConnectionPosition => {
+    if (this.type === StepType.CONTAINER) {
+      return { bottom: 40, left: 50 };
+    }
+    return undefined;
+  };
+
   @computed
   private get _transitions(): Transition[] {
     return this.node.outputs
@@ -100,8 +110,11 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   }
   @computed
   get transitions(): Transition[] {
+    if (this === this.automationSystem.fFamily!.data){
+      return this._transitions;
+    }
     return this.family === ProcedureType.F
-      ? this.automationSystem.workingFamilyTransitions.concat(this._transitions)
+      ? this.automationSystem.fFamily!.data.transitions.concat(this._transitions)
       : this._transitions;
   }
   @computed
@@ -201,21 +214,21 @@ abstract class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   });
 }
 
-export class SimpleStep extends BaseStep {
-  type = StepType.SIMPLE;
-}
+export type SimpleStep = BaseStep & {
+  type: StepType.SIMPLE;
+};
 
-export class ContainerStep extends BaseStep {
-  type = StepType.CONTAINER;
-}
+export type ContainerStep = BaseStep & {
+  type: StepType.CONTAINER;
+};
 
-export class EnclosingStep extends BaseStep {
-  type = StepType.ENCLOSING;
-}
+export type EnclosingStep = BaseStep & {
+  type: StepType.ENCLOSING;
+};
 
-export class MacroStep extends BaseStep {
-  type = StepType.MACRO;
-}
+export type MacroStep = BaseStep & {
+  type: StepType.MACRO;
+};
 
 const EnclosingDecoration = ({
   nodeHeight,

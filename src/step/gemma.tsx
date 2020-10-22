@@ -14,15 +14,7 @@ import { ChoiceField } from "../fields/choice-field";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import IconButton from "@material-ui/core/IconButton";
 import { Transition } from "./transition";
-import {
-  Step,
-  SimpleStep,
-  EnclosingStep,
-  StepType,
-  MacroStep,
-  ProcedureType,
-  ContainerStep,
-} from "./step";
+import { Step, StepType, ProcedureType, BaseStep } from "./step";
 import { ConnModel, NodeModel } from "../node/node-model";
 import { IndexedDB } from "../canvas/persistence";
 import Table from "@material-ui/core/Table";
@@ -147,8 +139,6 @@ export class GemmaGrafcet implements GlobalData<Step> {
   private _hasInitialStep(): boolean {
     return [...this.graph.nodes.values()].some((n) => n.data.isInitial);
   }
-
-  workingFamilyTransitions: Transition[] = [];
 
   @computed
   get steps(): Step[] {
@@ -305,6 +295,10 @@ export class GemmaGrafcet implements GlobalData<Step> {
                   left: n.x,
                 }}
                 key={n.key}
+                ref={(e) => {
+                  if (e === null) return;
+                  n.setSize(e.getBoundingClientRect());
+                }}
               >
                 {_nodesFromFamily(n.data.family)}
               </div>
@@ -464,18 +458,10 @@ export const gemmaBuilders: DataBuilder<Step, GemmaGrafcet, Transition> = {
     console.log(json);
     const type = json !== undefined ? json["type"] : undefined;
     if (typeof type === "string" && Object.keys(StepType).includes(type)) {
-      switch (type) {
-        case StepType.ENCLOSING:
-          return new EnclosingStep(n, json);
-        case StepType.MACRO:
-          return new MacroStep(n, json);
-        case StepType.SIMPLE:
-          return new SimpleStep(n, json);
-        case StepType.CONTAINER:
-          return new ContainerStep(n, json);
-      }
+      return new BaseStep(n, json);
     }
-    return new SimpleStep(n);
+
+    return new BaseStep(n);
   },
   connectionBuilder: (c, json) => new Transition(c, json),
 };
@@ -493,16 +479,6 @@ export const make5NodesGraph = (
     s1.data.isInitial = true;
   }
   const s2 = rootStore.addNode(StepType.MACRO, { x: 261, y: 170 });
-
-  const _t = new ConnModel(
-    s1!,
-    s2!,
-    (c) =>
-      new Transition(c, {
-        conditionExpression: "I1 & I2",
-      })
-  );
-  rootStore.globalData.workingFamilyTransitions.push(_t.data);
 
   [
     s1,
@@ -577,7 +553,7 @@ export const makeBaseGemmaTemplate = (
     }
   }
 
-  const connextions = {
+  const connections = {
     A1: ["F2", "F1", "F6", "F5", "F4"],
     A2: ["A1"],
     A3: ["A4"],
@@ -594,21 +570,15 @@ export const makeBaseGemmaTemplate = (
     D3: ["A2", "A3"],
   };
 
-  for (const [k, v] of Object.entries(connextions)) {
+  for (const [from, v] of Object.entries(connections)) {
     for (const to of v) {
-      rootStore.addConnection(nodes[k], nodes[to]);
+      rootStore.addConnection(nodes[from], nodes[to]);
     }
   }
 
-  const _t = new ConnModel(
-    nodes["A1"]!,
-    nodes["D1"]!,
-    (c) =>
-      new Transition(c, {
-        conditionExpression: "I1 & I2",
-      })
-  );
-  rootStore.globalData.workingFamilyTransitions.push(_t.data);
+  rootStore.addConnection(rootStore.globalData.fFamily!, nodes["D1"]!, {
+    conditionExpression: "I1 AND I2",
+  });
 
   const a1 = nodes["A1"]!;
   rootStore.selectNode(a1);

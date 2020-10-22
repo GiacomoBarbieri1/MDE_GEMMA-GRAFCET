@@ -29,6 +29,12 @@ export const mobxDecorators = <V extends { [key: string]: FieldSpec }>(
   };
 };
 
+export type ConnectionPosition =
+  | { top: number; left: number }
+  | { top: number; right: number }
+  | { bottom: number; left: number }
+  | { bottom: number; right: number };
+
 export interface NodeData<
   D extends NodeData<D, G, C>,
   G extends GlobalData<D>,
@@ -42,6 +48,7 @@ export interface NodeData<
   View: React.FC;
   toJson: JsonType;
   parent?: NodeModel<D, G, C>;
+  connectionStartPosition?: () => undefined | ConnectionPosition;
 }
 
 export type ConnectionData<D> = {
