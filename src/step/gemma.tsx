@@ -15,7 +15,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import IconButton from "@material-ui/core/IconButton";
 import { Transition } from "./transition";
 import { Step, StepType, ProcedureType, BaseStep } from "./step";
-import { ConnModel, NodeModel } from "../node/node-model";
+import { NodeModel } from "../node/node-model";
 import { IndexedDB } from "../canvas/persistence";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
@@ -119,15 +119,31 @@ export class GemmaGrafcet implements GlobalData<Step> {
   };
 
   initState(): void {
-    this.fFamily = this.graph.addNode(StepType.CONTAINER, { x: 600, y: 0 })!;
+    const nodes = [...this.graph.nodes.values()];
+    this.fFamily =
+      nodes.find(
+        (n) =>
+          n.data.type === StepType.CONTAINER &&
+          n.data.family === ProcedureType.F
+      ) ?? this.graph.addNode(StepType.CONTAINER, { x: 600, y: 0 })!;
     this.fFamily.setName("F family");
     this.fFamily.data.family = ProcedureType.F;
 
-    this.aFamily = this.graph.addNode(StepType.CONTAINER, { x: 0, y: 0 })!;
+    this.aFamily =
+      nodes.find(
+        (n) =>
+          n.data.type === StepType.CONTAINER &&
+          n.data.family === ProcedureType.A
+      ) ?? this.graph.addNode(StepType.CONTAINER, { x: 0, y: 0 })!;
     this.aFamily.setName("A family");
     this.aFamily.data.family = ProcedureType.A;
 
-    this.dFamily = this.graph.addNode(StepType.CONTAINER, { x: 0, y: 500 })!;
+    this.dFamily =
+      nodes.find(
+        (n) =>
+          n.data.type === StepType.CONTAINER &&
+          n.data.family === ProcedureType.D
+      ) ?? this.graph.addNode(StepType.CONTAINER, { x: 0, y: 500 })!;
     this.dFamily.setName("D family");
     this.dFamily.data.family = ProcedureType.D;
   }

@@ -85,6 +85,7 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
       case ProcedureType.F:
         return this.automationSystem.fFamily;
     }
+    throw new Error("");
   }
 
   get automationSystem(): GemmaGrafcet {
@@ -110,11 +111,13 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   }
   @computed
   get transitions(): Transition[] {
-    if (this === this.automationSystem.fFamily!.data){
+    if (this === this.automationSystem.fFamily!.data) {
       return this._transitions;
     }
     return this.family === ProcedureType.F
-      ? this.automationSystem.fFamily!.data.transitions.concat(this._transitions)
+      ? this.automationSystem.fFamily!.data.transitions.concat(
+          this._transitions
+        )
       : this._transitions;
   }
   @computed
