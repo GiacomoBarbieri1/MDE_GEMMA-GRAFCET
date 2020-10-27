@@ -72,7 +72,7 @@ export const NodeView: React.FC<NodeViewProps> = observer((params) => {
       <StyledNode
         ref={(e) => {
           if (e === null) return;
-          node.setSize(e.getBoundingClientRect());
+          node.setElement(e);
         }}
         onClick={onClick}
         style={style}

@@ -3,6 +3,7 @@ import { SnapshotIn } from "mobx-state-tree";
 import { FieldSpec } from "../fields";
 import { GlobalData, RootStoreModel, JsonType } from "../canvas/store";
 import { ConnectionJson, NodeJson } from "../canvas/persistence";
+import { ResizeObserver } from "@juggle/resize-observer";
 
 export type OperationI<
   V extends { [key: string]: FieldSpec },
@@ -122,6 +123,8 @@ export class NodeModel<
     this.data = d.dataBuilder(this, d.data);
   }
 
+  resizeObserver?: ResizeObserver;
+  element?: HTMLElement;
   @observable
   key: string;
   @observable
@@ -176,6 +179,20 @@ export class NodeModel<
   @action
   setName = (name: string) => {
     this.name = name;
+  };
+  setElement = (element: HTMLElement) => {
+    this.setSize(element.getBoundingClientRect());
+
+    if (this.element !== element) {
+      if (this.resizeObserver !== undefined) {
+        this.resizeObserver.disconnect();
+      }
+      this.element = element;
+      this.resizeObserver = new ResizeObserver((entries, observer) => {
+        this.setSize(element.getBoundingClientRect());
+      });
+      this.resizeObserver.observe(element);
+    }
   };
 
   @computed
