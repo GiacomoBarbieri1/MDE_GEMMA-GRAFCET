@@ -530,26 +530,26 @@ export const makeBaseGemmaTemplate = (
     };
   } = {
     [ProcedureType.A]: {
-      A6: { type: StepType.SIMPLE, x: 60, y: 60 },
-      A1: { type: StepType.SIMPLE, x: 200, y: 25 },
-      A2: { type: StepType.SIMPLE, x: 180, y: 300 },
-      A3: { type: StepType.SIMPLE, x: 270, y: 300 },
-      A4: { type: StepType.SIMPLE, x: 360, y: 200 },
-      A5: { type: StepType.MACRO, x: 60, y: 300 },
-      A7: { type: StepType.MACRO, x: 160, y: 200 },
+      A1: { type: StepType.SIMPLE, x: 497, y: 125 },
+      A2: { type: StepType.SIMPLE, x: 260, y: 364 },
+      A3: { type: StepType.SIMPLE, x: 444, y: 400 },
+      A4: { type: StepType.SIMPLE, x: 457, y: 246 },
+      A5: { type: StepType.MACRO, x: 100, y: 301 },
+      A6: { type: StepType.SIMPLE, x: 173, y: 54 },
+      A7: { type: StepType.MACRO, x: 239, y: 176 },
     },
     [ProcedureType.D]: {
-      D1: { type: StepType.MACRO, x: 60, y: 800 },
-      D2: { type: StepType.SIMPLE, x: 90, y: 700 },
-      D3: { type: StepType.ENCLOSING, x: 200, y: 700 },
+      D1: { type: StepType.MACRO, x: 146, y: 767 },
+      D2: { type: StepType.SIMPLE, x: 221, y: 573 },
+      D3: { type: StepType.ENCLOSING, x: 381, y: 639 },
     },
     [ProcedureType.F]: {
-      F1: { type: StepType.MACRO, x: 800, y: 500 },
-      F2: { type: StepType.MACRO, x: 800, y: 200 },
-      F3: { type: StepType.MACRO, x: 840, y: 200 },
-      F4: { type: StepType.ENCLOSING, x: 850, y: 60 },
-      F5: { type: StepType.ENCLOSING, x: 850, y: 350 },
-      F6: { type: StepType.ENCLOSING, x: 850, y: 500 },
+      F1: { type: StepType.MACRO, x: 768, y: 707 },
+      F2: { type: StepType.MACRO, x: 846, y: 233 },
+      F3: { type: StepType.MACRO, x: 982, y: 147 },
+      F4: { type: StepType.ENCLOSING, x: 848, y: 29 },
+      F5: { type: StepType.ENCLOSING, x: 734, y: 282 },
+      F6: { type: StepType.ENCLOSING, x: 722, y: 378 },
     },
   };
 
