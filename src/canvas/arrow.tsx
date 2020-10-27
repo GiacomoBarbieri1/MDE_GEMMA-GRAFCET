@@ -86,24 +86,28 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
           style={{
             strokeWidth: 2,
             stroke: "black",
-            opacity: connection.isHidden ? 0.1 : 1,
+            opacity: connection.isHidden ? 0.07 : 1,
           }}
           d={`M${x1} ${y1} L${x2} ${y2}`}
           onClick={(_) => {
             rootStore.selectConnection(connection);
           }}
         />
-        <RectAndText
-          text={connection.data.connectionText}
-          x={xm}
-          rectFill={isSelected ? "#eeedff" : "#eee"}
-          y={ym}
-          onClick={(_) => rootStore.selectConnection(connection)}
-        />
-        <path
-          d={triangleFromCenter(xa, ya)}
-          transform={`rotate(${degrees} ${xa} ${ya})`}
-        />
+        {!connection.isHidden && (
+          <>
+            <RectAndText
+              text={connection.data.connectionText}
+              x={xm}
+              rectFill={isSelected ? "#eeedff" : "#eee"}
+              y={ym}
+              onClick={(_) => rootStore.selectConnection(connection)}
+            />
+            <path
+              d={triangleFromCenter(xa, ya)}
+              transform={`rotate(${degrees} ${xa} ${ya})`}
+            />
+          </>
+        )}
       </>
     );
   }
