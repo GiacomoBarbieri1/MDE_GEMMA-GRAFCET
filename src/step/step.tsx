@@ -173,44 +173,51 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
         </div>
       );
     }
+
     let style: React.CSSProperties = {};
     let innerStyle: React.CSSProperties = { padding: "12px" };
-    if (this.isInitial) {
-      style = { padding: "5px" };
-      innerStyle = {
-        border: "1.5px solid",
-        padding: "7px",
-      };
-    } else {
-      const nodeHeight = this.node.height - 2;
+    let wrapper: (p: React.ReactElement) => React.ReactElement = (p) => p;
 
-      switch (this.type) {
-        case StepType.ENCLOSING:
-          style = { padding: "0 0", display: "flex" };
-          return (
-            <div style={{ ...style, position: "relative" }}>
-              <EnclosingDecoration left={true} nodeHeight={nodeHeight} />
-              <div style={{ ...innerStyle, padding: "12px 18px" }}>
-                {this.node.name}
-              </div>
-              <EnclosingDecoration left={false} nodeHeight={nodeHeight} />
-            </div>
-          );
-        case StepType.MACRO:
-          style = { padding: "5px 0" };
-          innerStyle = {
-            border: "1.5px solid",
-            borderRight: "0",
-            borderLeft: "0",
-            padding: "5px 12px",
-          };
-          break;
-        default:
-          break;
-      }
+    if (this.isInitial) {
+      wrapper = (p) => (
+        <div style={{ padding: "5px" }}>
+          <div
+            style={{
+              border: "1.5px solid",
+            }}
+          >
+            {p}
+          </div>
+        </div>
+      );
     }
 
-    return (
+    const nodeHeight = this.node.height - 2 - (this.isInitial ? 12 : 0);
+    switch (this.type) {
+      case StepType.ENCLOSING:
+        style = { padding: "0 0", display: "flex" };
+        return wrapper(
+          <div style={{ ...style, position: "relative" }}>
+            <EnclosingDecoration left={true} nodeHeight={nodeHeight} />
+            <div style={{ ...innerStyle, padding: "12px 18px" }}>
+              {this.node.name}
+            </div>
+            <EnclosingDecoration left={false} nodeHeight={nodeHeight} />
+          </div>
+        );
+      case StepType.MACRO:
+        style = { padding: "5px 0" };
+        innerStyle = {
+          borderTop: "1.5px solid",
+          borderBottom: "1.5px solid",
+          borderRight: "0",
+          borderLeft: "0",
+          padding: "5px 12px",
+        };
+        break;
+    }
+
+    return wrapper(
       <div style={style}>
         <div style={innerStyle}>{this.node.name}</div>
       </div>
