@@ -81,13 +81,17 @@ export class Transition {
   @computed
   get connectionText(): string {
     const cond = this.conditionExpression.substring(0, 20);
-    return `${this.priority}${
+    const negation =
       this.isNegated &&
       (this.from.type === StepType.MACRO ||
         this.from.type === StepType.ENCLOSING)
         ? "\u00AF"
-        : ""
-    }: ${cond}${this.conditionExpression.length > 20 ? "..." : ""}`;
+        : "";
+    return `${
+      this.from.type === StepType.CONTAINER
+        ? ""
+        : `${this.priority}${negation}:`
+    }${cond}${this.conditionExpression.length > 20 ? "..." : ""}`;
   }
 
   @computed
