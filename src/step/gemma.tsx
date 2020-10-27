@@ -158,7 +158,9 @@ export class GemmaGrafcet implements GlobalData<Step> {
 
   @computed
   get steps(): Step[] {
-    return [...this.graph.nodes.values()].map((node) => node.data);
+    return [...this.graph.nodes.values()]
+      .filter((node) => !node.isHidden && node.data.type !== StepType.CONTAINER)
+      .map((node) => node.data);
   }
 
   readonly signals: IObservableArray<Signal>;
@@ -522,6 +524,7 @@ export const makeBaseGemmaTemplate = (
   const rootStore = new RootStoreModel<Step, GemmaGrafcet, Transition>({
     db,
     builders: gemmaBuilders,
+    hideOnDelete: true,
   });
 
   const nodesRaw: {

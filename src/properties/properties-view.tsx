@@ -41,8 +41,19 @@ export const PropertiesView: React.FC<Props> = observer(() => {
             <h3 style={{ margin: "5px 0px 10px 5px" }}>
               {`Step: ${selectedNode.name}`}
             </h3>
-            <IconButton onClick={(e) => rootStore.removeNode(selectedNode)}>
-              <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
+            <IconButton
+              onClick={(_) => {
+                if (selectedNode.isHidden) {
+                  rootStore.activateNode(selectedNode);
+                } else {
+                  rootStore.removeNode(selectedNode);
+                }
+              }}
+            >
+              <FontAwesomeIcon
+                icon={selectedNode.isHidden ? "eye" : "eye-slash"} //trash-alt
+                color={"#000"}
+              />
             </IconButton>
           </div>
           <PropertiesTableNode self={rootStore.selectedNode} />
@@ -65,11 +76,18 @@ export const PropertiesView: React.FC<Props> = observer(() => {
                   {`Transition: ${selectedConnection.from.name} -> ${selectedConnection.to.name}`}
                 </h3>
                 <IconButton
-                  onClick={(e) =>
-                    rootStore.removeConnection(selectedConnection)
-                  }
+                  onClick={(_) => {
+                    if (selectedConnection.isHidden) {
+                      rootStore.activateConnection(selectedConnection);
+                    } else {
+                      rootStore.removeConnection(selectedConnection);
+                    }
+                  }}
                 >
-                  <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
+                  <FontAwesomeIcon
+                    icon={selectedConnection.isHidden ? "eye" : "eye-slash"} //trash-alt
+                    color={"#000"}
+                  />
                 </IconButton>
               </div>
               <selectedConnection.data.ConnectionView />

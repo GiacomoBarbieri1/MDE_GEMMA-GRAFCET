@@ -68,10 +68,12 @@ export class RootStoreModel<
   constructor(d: {
     db: IndexedDB;
     builders: DataBuilder<D, G, C>;
+    hideOnDelete?: boolean;
     json?: FullGraphJson;
   }) {
     this.db = d.db;
     this.builders = d.builders;
+    this.hideOnDelete = d.hideOnDelete ?? false;
     this.globalData = d.builders.graphBuilder(this, d.json?.graph.data);
     this.key = d.json?.graph.key ?? v4();
 
@@ -91,7 +93,7 @@ export class RootStoreModel<
       const from = this.nodes.get(c.from);
       const to = this.nodes.get(c.to);
       if (from !== undefined && to !== undefined) {
-        this.addConnection(from, to, c.data);
+        this.addConnection(from, to, c.data, c.isHidden);
       }
     });
     if (this.nodes.size !== 0) {
@@ -117,6 +119,7 @@ export class RootStoreModel<
   key: string;
   // Builders to create graph, node and transition instances
   builders: DataBuilder<D, G, C>;
+  hideOnDelete: boolean;
   // Global generic data
   globalData: G;
   db: IndexedDB;
@@ -175,13 +178,34 @@ export class RootStoreModel<
     if (node === this.selectedNode) {
       this.selectedNode = undefined;
     }
-    if (this.nodes.delete(node.key)) {
+    if (this.hideOnDelete) {
+      node.isHidden = true;
       for (const _in of node.inputs) {
-        _in.from.outputs.remove(_in);
+        _in.isHidden = true;
       }
       for (const _out of node.outputs) {
-        _out.to.inputs.remove(_out);
+        _out.isHidden = true;
       }
+    } else {
+      if (this.nodes.delete(node.key)) {
+        for (const _in of node.inputs) {
+          _in.from.outputs.remove(_in);
+        }
+        for (const _out of node.outputs) {
+          _out.to.inputs.remove(_out);
+        }
+      }
+    }
+  };
+
+  @action
+  activateNode = (node: NodeModel<D, G, C>) => {
+    node.isHidden = false;
+    for (const _in of node.inputs) {
+      _in.isHidden = false;
+    }
+    for (const _out of node.outputs) {
+      _out.isHidden = false;
     }
   };
 
@@ -190,8 +214,19 @@ export class RootStoreModel<
     if (connection === this.selectedConnection) {
       this.selectedConnection = undefined;
     }
-    connection.from.outputs.remove(connection);
-    connection.to.inputs.remove(connection);
+    if (this.hideOnDelete) {
+      connection.isHidden = true;
+    } else {
+      connection.from.outputs.remove(connection);
+      connection.to.inputs.remove(connection);
+    }
+  };
+
+  @action
+  activateConnection = (connection: ConnModel<D, G, C>): void => {
+    if (!connection.from.isHidden && !connection.to.isHidden) {
+      connection.isHidden = false;
+    }
   };
 
   // Select input-output / add connection
@@ -228,9 +263,16 @@ export class RootStoreModel<
   addConnection = (
     from: NodeModel<D, G, C>,
     to: NodeModel<D, G, C>,
-    json?: JsonType
+    json?: JsonType,
+    isHidden?: boolean
   ): ConnModel<D, G, C> => {
-    const conn = new ConnModel(from, to, this.builders.connectionBuilder, json);
+    const conn = new ConnModel(
+      from,
+      to,
+      this.builders.connectionBuilder,
+      json,
+      isHidden
+    );
     conn.from.addOutput(conn);
     return conn;
   };

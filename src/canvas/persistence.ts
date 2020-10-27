@@ -20,6 +20,7 @@ export type NodeJson = {
   y: number;
   width: number;
   height: number;
+  isHidden: boolean;
   data: JsonType;
 };
 
@@ -30,6 +31,7 @@ type _NodeJson = NodeJson & {
 export type ConnectionJson = {
   from: string;
   to: string;
+  isHidden: boolean;
   data: JsonType;
 };
 
@@ -188,10 +190,16 @@ export class IndexedDB {
   }
 
   async updateConnection(graphKey: string, connection: ConnectionJson) {
-    return this.db.put(DBStores.connection, connectionWithKey(graphKey, connection));
+    return this.db.put(
+      DBStores.connection,
+      connectionWithKey(graphKey, connection)
+    );
   }
 
-  async updateConnections(graphKey: string, connections: Array<ConnectionJson>) {
+  async updateConnections(
+    graphKey: string,
+    connections: Array<ConnectionJson>
+  ) {
     return this.updateMany(
       DBStores.connection,
       connections.map(getKeyFromConnection),

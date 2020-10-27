@@ -55,6 +55,9 @@ export const NodeView: React.FC<NodeViewProps> = observer((params) => {
   if (selectingInput) {
     style["cursor"] = isValidInput ? "pointer" : "not-allowed";
   }
+  if (node.isHidden) {
+    style["opacity"] = 0.1;
+  }
 
   return (
     <Draggable

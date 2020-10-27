@@ -65,12 +65,18 @@ export class ConnModel<
   constructor(
     public from: NodeModel<D, G, C>,
     public to: NodeModel<D, G, C>,
+
     dataBuilder: (connection: ConnModel<D, G, C>, json?: JsonType) => C,
-    json?: JsonType
+    json?: JsonType,
+    isHidden?: boolean
   ) {
     this.data = dataBuilder(this, json);
+    this.isHidden = isHidden ?? false;
   }
 
+  data: C;
+  @observable
+  isHidden: boolean;
   get graph(): RootStoreModel<D, G, any> {
     return this.from.graph;
   }
@@ -80,14 +86,13 @@ export class ConnModel<
     return this.from.graph.selectedConnection === this;
   }
 
-  data: C;
-
   @computed
   get toJson(): ConnectionJson {
     return {
       from: this.from.key,
       to: this.to.key,
       data: this.data.toJson,
+      isHidden: this.isHidden,
     };
   }
 }
@@ -104,6 +109,7 @@ export class NodeModel<
       name: string;
       x: number;
       y: number;
+      isHidden?: boolean;
       dataBuilder: (node: NodeModel<D, G, C>, json?: JsonType) => D;
       data?: JsonType;
     }
@@ -112,6 +118,7 @@ export class NodeModel<
     this.name = d.name;
     this.x = d.x;
     this.y = d.y;
+    this.isHidden = d.isHidden ?? false;
     this.data = d.dataBuilder(this, d.data);
   }
 
@@ -129,6 +136,8 @@ export class NodeModel<
   height: number = 60;
   @observable
   data: D;
+  @observable
+  isHidden: boolean;
   @observable
   inputs = observable.array<ConnModel<D, G, C>>();
   @computed
@@ -178,6 +187,7 @@ export class NodeModel<
       y: this.y,
       width: this.width,
       height: this.height,
+      isHidden: this.isHidden,
       data: this.data.toJson,
     };
   }

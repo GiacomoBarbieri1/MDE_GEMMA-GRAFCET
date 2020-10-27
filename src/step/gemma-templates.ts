@@ -108,7 +108,6 @@ END_VAR
 // Program behavior
 CASE State OF
   ${model.steps
-    .filter((s) => s.type !== StepType.CONTAINER)
     .map((step) => {
       return `
   ${step.id}: //State ${step.name}

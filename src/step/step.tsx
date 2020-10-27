@@ -102,6 +102,7 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   @computed
   private get _transitions(): Transition[] {
     return this.node.outputs
+      .filter((t) => !t.isHidden)
       .map((t) => t.data)
       .sort((a, b) => a.priority - b.priority);
   }

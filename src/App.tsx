@@ -51,6 +51,7 @@ export function App() {
           _store = new RootStoreModel({
             db,
             json: { graph, ...graphExt },
+            hideOnDelete: true,
             builders: gemmaBuilders,
           });
         } else {
