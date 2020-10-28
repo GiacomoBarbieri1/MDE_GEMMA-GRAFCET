@@ -191,16 +191,6 @@ const RectAndText: React.FC<{
             </text>
           );
         })}
-        {/* <text
-          x={bbox !== undefined ? xm - bbox.width / 2 : xm}
-          y={ym + 2}
-          fill="black"
-          ref={setTextRef}
-          onClick={onClick}
-          style={{ cursor: "pointer" }}
-        >
-          {text}
-        </text> */}
       </>
     );
   }

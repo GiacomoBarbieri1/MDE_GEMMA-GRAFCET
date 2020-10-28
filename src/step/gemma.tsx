@@ -338,66 +338,82 @@ const SignalRow = observer(
     showDelete: boolean;
     removeSignal: (s: Signal) => void;
     error?: string;
-  }) => (
-    <TableRow>
-      <TableCell>
-        <Tooltip title={error !== undefined ? error : ""}>
-          <TextField
-            type="text"
-            value={s.name}
-            onChange={(e) => (s.name = e.target.value)}
-            style={{ width: "110px" }}
-            error={error !== undefined}
-          />
-        </Tooltip>
-      </TableCell>
-      <TableCell>
-        <ChoiceField
-          keys={Object.keys(SignalTypeBase)}
-          setValue={(v) => s.setTypeBase(v as any)}
-          value={s.typeBase}
-        />
-      </TableCell>
-      <TableCell>
-        <ChoiceField
-          keys={signalSizeMap[s.typeBase]}
-          setValue={(v) => (s.typeSize = v as any)}
-          value={s.typeSize}
-          maxButton={0}
-        />
-      </TableCell>
-      <TableCell>
-        <TextField
-          type="text"
-          value={s.defaultValue}
-          onChange={(e) => {
-            s.defaultValue = e.target.value.replace(/\s/g, "");
-          }}
-          style={{ width: "80px" }}
-          error={
-            s.didBlur
-              ? !regexSignalDefaultValid[s.typeBase].test(s.defaultValue)
-              : false
-          }
-          onBlur={(_) => (s.didBlur = true)}
-        />
-      </TableCell>
-      {showDelete && (
-        <TableCell align="center">
-          <IconButton onClick={(_) => removeSignal(s)} size="small">
-            <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
-          </IconButton>
+  }) => {
+    const validator = regexSignalDefaultValid[s.typeBase];
+    const hasError =
+      s.defaultValue.length !== 0 && !validator.regex.test(s.defaultValue);
+    const defaultValueError = hasError ? validator.message : "";
+
+    return (
+      <TableRow>
+        <TableCell>
+          <Tooltip title={error !== undefined ? error : ""}>
+            <TextField
+              type="text"
+              value={s.name}
+              onChange={(e) => (s.name = e.target.value)}
+              style={{ width: "110px" }}
+              error={error !== undefined}
+            />
+          </Tooltip>
         </TableCell>
-      )}
-    </TableRow>
-  )
+        <TableCell>
+          <ChoiceField
+            keys={Object.keys(SignalTypeBase)}
+            setValue={(v) => s.setTypeBase(v as any)}
+            value={s.typeBase}
+          />
+        </TableCell>
+        <TableCell>
+          <ChoiceField
+            keys={signalSizeMap[s.typeBase]}
+            setValue={(v) => (s.typeSize = v as any)}
+            value={s.typeSize}
+            maxButton={0}
+          />
+        </TableCell>
+        <TableCell>
+          <Tooltip title={defaultValueError} open={true}>
+            <TextField
+              type={s.typeBase === SignalTypeBase.bool ? "text" : "number"}
+              value={s.defaultValue}
+              onChange={(e) => {
+                s.defaultValue = e.target.value.replace(/\s/g, "");
+              }}
+              style={{ width: "80px" }}
+              error={hasError}
+            />
+          </Tooltip>
+        </TableCell>
+        {showDelete && (
+          <TableCell align="center">
+            <IconButton onClick={(_) => removeSignal(s)} size="small">
+              <FontAwesomeIcon icon={"trash-alt"} color={"#000"} />
+            </IconButton>
+          </TableCell>
+        )}
+      </TableRow>
+    );
+  }
 );
 
 const regexSignalDefaultValid = {
-  [SignalTypeBase.bool]: /^(TRUE|FALSE)$/,
-  [SignalTypeBase.int]: /^-?[1-9][0-9]*$/,
-  [SignalTypeBase.uint]: /^[1-9][0-9]*$/,
-  [SignalTypeBase.real]: /^-?[0-9]*\.?[0-9]+$/,
+  [SignalTypeBase.bool]: {
+    regex: /^(TRUE|FALSE)$/,
+    message: 'should be "TRUE" or "FALSE"',
+  },
+  [SignalTypeBase.int]: {
+    regex: /^-?[1-9][0-9]*$/,
+    message: "should be an integer",
+  },
+  [SignalTypeBase.uint]: {
+    regex: /^[1-9][0-9]*$/,
+    message: "should be a positive integer",
+  },
+  [SignalTypeBase.real]: {
+    regex: /^-?[0-9]*\.?[0-9]+$/,
+    message: "should be a number",
+  },
 };
 
 export class Signal {
