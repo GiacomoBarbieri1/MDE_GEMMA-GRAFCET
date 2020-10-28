@@ -96,7 +96,8 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
         {!connection.isHidden && (
           <>
             <RectAndText
-              text={connection.data.connectionText}
+              connection={connection}
+              texts={connection.data.connectionText}
               x={xm}
               rectFill={isSelected ? "#eeedff" : "#eee"}
               y={ym}
@@ -114,47 +115,92 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
 );
 
 const RectAndText: React.FC<{
-  text: string;
+  texts: { text: string; style?: React.CSSProperties }[];
+  connection: ConnModel<any, any, any>;
   x: number;
   y: number;
   rectFill?: string;
   padding?: number;
   onClick: (event: React.MouseEvent<any, MouseEvent>) => void;
 }> = observer(
-  ({ text, x: xm, y: ym, rectFill = "#eee", padding = 3, onClick }) => {
-    const [textRef, setTextRef] = React.useState<SVGTextElement | null>(null);
-    const [prev, setPrev] = React.useState(text);
-    const bbox = textRef?.getBBox();
+  ({
+    texts,
+    x: xm,
+    y: ym,
+    rectFill = "#eee",
+    padding = 3,
+    onClick,
+    connection,
+  }) => {
+    const [textRefs, setTextRefs] = React.useState<SVGTextElement[]>([]);
+    const curr = texts.reduce((p, c) => p + c.text, "");
+    const [prev, setPrev] = React.useState(curr);
+    const fullbbox = textRefs.reduce(
+      (p, c) => {
+        if (c === undefined) {
+          return p;
+        }
+        const b = c.getBBox();
+
+        return {
+          width: p.width + b.width,
+          height: Math.max(p.height, b.height),
+        };
+      },
+      { width: 0, height: 0 }
+    );
     React.useEffect(() => {
-      if (prev !== text) {
-        const id = setTimeout(() => setPrev(text), 0);
+      if (prev !== curr) {
+        const id = setTimeout(() => setPrev(curr), 0);
         return () => clearTimeout(id);
       }
     });
-
+    let xPrev = 0;
     return (
       <>
-        {bbox !== undefined && (
-          <rect
-            width={bbox.width + padding * 2}
-            height={bbox.height + padding * 2}
-            x={xm - bbox.width / 2 - padding}
-            y={ym - bbox.height + padding}
-            fill={rectFill}
-            onClick={onClick}
-            style={{ cursor: "pointer" }}
-          ></rect>
-        )}
-        <text
+        <rect
+          width={fullbbox.width + padding * 2}
+          height={fullbbox.height + padding * 2}
+          x={xm - fullbbox.width / 2 - padding}
+          y={ym - fullbbox.height + padding}
+          fill={rectFill}
+          onClick={onClick}
+          style={{ cursor: "pointer" }}
+        ></rect>
+        {texts.map((t, index) => {
+          const bbox = textRefs[index]?.getBBox();
+          const x =
+            (fullbbox !== undefined ? xm - fullbbox.width / 2 : xm) + xPrev;
+          xPrev += bbox !== undefined ? bbox.width : 0;
+          return (
+            <text
+              key={`${connection.from.key}${connection.to.key}${index}`}
+              x={x}
+              y={ym + 2}
+              fill="black"
+              ref={(e) => {
+                if (e === null || e === undefined || !!textRefs[index]) return;
+                const nn = [...textRefs];
+                nn[index] = e;
+                setTextRefs(nn);
+              }}
+              onClick={onClick}
+              style={{ cursor: "pointer", ...(t.style ?? {}) }}
+            >
+              {t.text}
+            </text>
+          );
+        })}
+        {/* <text
           x={bbox !== undefined ? xm - bbox.width / 2 : xm}
-          y={ym}
+          y={ym + 2}
           fill="black"
           ref={setTextRef}
           onClick={onClick}
           style={{ cursor: "pointer" }}
         >
           {text}
-        </text>
+        </text> */}
       </>
     );
   }

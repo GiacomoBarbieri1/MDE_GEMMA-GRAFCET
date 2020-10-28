@@ -79,19 +79,23 @@ export class Transition {
   }
 
   @computed
-  get connectionText(): string {
+  get connectionText(): { text: string; style?: React.CSSProperties }[] {
     const cond = this.conditionExpression.substring(0, 20);
-    const negation =
+    const hasNegation =
       this.isNegated &&
       (this.from.type === StepType.MACRO ||
-        this.from.type === StepType.ENCLOSING)
-        ? "\u00AF"
-        : "";
-    return `${
-      this.from.type === StepType.CONTAINER
-        ? ""
-        : `${this.priority}${negation}:`
-    }${cond}${this.conditionExpression.length > 20 ? "..." : ""}`;
+        this.from.type === StepType.ENCLOSING);
+    const showPriority =
+      this.from.type !== StepType.CONTAINER &&
+      this.connection.from.outputs.length > 1;
+
+    return [
+      {
+        text: showPriority ? `${this.priority}:` : "",
+        style: { textDecoration: hasNegation ? "overline" : undefined },
+      },
+      { text: `${cond}${this.conditionExpression.length > 20 ? "..." : ""}` },
+    ];
   }
 
   @computed

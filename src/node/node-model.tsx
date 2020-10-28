@@ -54,7 +54,7 @@ export interface NodeData<
 
 export type ConnectionData<D> = {
   ConnectionView: React.FunctionComponent;
-  connectionText: string;
+  connectionText: { text: string; style?: React.CSSProperties }[];
   toJson: JsonType;
 };
 
