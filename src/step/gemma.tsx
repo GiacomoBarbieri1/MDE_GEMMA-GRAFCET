@@ -160,6 +160,7 @@ export class GemmaGrafcet implements GlobalData<Step> {
   get steps(): Step[] {
     return [...this.graph.nodes.values()]
       .filter((node) => !node.isHidden && node.data.type !== StepType.CONTAINER)
+      .sort((a, b) => a.data.id - b.data.id)
       .map((node) => node.data);
   }
 

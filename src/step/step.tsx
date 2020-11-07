@@ -34,7 +34,7 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   errors = observable.map<string, string>();
 
   constructor(
-    private node: GemmaNode,
+    public node: GemmaNode,
     d?: {
       description?: string;
       family?: ProcedureType;
@@ -49,7 +49,6 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
     reaction(
       (_) => this.isInitial,
       (isInitial, _) => {
-        console.log(isInitial);
         if (isInitial) {
           const otherInitial = this.automationSystem.steps.find(
             (s) => s.isInitial && s !== this
@@ -123,7 +122,22 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   }
   @computed
   get id(): number {
-    return this.automationSystem.steps.indexOf(this as any) + 1;
+    if (this.name.length == 2) {
+      let delta: number;
+      switch (this.family) {
+        case ProcedureType.A:
+          delta = 0;
+          break;
+        case ProcedureType.F:
+          delta = 7;
+          break;
+        case ProcedureType.D:
+          delta = 7 + 6;
+          break;
+      }
+      return delta + Number.parseInt(this.name[1]);
+    }
+    return 0;
   }
 
   spec = {
@@ -241,7 +255,7 @@ export type MacroStep = BaseStep & {
   type: StepType.MACRO;
 };
 
-const EnclosingDecoration = ({
+export const EnclosingDecoration = ({
   nodeHeight,
   left,
 }: {
