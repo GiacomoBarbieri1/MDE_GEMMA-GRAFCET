@@ -45,6 +45,10 @@ export const NodeView: React.FC<NodeViewProps> = observer((params) => {
     },
     [rootStore, node, selectingInput, isValidInput]
   );
+
+  if (node.isHidden && !rootStore.showHidden) {
+    return <></>;
+  }
   // const [_, setDivRef] = React.useState<HTMLDivElement | null>(null);
   const { x, y } = node;
 

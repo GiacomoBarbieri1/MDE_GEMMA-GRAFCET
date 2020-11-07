@@ -140,6 +140,9 @@ export class RootStoreModel<
   @observable
   selectingInputFor?: NodeModel<D, G, C>;
 
+  @observable
+  showHidden = true;
+
   // Select a node
   @action
   selectNode = (node: NodeModel<D, G, C>) => {
@@ -175,9 +178,6 @@ export class RootStoreModel<
   // Remove a node
   @action
   removeNode = (node: NodeModel<D, G, C>): void => {
-    if (node === this.selectedNode) {
-      this.selectedNode = undefined;
-    }
     if (this.hideOnDelete) {
       node.isHidden = true;
       for (const _in of node.inputs) {
@@ -187,6 +187,9 @@ export class RootStoreModel<
         _out.isHidden = true;
       }
     } else {
+      if (node === this.selectedNode) {
+        this.selectedNode = undefined;
+      }
       if (this.nodes.delete(node.key)) {
         for (const _in of node.inputs) {
           _in.from.outputs.remove(_in);
@@ -211,12 +214,12 @@ export class RootStoreModel<
 
   @action
   removeConnection = (connection: ConnModel<D, G, C>): void => {
-    if (connection === this.selectedConnection) {
-      this.selectedConnection = undefined;
-    }
     if (this.hideOnDelete) {
       connection.isHidden = true;
     } else {
+      if (connection === this.selectedConnection) {
+        this.selectedConnection = undefined;
+      }
       connection.from.outputs.remove(connection);
       connection.to.inputs.remove(connection);
     }

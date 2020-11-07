@@ -19,6 +19,7 @@ const triangleFromCenter = (
   const y0 = y + height;
   return `M${x} ${y} L${x - width / 2} ${y0} L${x + width / 2} ${y0} Z`;
 };
+
 const getStartPositionConnection = (
   from: NodeModel<any, any, any>
 ): { x: number; y: number } => {
@@ -50,6 +51,10 @@ const getStartPositionConnection = (
 export const ArrowView: React.FC<ArrowViewProps> = observer(
   ({ connection }: ArrowViewProps) => {
     const rootStore = useStore();
+
+    if (connection.isHidden && !rootStore.showHidden) {
+      return <></>;
+    }
     const { from, to, isSelected } = connection;
     const { x: x1, y: y1 } = getStartPositionConnection(from);
 
