@@ -191,16 +191,17 @@ export class GemmaGrafcet implements GlobalData<Step> {
     const main = templateGemmaGrafcet(this);
     const globals = templateGlobals(this.signals);
     const files = [
-      new SourceFile("main.txt", main),
+      new SourceFile("GEMMA.txt", main),
       new SourceFile("GVL.txt", globals),
     ];
 
     for (const s of this.steps.values()) {
-      if (s.type === StepType.ENCLOSING) {
-        files.push(
-          new SourceFile(s.name + "_FB.txt", enclosingStepTemplate(s))
-        );
-      } else if (s.type === StepType.MACRO) {
+      // if (s.type === StepType.ENCLOSING) {
+      //   files.push(
+      //     new SourceFile(s.name + "_FB.txt", enclosingStepTemplate(s))
+      //   );
+      // } else
+      if (s.type === StepType.ENCLOSING || s.type === StepType.MACRO) {
         files.push(new SourceFile(s.name + "_FB.txt", macroStepTemplate(s)));
       }
     }
@@ -404,11 +405,11 @@ const regexSignalDefaultValid = {
     message: 'should be "TRUE" or "FALSE"',
   },
   [SignalTypeBase.int]: {
-    regex: /^-?[1-9][0-9]*$/,
+    regex: /^(-?[1-9][0-9]*|0)$/,
     message: "should be an integer",
   },
   [SignalTypeBase.uint]: {
-    regex: /^[1-9][0-9]*$/,
+    regex: /^([1-9][0-9]*|0)$/,
     message: "should be a positive integer",
   },
   [SignalTypeBase.real]: {
@@ -558,11 +559,6 @@ export const makeBaseGemmaTemplate = (
       A6: { type: StepType.SIMPLE, x: 173, y: 54 },
       A7: { type: StepType.MACRO, x: 239, y: 176 },
     },
-    [ProcedureType.D]: {
-      D1: { type: StepType.MACRO, x: 146, y: 767 },
-      D2: { type: StepType.SIMPLE, x: 221, y: 573 },
-      D3: { type: StepType.ENCLOSING, x: 381, y: 639 },
-    },
     [ProcedureType.F]: {
       F1: { type: StepType.MACRO, x: 768, y: 707 },
       F2: { type: StepType.MACRO, x: 846, y: 233 },
@@ -570,6 +566,11 @@ export const makeBaseGemmaTemplate = (
       F4: { type: StepType.ENCLOSING, x: 848, y: 29 },
       F5: { type: StepType.ENCLOSING, x: 734, y: 282 },
       F6: { type: StepType.ENCLOSING, x: 722, y: 378 },
+    },
+    [ProcedureType.D]: {
+      D1: { type: StepType.MACRO, x: 146, y: 767 },
+      D2: { type: StepType.SIMPLE, x: 221, y: 573 },
+      D3: { type: StepType.ENCLOSING, x: 381, y: 639 },
     },
   };
 
@@ -590,17 +591,19 @@ export const makeBaseGemmaTemplate = (
   }
 
   const connections = {
-    A1: ["F2", "F1", "F6", "F5", "F4"],
+    A1: ["F2", "F1", "F5", "F4"],
     A2: ["A1"],
     A3: ["A4"],
     A4: ["F1"],
-    A5: ["A7"],
+    A5: ["A6", "A7"],
     A6: ["A1"],
     A7: ["A4"],
-    F1: ["F3", "A2", "A3", "D1", "D3"],
+    F1: ["F3", "F4", "F5", "F6", "A2", "A3", "D1", "D2", "D3"],
     F2: ["F1"],
     F3: ["A1"],
     F4: ["A6"],
+    F5: ["F1", "F4"],
+    F6: ["F1", "D1"],
     D1: ["D2", "A5"],
     D2: ["A5"],
     D3: ["A2", "A3"],
