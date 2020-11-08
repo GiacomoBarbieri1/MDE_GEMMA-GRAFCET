@@ -1,6 +1,6 @@
-import { MacroStep } from "./step";
+import { MacroStep, EnclosingStep } from "./step";
 
-export const macroStepTemplate = (model: MacroStep) =>
+export const macroStepTemplate = (model: MacroStep | EnclosingStep) =>
   `\
 FUNCTION_BLOCK ${model.name}_FB
 

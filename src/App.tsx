@@ -13,6 +13,7 @@ import { NodeData, ConnectionData } from "./node/node-model";
 import { PropertiesView } from "./properties/properties-view";
 import { gemmaBuilders, makeBaseGemmaTemplate } from "./step/gemma";
 import { importJson } from "./utils";
+import { observer } from "mobx-react-lite";
 
 export const storeContext = React.createContext<RootStoreModel<
   any,
@@ -88,7 +89,7 @@ export function App() {
           }}
         >
           <div className="row" style={{ minHeight: 0, flex: 1 }}>
-            <div className="col">
+            <div className="col" style={{ flex: 1 }}>
               <TopMenu store={store} globalDB={globalDB!} setStore={setStore} />
               <MainCanvas />
             </div>
@@ -100,6 +101,16 @@ export function App() {
     </storeContext.Provider>
   );
 }
+
+const ToggleShowHidden = observer(({ store }: { store: RootStore }) => (
+  <Button
+    onClick={(_) => {
+      store.showHidden = !store.showHidden;
+    }}
+  >
+    {store.showHidden ? "Hide Deleted" : "Show Deleted"}
+  </Button>
+));
 
 function TopMenu({
   store,
@@ -119,87 +130,96 @@ function TopMenu({
     <div
       className="row"
       style={{
-        justifyContent: "flex-end",
+        justifyContent: "space-between",
         borderBottom: "rgb(221 220 220) solid 1.5px",
       }}
     >
-      <Button
-        onClick={(_) => {
-          store.saveModel();
+      <ToggleShowHidden store={store} />
+      <div
+        className="row"
+        style={{
+          justifyContent: "flex-end",
         }}
       >
-        Save
-      </Button>
-      <Button onClick={toggleDialog}>Reset</Button>
-      <Dialog
-        open={isResetDialogOpen}
-        onClose={toggleDialog}
-        keepMounted
-        aria-labelledby="alert-dialog-slide-title"
-        aria-describedby="alert-dialog-slide-description"
-      >
-        <DialogTitle id="alert-dialog-slide-title">
-          Reset Diagram State
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-slide-description">
-            Are you sure you want to reset the diagram state? All changes will
-            be lost.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={toggleDialog} color="primary">
-            Close
-          </Button>
-          <Button
-            onClick={async (_) => {
-              const _store = makeBaseGemmaTemplate(globalDB);
-              setStore(_store);
-              toggleDialog();
-            }}
-            color="primary"
-          >
-            Reset Diagram
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Button
-        onClick={(_) => {
-          store.downloadModel();
-        }}
-      >
-        Export
-      </Button>
-      <Button>
-        <label
-          htmlFor="import-file-input"
-          style={{ margin: 0, width: "100%", cursor: "pointer" }}
-        >
-          Import
-        </label>
-        <input
-          type="file"
-          id="import-file-input"
-          accept="application/json"
-          style={{ display: "none" }}
-          onChange={async (e) => {
-            const json = await importJson(e);
-            if (typeof json === "string") {
-              try {
-                const val = JSON.parse(json);
-                const _store = new RootStoreModel({
-                  db: globalDB,
-                  json: val,
-                  builders: gemmaBuilders,
-                });
-                setStore(_store);
-              } catch (e) {
-                console.log(e);
-              }
-            }
+        <Button
+          onClick={(_) => {
+            store.saveModel();
           }}
-        />
-      </Button>
+        >
+          Save
+        </Button>
+        <Button onClick={toggleDialog}>Reset</Button>
+        <Dialog
+          open={isResetDialogOpen}
+          onClose={toggleDialog}
+          keepMounted
+          aria-labelledby="alert-dialog-slide-title"
+          aria-describedby="alert-dialog-slide-description"
+        >
+          <DialogTitle id="alert-dialog-slide-title">
+            Reset Diagram State
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText id="alert-dialog-slide-description">
+              Are you sure you want to reset the diagram state? All changes will
+              be lost.
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={toggleDialog} color="primary">
+              Close
+            </Button>
+            <Button
+              onClick={async (_) => {
+                const _store = makeBaseGemmaTemplate(globalDB);
+                setStore(_store);
+                toggleDialog();
+              }}
+              color="primary"
+            >
+              Reset Diagram
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Button
+          onClick={(_) => {
+            store.downloadModel();
+          }}
+        >
+          Export
+        </Button>
+        <Button>
+          <label
+            htmlFor="import-file-input"
+            style={{ margin: 0, width: "100%", cursor: "pointer" }}
+          >
+            Import
+          </label>
+          <input
+            type="file"
+            id="import-file-input"
+            accept="application/json"
+            style={{ display: "none" }}
+            onChange={async (e) => {
+              const json = await importJson(e);
+              if (typeof json === "string") {
+                try {
+                  const val = JSON.parse(json);
+                  const _store = new RootStoreModel({
+                    db: globalDB,
+                    json: val,
+                    builders: gemmaBuilders,
+                    hideOnDelete: true,
+                  });
+                  setStore(_store);
+                } catch (e) {
+                  console.log(e);
+                }
+              }
+            }}
+          />
+        </Button>
+      </div>
     </div>
   );
 }
