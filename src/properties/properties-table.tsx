@@ -45,14 +45,15 @@ export const PropertiesTableNode = observer(
         <div style={{ margin: "0 3px" }}>
           {self.data.nInputs !== 0 && (
             <div className="row" key="inputs">
-              <h4 style={{ margin: "3px 0 5px 0", width: "100px" }}>Inputs:</h4>
-              <div>
+              <h4 style={{ margin: "3px 0 5px 0", width: "90px" }}>Inputs:</h4>
+              <div style={{ flex: 1 }}>
                 {self.inputs.map((v) => (
                   <Button
                     onClick={() => rootStore.selectConnection(v as any)}
                     key={v.from.key}
                     variant="outlined"
                     size="small"
+                    style={{minWidth: "0px"}}
                   >
                     {v.from.name}
                   </Button>
@@ -61,15 +62,16 @@ export const PropertiesTableNode = observer(
               </div>
             </div>
           )}
-          <div key="outputs" className="row">
-            <h4 style={{ margin: "3px 0 5px 0", width: "100px" }}>Outputs:</h4>
-            <div>
+          <div className="row" key="outputs">
+            <h4 style={{ margin: "3px 0 5px 0", width: "90px" }}>Outputs:</h4>
+            <div style={{ flex: 1 }}>
               {self.outputs.map((v) => (
                 <Button
                   onClick={() => rootStore.selectConnection(v as any)}
                   key={v.to.key}
                   variant="outlined"
                   size="small"
+                  style={{minWidth: "0px"}}
                 >
                   {v.to.name}
                 </Button>
