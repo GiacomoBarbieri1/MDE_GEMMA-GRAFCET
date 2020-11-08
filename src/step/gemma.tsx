@@ -354,7 +354,7 @@ const SignalRow = observer(
               type="text"
               value={s.name}
               onChange={(e) => (s.name = e.target.value)}
-              style={{ width: "110px" }}
+              style={{ width: "145px" }}
               error={error !== undefined}
             />
           </Tooltip>
@@ -382,7 +382,7 @@ const SignalRow = observer(
               onChange={(e) => {
                 s.defaultValue = e.target.value.replace(/\s/g, "");
               }}
-              style={{ width: "80px" }}
+              style={{ width: "70px" }}
               error={hasError}
             />
           </Tooltip>
