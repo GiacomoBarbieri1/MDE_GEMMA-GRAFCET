@@ -41,7 +41,7 @@ code {
 }
 
 .multiline-input {
-  width: 180px;
+  width: 200px;
   height: 60px;
   overflow: auto;
   border-radius: 5px;

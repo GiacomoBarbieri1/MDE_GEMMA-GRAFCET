@@ -189,7 +189,7 @@ const ConditionInput = observer(
     const font = "400 15px monospace";
 
     return (
-      <div style={{ width: "180px", position: "relative" }} className="center">
+      <div style={{ width: "206px", position: "relative" }} className="center">
         <span
           style={{
             font,
@@ -235,7 +235,10 @@ const ConditionInput = observer(
           spellCheck={false}
           value={m.conditionExpression}
           onChange={(e) => {
-            m.conditionExpression = e.currentTarget.value;
+            const value = e.currentTarget.value;
+            if (value.match(/^\s$/) === null) {
+              m.conditionExpression = value.replace(/\s[^\S\r\n]/g, " ");
+            }
           }}
         ></textarea>
       </div>
