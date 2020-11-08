@@ -1,5 +1,6 @@
+import { Checkbox } from "@material-ui/core";
 import Switch from "@material-ui/core/Switch";
-import { action, computed, observable } from "mobx";
+import { action, computed, observable, ObservableSet } from "mobx";
 import { observer } from "mobx-react-lite";
 import React, { useRef } from "react";
 import { JsonType } from "../canvas/store";
@@ -21,6 +22,8 @@ export class Transition {
   priority: number;
   @observable
   isNegated: boolean;
+  @observable
+  signalsWithMemory: ObservableSet<string> = new ObservableSet();
   @computed
   get priorityChoices() {
     return [...Array(this.connection.from.outputs.length)].map(
@@ -161,14 +164,67 @@ export class Transition {
             </tr>
           )}
         </PropertiesTable>
-        <div>
-          <h4 style={{ margin: "0" }}>Errors</h4>
-          {this.expressionErrors.length === 0 && "No errors"}
-          <ul style={{ color: "indianred", marginTop: "0" }} key="errors">
-            {this.expressionErrors.map((err, index) => (
-              <li key={index}>{err}</li>
-            ))}
-          </ul>
+        <div className="row">
+          <div style={{ flex: 1 }}>
+            <h4 style={{ margin: "0" }}>Errors</h4>
+            {this.expressionErrors.length === 0 && "No errors"}
+            <ul
+              style={{
+                color: "indianred",
+                marginTop: "0",
+                paddingLeft: "20px",
+              }}
+              key="errors"
+            >
+              {this.expressionErrors.map((err, index) => (
+                <li key={index}>{err}</li>
+              ))}
+            </ul>
+          </div>
+          <div style={{ width: "10px" }} />
+          <div style={{ flex: 1 }}>
+            <h4 key="title" style={{ margin: "0" }}>
+              With Memory
+            </h4>
+            {[
+              ...this.expressionTokens
+                .map(([token, _]) => token)
+                .filter(
+                  (token) =>
+                    token instanceof VarId &&
+                    this.from.automationSystem.signals.some(
+                      (s) => s.name === token.toString()
+                    )
+                )
+                .reduce((set, token) => {
+                  set.add(token.toString());
+                  return set;
+                }, new Set<string>())
+                .values(),
+            ].map((token) => {
+              const withMemory = this.signalsWithMemory.has(token);
+              const MemCheckbox = observer(() => (
+                <div className="row" style={{ alignItems: "center" }}>
+                  <div style={{ flex: 1 }}>{token}</div>
+                  <div>
+                    <Checkbox
+                      checked={withMemory}
+                      size="small"
+                      color="primary"
+                      onChange={() => {
+                        if (withMemory) {
+                          this.signalsWithMemory.delete(token);
+                        } else {
+                          this.signalsWithMemory.add(token);
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              ));
+              return <MemCheckbox key={token} />;
+            })}
+          </div>
         </div>
       </>
     );

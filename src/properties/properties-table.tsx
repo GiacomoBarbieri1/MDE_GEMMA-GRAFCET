@@ -44,7 +44,7 @@ export const PropertiesTableNode = observer(
         </PropertiesTable>
         <div style={{ margin: "0 3px" }}>
           {self.data.nInputs !== 0 && (
-            <div className="row" key="inputs">
+            <div className="row" key="inputs" style={{ alignItems: "center" }}>
               <h4 style={{ margin: "3px 0 5px 0", width: "90px" }}>Inputs:</h4>
               <div style={{ flex: 1 }}>
                 {self.inputs.map((v) => (
@@ -53,7 +53,7 @@ export const PropertiesTableNode = observer(
                     key={v.from.key}
                     variant="outlined"
                     size="small"
-                    style={{minWidth: "0px"}}
+                    style={{ minWidth: "0px" }}
                   >
                     {v.from.name}
                   </Button>
@@ -62,7 +62,7 @@ export const PropertiesTableNode = observer(
               </div>
             </div>
           )}
-          <div className="row" key="outputs">
+          <div className="row" key="outputs" style={{ alignItems: "center" }}>
             <h4 style={{ margin: "3px 0 5px 0", width: "90px" }}>Outputs:</h4>
             <div style={{ flex: 1 }}>
               {self.outputs.map((v) => (
@@ -71,7 +71,7 @@ export const PropertiesTableNode = observer(
                   key={v.to.key}
                   variant="outlined"
                   size="small"
-                  style={{minWidth: "0px"}}
+                  style={{ minWidth: "0px" }}
                 >
                   {v.to.name}
                 </Button>
