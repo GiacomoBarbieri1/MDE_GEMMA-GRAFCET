@@ -38,7 +38,7 @@ export class Transition {
   };
 
   constructor(
-    private connection: GemmaConn,
+    public connection: GemmaConn,
     d?: {
       conditionExpression?: string;
       priority?: number;
@@ -129,6 +129,23 @@ export class Transition {
   }
 
   ConnectionView = observer(() => {
+    const signalsInCondition = [
+      ...this.expressionTokens
+        .map(([token, _]) => token)
+        .filter(
+          (token) =>
+            token instanceof VarId &&
+            this.from.automationSystem.signals.some(
+              (s) => s.name === token.toString()
+            )
+        )
+        .reduce((set, token) => {
+          set.add(token.toString());
+          return set;
+        }, new Set<string>())
+        .values(),
+    ];
+
     return (
       <>
         <PropertiesTable key="table">
@@ -186,22 +203,8 @@ export class Transition {
             <h4 key="title" style={{ margin: "0" }}>
               With Memory
             </h4>
-            {[
-              ...this.expressionTokens
-                .map(([token, _]) => token)
-                .filter(
-                  (token) =>
-                    token instanceof VarId &&
-                    this.from.automationSystem.signals.some(
-                      (s) => s.name === token.toString()
-                    )
-                )
-                .reduce((set, token) => {
-                  set.add(token.toString());
-                  return set;
-                }, new Set<string>())
-                .values(),
-            ].map((token) => {
+            {signalsInCondition.length === 0 && "No signals in transition"}
+            {signalsInCondition.map((token) => {
               const withMemory = this.signalsWithMemory.has(token);
               const MemCheckbox = observer(() => (
                 <div className="row" style={{ alignItems: "center" }}>

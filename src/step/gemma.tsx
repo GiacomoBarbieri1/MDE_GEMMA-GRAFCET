@@ -24,7 +24,6 @@ import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
 import "./gemma-styles.css";
 import { SourceDirectory, SourceFile } from "../codegen/file-system";
-import { enclosingStepTemplate } from "./enclosing-step";
 import { macroStepTemplate } from "./macro-step";
 import { NodeView } from "../node/node";
 import { Tooltip } from "@material-ui/core";
@@ -120,6 +119,19 @@ export class GemmaGrafcet implements GlobalData<Step> {
 
   initState(): void {
     const nodes = [...this.graph.nodes.values()];
+    const _selected = nodes.find(
+      (n) => n.data.type !== StepType.CONTAINER && !n.isHidden
+    );
+    if (_selected !== undefined) {
+      this.graph.selectNode(_selected);
+    }
+    const _selectedTrans = nodes
+      .flatMap((n) => n.inputs)
+      .find((t) => !t.isHidden);
+    if (_selectedTrans !== undefined) {
+      this.graph.selectConnection(_selectedTrans);
+    }
+
     this.fFamily =
       nodes.find(
         (n) =>
@@ -551,26 +563,26 @@ export const makeBaseGemmaTemplate = (
     };
   } = {
     [ProcedureType.A]: {
-      A1: { type: StepType.SIMPLE, x: 497, y: 125 },
-      A2: { type: StepType.SIMPLE, x: 260, y: 364 },
-      A3: { type: StepType.SIMPLE, x: 444, y: 400 },
-      A4: { type: StepType.SIMPLE, x: 457, y: 246 },
-      A5: { type: StepType.MACRO, x: 100, y: 301 },
-      A6: { type: StepType.SIMPLE, x: 173, y: 54 },
+      A1: { type: StepType.SIMPLE, x: 517, y: 142 },
+      A2: { type: StepType.SIMPLE, x: 240, y: 417 },
+      A3: { type: StepType.SIMPLE, x: 418, y: 406 },
+      A4: { type: StepType.SIMPLE, x: 479, y: 314 },
+      A5: { type: StepType.MACRO, x: 86, y: 325 },
+      A6: { type: StepType.SIMPLE, x: 156, y: 31 },
       A7: { type: StepType.MACRO, x: 239, y: 176 },
     },
     [ProcedureType.F]: {
-      F1: { type: StepType.MACRO, x: 768, y: 707 },
-      F2: { type: StepType.MACRO, x: 846, y: 233 },
-      F3: { type: StepType.MACRO, x: 982, y: 147 },
+      F1: { type: StepType.MACRO, x: 743, y: 709 },
+      F2: { type: StepType.MACRO, x: 966, y: 683 },
+      F3: { type: StepType.MACRO, x: 704, y: 171 },
       F4: { type: StepType.ENCLOSING, x: 848, y: 29 },
-      F5: { type: StepType.ENCLOSING, x: 734, y: 282 },
-      F6: { type: StepType.ENCLOSING, x: 722, y: 378 },
+      F5: { type: StepType.ENCLOSING, x: 979, y: 478 },
+      F6: { type: StepType.ENCLOSING, x: 729, y: 876 },
     },
     [ProcedureType.D]: {
-      D1: { type: StepType.MACRO, x: 146, y: 767 },
+      D1: { type: StepType.MACRO, x: 75, y: 895 },
       D2: { type: StepType.SIMPLE, x: 221, y: 573 },
-      D3: { type: StepType.ENCLOSING, x: 381, y: 639 },
+      D3: { type: StepType.ENCLOSING, x: 309, y: 735 },
     },
   };
 

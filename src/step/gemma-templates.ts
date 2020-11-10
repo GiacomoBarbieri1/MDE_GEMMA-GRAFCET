@@ -83,7 +83,7 @@ VAR_GLOBAL
     ${signals
       .map(
         (s) =>
-          `${s.name} : ${s.type}${
+          `${s.name} : ${s.type.toUpperCase()}${
             s.defaultValue.trim().length === 0 ? "" : " :=" + s.defaultValue
           };`
       )

@@ -90,6 +90,9 @@ const PropertiesTableStyled = styled.table`
   thead {
     font-size: 1.1em;
     font-weight: bolder;
+    tr td:last-child {
+      padding: 4px 0px 4px 10px;
+    }
   }
   tr td {
     padding: 0;

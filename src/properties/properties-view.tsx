@@ -116,7 +116,7 @@ export const PropertiesView: React.FC<Props> = observer(() => {
   return (
     <Resizable
       minHeight={200}
-      defaultSize={{ height: 280, width: "auto" }}
+      defaultSize={{ height: 295, width: "auto" }}
       style={{
         position: "relative",
         background: "white",

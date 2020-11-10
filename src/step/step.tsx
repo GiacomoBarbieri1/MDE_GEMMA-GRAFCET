@@ -122,7 +122,7 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   }
   @computed
   get id(): number {
-    if (this.name.length == 2) {
+    if (this.name.length === 2) {
       let delta: number;
       switch (this.family) {
         case ProcedureType.A:

@@ -205,10 +205,10 @@ export class RootStoreModel<
   activateNode = (node: NodeModel<D, G, C>) => {
     node.isHidden = false;
     for (const _in of node.inputs) {
-      _in.isHidden = false;
+      if (!_in.from.isHidden) _in.isHidden = false;
     }
     for (const _out of node.outputs) {
-      _out.isHidden = false;
+      if (!_out.to.isHidden) _out.isHidden = false;
     }
   };
 
