@@ -53,7 +53,7 @@ export const PropertiesTableNode = observer(
                     key={v.from.key}
                     variant="outlined"
                     size="small"
-                    style={{ minWidth: "0px" }}
+                    style={{ minWidth: "39px" }}
                   >
                     {v.from.name}
                   </Button>
@@ -71,7 +71,7 @@ export const PropertiesTableNode = observer(
                   key={v.to.key}
                   variant="outlined"
                   size="small"
-                  style={{ minWidth: "0px" }}
+                  style={{ minWidth: "39px" }}
                 >
                   {v.to.name}
                 </Button>
