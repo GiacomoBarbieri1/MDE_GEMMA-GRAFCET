@@ -1,7 +1,8 @@
 import { VarId } from "./custom_parser";
-import { GemmaGrafcet, Signal } from "./gemma";
+import { GemmaGrafcet } from "./gemma";
 import { EnclosingStep, MacroStep, SimpleStep, StepType } from "./step";
 import { Transition } from "./transition";
+import { Signal } from "./signal";
 
 export class H {
   static textOrEmpty = (cond: boolean, text: string) => (cond ? text : "");
