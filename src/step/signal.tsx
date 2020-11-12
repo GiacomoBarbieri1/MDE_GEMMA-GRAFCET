@@ -10,6 +10,7 @@ import TableCell from "@material-ui/core/TableCell";
 import TableRow from "@material-ui/core/TableRow";
 import "./gemma-styles.css";
 import { Tooltip } from "@material-ui/core";
+import { GemmaGrafcet } from "./gemma";
 
 enum SignalTypeBase {
   bool = "bool",
@@ -87,28 +88,23 @@ export const SignalRow = observer(
     signal: s,
     showDelete,
     removeSignal,
-    error,
   }: {
     signal: Signal;
     showDelete: boolean;
     removeSignal: (s: Signal) => void;
-    error?: string;
   }) => {
-    const validator = regexSignalDefaultValid[s.typeBase];
-    const hasError =
-      s.defaultValue.length !== 0 && !validator.regex.test(s.defaultValue);
-    const defaultValueError = hasError ? validator.message : "";
-
     return (
       <TableRow>
         <TableCell>
-          <Tooltip title={error !== undefined ? error : ""}>
+          <Tooltip
+            title={s.errors["Name"] !== undefined ? s.errors["Name"] : ""}
+          >
             <TextField
               type="text"
               value={s.name}
               onChange={(e) => (s.name = e.target.value)}
               style={{ width: "145px" }}
-              error={error !== undefined}
+              error={s.errors["Name"] !== undefined}
             />
           </Tooltip>
         </TableCell>
@@ -128,7 +124,14 @@ export const SignalRow = observer(
           />
         </TableCell>
         <TableCell>
-          <Tooltip title={defaultValueError} open={true}>
+          <Tooltip
+            title={
+              s.errors["Default Value"] !== undefined
+                ? s.errors["Default Value"]
+                : ""
+            }
+            open={true}
+          >
             <TextField
               type={s.typeBase === SignalTypeBase.bool ? "text" : "number"}
               value={s.defaultValue}
@@ -136,7 +139,7 @@ export const SignalRow = observer(
                 s.defaultValue = e.target.value.replace(/\s/g, "");
               }}
               style={{ width: "70px" }}
-              error={hasError}
+              error={s.errors["Default Value"] !== undefined}
             />
           </Tooltip>
         </TableCell>
@@ -204,6 +207,24 @@ export class Signal {
     }
   };
 
+  @computed
+  get errors() {
+    const name =
+      this.automationSystem.signals.findIndex(
+        (s2) => s2.name === this.name && this !== s2
+      ) !== -1
+        ? "Duplicate name"
+        : undefined;
+
+    const validator = regexSignalDefaultValid[this.typeBase];
+    const hasError =
+      this.defaultValue.length !== 0 &&
+      !validator.regex.test(this.defaultValue);
+    const defaultValueError = hasError ? validator.message : undefined;
+
+    return { Name: name, "Default Value": defaultValueError };
+  }
+
   description?: string;
 
   @computed
@@ -215,23 +236,29 @@ export class Signal {
     };
   }
 
-  static fromJson(json: JsonType): Signal | undefined {
+  static fromJson(
+    automationSystem: GemmaGrafcet,
+    json: JsonType
+  ): Signal | undefined {
     if (
       typeof json["name"] === "string" &&
       Object.keys(SignalType).includes(json["type"] as any)
     ) {
-      return new Signal(json);
+      return new Signal(automationSystem, json);
     } else {
       return undefined;
     }
   }
 
-  constructor(d?: {
-    name?: string;
-    description?: string;
-    type?: SignalType;
-    defaultValue?: string;
-  }) {
+  constructor(
+    private automationSystem: GemmaGrafcet,
+    d?: {
+      name?: string;
+      description?: string;
+      type?: SignalType;
+      defaultValue?: string;
+    }
+  ) {
     this.name = d?.name ?? "";
     this.description = d?.description;
     const typePrim = signalTypeToPrimitives(d?.type);

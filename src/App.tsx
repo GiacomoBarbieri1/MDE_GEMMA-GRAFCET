@@ -8,7 +8,7 @@ import React, { useCallback, useState } from "react";
 import { MainCanvas } from "./canvas/canvas";
 import { ConfigView } from "./canvas/config-view";
 import { createIndexedDB, IndexedDB } from "./canvas/persistence";
-import { RootStoreModel, GlobalData } from "./canvas/store";
+import { RootStoreModel, GlobalData, GraphWarnings } from "./canvas/store";
 import { NodeData, ConnectionData } from "./node/node-model";
 import { PropertiesView } from "./properties/properties-view";
 import { gemmaBuilders, makeBaseGemmaTemplate } from "./step/gemma";
@@ -112,16 +112,21 @@ const ToggleShowHidden = observer(({ store }: { store: RootStore }) => (
   </Button>
 ));
 
-function TopMenu({
+function TopMenu<
+  D extends NodeData<D, G, C>,
+  G extends GlobalData<D>,
+  C extends ConnectionData<D>
+>({
   store,
   setStore,
   globalDB,
 }: {
-  store: RootStore;
+  store: RootStoreModel<D, G, C>;
   globalDB: IndexedDB;
   setStore: (store: RootStore) => void;
 }) {
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isWarningsDialogOpen, setIsWarningsDialogOpen] = useState(false);
   const toggleDialog = useCallback(() => {
     setIsResetDialogOpen(!isResetDialogOpen);
   }, [isResetDialogOpen]);
@@ -183,11 +188,24 @@ function TopMenu({
         </Dialog>
         <Button
           onClick={(_) => {
-            store.downloadModel();
+            const hasWarnings = Object.values(store.globalData.warnings).some(
+              (v) => v.length > 0
+            );
+            if (hasWarnings) {
+              setIsWarningsDialogOpen(true);
+            } else {
+              store.downloadModel();
+            }
           }}
         >
           Export
         </Button>
+        <WarningsDialog
+          open={isWarningsDialogOpen}
+          toggleDialog={() => setIsWarningsDialogOpen(!isWarningsDialogOpen)}
+          warnings={store.globalData.warnings}
+          accept={store.downloadModel}
+        />
         <Button>
           <label
             htmlFor="import-file-input"
@@ -223,3 +241,73 @@ function TopMenu({
     </div>
   );
 }
+
+export const WarningsDialog = ({
+  open,
+  toggleDialog,
+  warnings,
+  accept,
+}: {
+  open: boolean;
+  toggleDialog: () => void;
+  warnings: GraphWarnings;
+  accept: () => void;
+}) => {
+  return (
+    <Dialog
+      open={open}
+      onClose={toggleDialog}
+      keepMounted
+      aria-labelledby="alert-dialog-slide-title"
+      aria-describedby="alert-dialog-slide-description"
+    >
+      <DialogTitle id="alert-dialog-slide-title">Download Diagram</DialogTitle>
+      <DialogContent>
+        <DialogContentText id="alert-dialog-slide-description">
+          There are some warnings in the diagram configuration. Do you want to
+          continue with the download?
+        </DialogContentText>
+        {Object.entries(warnings).map(([title, warnings]) => {
+          if (warnings.length === 0) {
+            return <></>;
+          }
+          return (
+            <div key={title} className="warning-list">
+              <h3>{title}</h3>
+              <ul>
+                {warnings[0].length === 2 && Array.isArray(warnings[0][1]) ? (
+                  <>
+                    {(warnings as [string, string[]][]).map(
+                      ([sectionTitle, warnings], index) => (
+                        <>
+                          <h5 key={sectionTitle}>{sectionTitle}</h5>
+                          {warnings.map((w, index) => (
+                            <li key={`${sectionTitle}${index}`}>{w}</li>
+                          ))}
+                        </>
+                      )
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {(warnings as string[]).map((w, index) => (
+                      <li key={index}>{w}</li>
+                    ))}
+                  </>
+                )}
+              </ul>
+            </div>
+          );
+        })}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={toggleDialog} color="primary">
+          Close
+        </Button>
+        <Button onClick={accept} color="primary">
+          Continue
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};

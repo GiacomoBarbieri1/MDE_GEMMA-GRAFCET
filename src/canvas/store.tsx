@@ -31,6 +31,8 @@ export type DataBuilder<
 type JsonTypeItem = number | string | boolean | JsonType;
 export type JsonType = { [key: string]: JsonTypeItem | JsonTypeItem[] };
 
+export type GraphWarnings = { [key: string]: string[] | Array<[string, Array<string>]> };
+
 export interface GlobalData<D extends NodeData<D, any, any>> {
   generateMainFile: string;
   generateSourceCode: SourceDirectory;
@@ -38,6 +40,7 @@ export interface GlobalData<D extends NodeData<D, any, any>> {
   View: React.FunctionComponent;
   CanvasView: React.FunctionComponent;
   toJson: JsonType;
+  warnings: GraphWarnings;
   initState?: () => void;
 }
 

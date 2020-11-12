@@ -4,6 +4,7 @@ import {
   RootStoreModel,
   DataBuilder,
   JsonType,
+  GraphWarnings,
 } from "../canvas/store";
 import { computed, IObservableArray, observable } from "mobx";
 import { observer } from "mobx-react-lite";
@@ -33,7 +34,9 @@ export class GemmaGrafcet implements GlobalData<Step> {
     let signals: Signal[] = [];
     if (Array.isArray(json?.signals)) {
       signals = json?.signals
-        .map((s) => (typeof s === "object" ? Signal.fromJson(s) : undefined))
+        .map((s) =>
+          typeof s === "object" ? Signal.fromJson(this, s) : undefined
+        )
         .filter((s) => s !== undefined) as Signal[];
     }
     this.signals = observable.array<Signal>(signals);
@@ -90,10 +93,6 @@ export class GemmaGrafcet implements GlobalData<Step> {
   aFamily?: NodeModel<Step, GemmaGrafcet, Transition>;
   dFamily?: NodeModel<Step, GemmaGrafcet, Transition>;
 
-  private _hasInitialStep(): boolean {
-    return [...this.graph.nodes.values()].some((n) => n.data.isInitial);
-  }
-
   @computed
   get steps(): Step[] {
     return [...this.graph.nodes.values()]
@@ -148,6 +147,65 @@ export class GemmaGrafcet implements GlobalData<Step> {
   }
 
   @computed
+  get warnings(): GraphWarnings {
+    const signalsErrors = [];
+    for (const s of this.signals) {
+      if (!!s.errors.Name) {
+        signalsErrors.push(`${s.name}. Name: ${s.errors["Name"]}.`);
+      }
+      if (!!s.errors["Default Value"]) {
+        signalsErrors.push(
+          `${s.name}. Default value: ${s.errors["Default Value"]}.`
+        );
+      }
+    }
+
+    const hasInitialStep = this.steps.some((s) => s.isInitial);
+    const stepsWithNoInputTransitions = this.steps.filter(
+      (s) => !s.node.inputs.some((n) => !n.isHidden)
+    );
+    const stepsWithNoOutputTransitions = this.steps.filter(
+      (s) => !s.node.outputs.some((n) => !n.isHidden)
+    );
+    const stepsErrors = [];
+    if (!hasInitialStep) {
+      stepsErrors.push("No initial step.");
+    }
+    if (stepsWithNoOutputTransitions.length !== 0) {
+      stepsErrors.push(
+        `Steps with no output transitions: ${stepsWithNoOutputTransitions
+          .map((s) => s.name)
+          .join(", ")}`
+      );
+    }
+    if (stepsWithNoInputTransitions.length !== 0) {
+      stepsErrors.push(
+        `Steps with no input transitions: ${stepsWithNoInputTransitions
+          .map((s) => s.name)
+          .join(", ")}`
+      );
+    }
+
+    const transitionErrors = this.steps
+      .flatMap((s) => s.transitions)
+      .filter(
+        (t) =>
+          t.parsedExpression?.errors !== undefined &&
+          t.parsedExpression?.errors.length > 0
+      )
+      .map((t) => [
+        `${t.from.name} -> ${t.to.name}`,
+        t.parsedExpression?.errors,
+      ]);
+
+    return {
+      Steps: stepsErrors,
+      Transitions: transitionErrors as any,
+      Signals: signalsErrors,
+    };
+  }
+
+  @computed
   get toJson(): JsonType {
     return {
       signals: this.signals.map((s) => s.toJson),
@@ -197,20 +255,13 @@ export class GemmaGrafcet implements GlobalData<Step> {
                 key={index}
                 showDelete={showDelete}
                 removeSignal={(s) => this.signals.remove(s)}
-                error={
-                  this.signals.findIndex(
-                    (s2) => s2.name === s.name && s !== s2
-                  ) !== -1
-                    ? "Duplicate name"
-                    : undefined
-                }
               />
             ))}
           </TableBody>
         </Table>
         <Button
           style={{ alignSelf: "flex-end" }}
-          onClick={(_) => this.signals.push(new Signal())}
+          onClick={(_) => this.signals.push(new Signal(this))}
         >
           Add Signal
         </Button>
@@ -311,7 +362,9 @@ export const make5NodesGraph = (
   const conn = rootStore.assignInput(s2!);
 
   rootStore.selectConnection(conn);
-  rootStore.globalData.signals.push(new Signal({ name: "" }));
+  rootStore.globalData.signals.push(
+    new Signal(rootStore.globalData, { name: "" })
+  );
   return rootStore;
 };
 

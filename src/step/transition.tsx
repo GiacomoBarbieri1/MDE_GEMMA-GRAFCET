@@ -176,7 +176,7 @@ export class Transition {
     let topOfAnd = false;
 
     let parent = s.parent;
-    while (parent != undefined) {
+    while (parent !== undefined) {
       if (parent instanceof AndParentExpressionContext) {
         topOfAnd = !topOfAnd;
       } else if (parent instanceof NotExpressionContext) {
