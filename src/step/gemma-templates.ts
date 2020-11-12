@@ -7,11 +7,22 @@ export class H {
   static textOrEmpty = (cond: boolean, text: string) => (cond ? text : "");
 }
 
+const memoryTransitionSuffix = (t: Transition): string => {
+  return `_${t.from.name}_${t.priority}_MEM`;
+};
+
 const templateCondition = (t: Transition): string => {
   return t.expressionTokens
     .map(([tok, _]) => {
       if (tok instanceof VarId) {
-        return "GVL." + tok.text;
+        // Is signal
+        return (
+          "GVL." +
+          tok.text +
+          (t.savedSignalsWithMemory.has(tok.text)
+            ? memoryTransitionSuffix(t)
+            : "")
+        );
       } else {
         return tok;
       }
@@ -71,7 +82,14 @@ ${index === 0 ? "IF" : "ELSIF"} ${templateCondition(t)}${
       _evaluateComplete(t, index) ? ` AND ${model.name}.Complete` : ""
     } THEN
   State:=${t.to.id};
-  Entry:=TRUE;`;
+  Entry:=TRUE;
+  ${model.transitions
+    .flatMap((t) =>
+      t.signalsWithMemory.map(
+        (sm) => `${sm}${memoryTransitionSuffix(t)} := FALSE;`
+      )
+    )
+    .join("  \n")}`;
   })
   .join("\n")}\
 ${H.textOrEmpty(transitions.length !== 0, "\nEND_IF")}`;
@@ -100,6 +118,14 @@ ${model.steps
   .filter((s) => s.type === StepType.ENCLOSING || s.type === StepType.MACRO)
   .map((s) => `  ${s.name}:${s.name}_FB;`)
   .join("\n")}
+${model.steps
+  .filter((s) => s.type === StepType.ENCLOSING || s.type === StepType.MACRO)
+  .flatMap((s) => s.transitions)
+  .flatMap((t) =>
+    t.signalsWithMemory.map((sm) => `${sm}${memoryTransitionSuffix(t)}`)
+  )
+  .map((sm) => `  ${sm}:BOOL:=FALSE;`)
+  .join("\n")}
 
   State:UINT:=${model.initialStep?.id};
   Entry:BOOL:=TRUE;
@@ -126,5 +152,19 @@ CASE State OF
     })
     .join("\n")}
 END_CASE
+
+${model.steps
+  .filter((s) => s.type === StepType.ENCLOSING || s.type === StepType.MACRO)
+  .flatMap((s) => s.transitions)
+  .flatMap((t) =>
+    t.signalsWithMemory.map(
+      (sm) => `\
+IF State = ${t.from.id} AND GVL.${sm} THEN
+  ${sm}${memoryTransitionSuffix(t)} := TRUE;
+END_IF
+`
+    )
+  )
+  .join("\n")}
 `;
 };

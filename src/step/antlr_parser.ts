@@ -16,6 +16,8 @@ class ErrorVisitor
   extends AbstractParseTreeVisitor<string[]>
   implements SimpleBooleanVisitor<string[]> {
   isInvalid: boolean = false;
+  boolSignals: Array<IdentifierExpressionContext> = [];
+
   constructor(public signals: { numSignals: string[]; boolSignals: string[] }) {
     super();
   }
@@ -38,6 +40,7 @@ class ErrorVisitor
 
   visitIdentifierExpression(n: IdentifierExpressionContext): string[] {
     const valid = this.signals.boolSignals.includes(n.text);
+    this.boolSignals.push(n);
     return valid ? [] : [`'${n.text}' is not a defined boolean signal`];
   }
 
@@ -47,7 +50,6 @@ class ErrorVisitor
   }
 
   visitExpression(n: ExpressionContext): string[] {
-    console.log("Dddddddddddddddddddddd");
     if (n.exception !== undefined && !this.isInvalid) {
       this.isInvalid = true;
       return ["Invalid boolean expression"];
@@ -56,10 +58,16 @@ class ErrorVisitor
   }
 }
 
+export type ParsedOutput = {
+  tree: ExpressionContext;
+  errors: string[];
+  boolSignals: Array<IdentifierExpressionContext>;
+};
+
 export const parseBoolExpression = (
   text: string,
   signals: { numSignals: string[]; boolSignals: string[] }
-): { tree: ExpressionContext; errors: string[] } => {
+): ParsedOutput => {
   // Create the lexer and parser
   let inputStream = CharStreams.fromString(text);
   let lexer = new SimpleBooleanLexer(inputStream);
@@ -80,7 +88,7 @@ export const parseBoolExpression = (
     errors.push("Invalid boolean expression");
   }
 
-  let toProcess: ParseTree[] | undefined = tree.children;
+  let toProcess: ParseTree[] | undefined = [...tree.children];
   if (toProcess !== undefined && !countFunctionsVisitor.isInvalid) {
     while (toProcess.length !== 0) {
       const curr: ParseTree | undefined = toProcess.pop()!;
@@ -94,5 +102,5 @@ export const parseBoolExpression = (
       }
     }
   }
-  return { tree, errors };
+  return { tree, errors, boolSignals: countFunctionsVisitor.boolSignals };
 };
