@@ -5,6 +5,7 @@ import {
   IMapEntries,
   observable,
   ObservableMap,
+  reaction,
 } from "mobx";
 import { v4 } from "uuid";
 import { SourceDirectory } from "../codegen/file-system";
@@ -31,7 +32,9 @@ export type DataBuilder<
 type JsonTypeItem = number | string | boolean | JsonType;
 export type JsonType = { [key: string]: JsonTypeItem | JsonTypeItem[] };
 
-export type GraphWarnings = { [key: string]: string[] | Array<[string, Array<string>]> };
+export type GraphWarnings = {
+  [key: string]: string[] | Array<[string, Array<string>]>;
+};
 
 export interface GlobalData<D extends NodeData<D, any, any>> {
   generateMainFile: string;
@@ -117,6 +120,31 @@ export class RootStoreModel<
     if (this.globalData.initState !== undefined) {
       this.globalData.initState();
     }
+
+    document.addEventListener("mousemove", (e) => {
+      this.mouseMoveEvent = e;
+    })
+
+    reaction(
+      (_) => ({
+        selectedPointIndex: this.selectedPointIndex,
+        mouseMoveEvent: this.mouseMoveEvent,
+      }),
+      (d) => {
+        if (
+          d.mouseMoveEvent !== undefined &&
+          d.selectedPointIndex !== undefined &&
+          this.selectedConnection !== undefined
+        ) {
+          const target = document
+            .getElementsByClassName("canvas-wrapper")[0]!
+            .getBoundingClientRect();
+          const x = d.mouseMoveEvent.clientX - target.left;
+          const y = d.mouseMoveEvent.clientY - target.top;
+          this.selectedConnection.innerPoints[d.selectedPointIndex] = { x, y };
+        }
+      }
+    );
   }
 
   key: string;
@@ -138,6 +166,11 @@ export class RootStoreModel<
   // Selected connection
   @observable
   selectedConnection?: ConnModel<D, G, C>;
+
+  @observable
+  selectedPointIndex?: number;
+  @observable
+  mouseMoveEvent?: MouseEvent;
 
   // Selected input for connection
   @observable

@@ -56,64 +56,143 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
       return <></>;
     }
     const { from, to, isSelected } = connection;
-    const { x: x1, y: y1 } = getStartPositionConnection(from);
+    let { x: x1, y: y1 } = getStartPositionConnection(from);
 
     const [x2, y2] = [to.x + to.width / 2, to.y + to.height / 2];
-    const dy = y2 - y1;
-    const dx = x2 - x1;
 
-    let changeX;
-    let changeY;
-    if (dx === 0) {
-      changeX = 0;
-      changeY = ((y2 > y1 ? 1 : -1) * to.height) / 2;
-    } else if (dy === 0) {
-      changeY = 0;
-      changeX = ((x2 > x1 ? 1 : -1) * to.width) / 2;
-    } else {
-      const m = Math.abs(dy / dx);
-      const [deltaX, deltaY] =
-        m > to.height / to.width
-          ? [to.height / 2 / m, to.height / 2]
-          : [to.width / 2, (to.width / 2) * m];
-      changeY = (y2 > y1 ? 1 : -1) * deltaY;
-      changeX = (x2 > x1 ? 1 : -1) * deltaX;
-    }
-    const xa = x2 - changeX;
-    const ya = y2 - changeY;
+    const getRelative = (event: {
+      clientX: number;
+      clientY: number;
+    }): { x: number; y: number } => {
+      const canvasScrollBbox = document
+        .getElementsByClassName("canvas-wrapper")[0]!
+        .getBoundingClientRect();
+      return {
+        x: event.clientX - canvasScrollBbox.left,
+        y: event.clientY - canvasScrollBbox.top,
+      };
+    };
 
-    const [xm, ym] = [(x1 + x2) / 2, (y1 + y2) / 2];
-    const degrees = 90 + (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+    const addInnerPoint = (
+      event: { clientX: number; clientY: number },
+      index: number
+    ) => {
+      connection.innerPoints.splice(index, 0, getRelative(event));
+    };
+
+    const points: JSX.Element[] = [];
 
     return (
       <>
+        <>
+          {connection.innerPoints.map((p, index) => {
+            points.push(
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r="7"
+                fill="RoyalBlue"
+                key={`${connection.from.key}${connection.to.key}${index}`}
+                // onMouseDown={(_) => {
+                //   connection.graph.selectedConnection = connection;
+                //   connection.graph.selectedPointIndex = index;
+                // }}
+                onClick={(_) => {
+                  connection.graph.selectedConnection = connection;
+                  if (connection.graph.selectedPointIndex !== undefined) {
+                    connection.graph.selectedPointIndex = undefined;
+                  } else {
+                    connection.graph.selectedPointIndex = index;
+                  }
+                }}
+              />
+            );
+
+            const lineAndPoint = (
+              <path
+                key={`${connection.from.key}${connection.to.key}${
+                  index - 1
+                }${index}`}
+                style={{
+                  strokeWidth: 3,
+                  stroke: "black",
+                  opacity: connection.isHidden ? 0.07 : 1,
+                }}
+                d={`M${x1} ${y1} L${p.x} ${p.y}`}
+                onClick={(event) => {
+                  if (event.shiftKey) {
+                    addInnerPoint(event, index);
+                  } else {
+                    rootStore.selectConnection(connection);
+                  }
+                }}
+              />
+            );
+            x1 = p.x;
+            y1 = p.y;
+            return lineAndPoint;
+          })}
+        </>
         <path
           style={{
-            strokeWidth: 2,
+            strokeWidth: 3,
             stroke: "black",
             opacity: connection.isHidden ? 0.07 : 1,
           }}
           d={`M${x1} ${y1} L${x2} ${y2}`}
-          onClick={(_) => {
-            rootStore.selectConnection(connection);
+          onClick={(event) => {
+            if (event.shiftKey) {
+              addInnerPoint(event, 0);
+            } else {
+              rootStore.selectConnection(connection);
+            }
           }}
         />
-        {!connection.isHidden && (
-          <>
-            <RectAndText
-              connection={connection}
-              texts={connection.data.connectionText}
-              x={xm}
-              rectFill={isSelected ? "#eeedff" : "#eee"}
-              y={ym}
-              onClick={(_) => rootStore.selectConnection(connection)}
-            />
-            <path
-              d={triangleFromCenter(xa, ya)}
-              transform={`rotate(${degrees} ${xa} ${ya})`}
-            />
-          </>
-        )}
+        {points}
+        {!connection.isHidden &&
+          (() => {
+            const dy = y2 - y1;
+            const dx = x2 - x1;
+
+            let changeX;
+            let changeY;
+            if (dx === 0) {
+              changeX = 0;
+              changeY = ((y2 > y1 ? 1 : -1) * to.height) / 2;
+            } else if (dy === 0) {
+              changeY = 0;
+              changeX = ((x2 > x1 ? 1 : -1) * to.width) / 2;
+            } else {
+              const m = Math.abs(dy / dx);
+              const [deltaX, deltaY] =
+                m > to.height / to.width
+                  ? [to.height / 2 / m, to.height / 2]
+                  : [to.width / 2, (to.width / 2) * m];
+              changeY = (y2 > y1 ? 1 : -1) * deltaY;
+              changeX = (x2 > x1 ? 1 : -1) * deltaX;
+            }
+            const xa = x2 - changeX;
+            const ya = y2 - changeY;
+
+            const [xm, ym] = [(x1 + x2) / 2, (y1 + y2) / 2];
+            const degrees = 90 + (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+            return (
+              <>
+                <RectAndText
+                  connection={connection}
+                  texts={connection.data.connectionText}
+                  x={xm}
+                  rectFill={isSelected ? "#eeedff" : "#eee"}
+                  y={ym}
+                  onClick={(_) => rootStore.selectConnection(connection)}
+                />
+                <path
+                  d={triangleFromCenter(xa, ya)}
+                  transform={`rotate(${degrees} ${xa} ${ya})`}
+                />
+              </>
+            );
+          })()}
       </>
     );
   }
