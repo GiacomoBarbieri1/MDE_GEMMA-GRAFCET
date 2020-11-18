@@ -148,13 +148,13 @@ export class GemmaGrafcet implements GlobalData<Step> {
 
   @computed
   get warnings(): GraphWarnings {
-    const signalsErrors = [];
+    const signalsErrors = new Set<string>();
     for (const s of this.signals) {
       if (!!s.errors.Name) {
-        signalsErrors.push(`${s.name}. Name: ${s.errors["Name"]}.`);
+        signalsErrors.add(`${s.name}. Name: ${s.errors["Name"]}.`);
       }
       if (!!s.errors["Default Value"]) {
-        signalsErrors.push(
+        signalsErrors.add(
           `${s.name}. Default value: ${s.errors["Default Value"]}.`
         );
       }
@@ -201,7 +201,7 @@ export class GemmaGrafcet implements GlobalData<Step> {
     return {
       Steps: stepsErrors,
       Transitions: transitionErrors as any,
-      Signals: signalsErrors,
+      Signals: [...signalsErrors.values()],
     };
   }
 
