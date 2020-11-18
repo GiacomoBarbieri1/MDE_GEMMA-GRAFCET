@@ -15,15 +15,14 @@ const memoryTransitionSuffix = (t: Transition): string => {
 const templateCondition = (t: Transition): string => {
   return t.expressionTokens
     .map(([tok, _]) => {
+      // Is signal
       if (tok instanceof VarId) {
-        // Is signal
-        return (
-          "GVL." +
-          tok.text +
-          (t.savedSignalsWithMemory.has(tok.text)
-            ? memoryTransitionSuffix(t)
-            : "")
-        );
+        const withMemory =
+          t.savedSignalsWithMemory.get(tok.text)?.withMemory ?? false;
+
+        return withMemory
+          ? tok.text + memoryTransitionSuffix(t)
+          : "GVL." + tok.text;
       } else {
         return tok;
       }
