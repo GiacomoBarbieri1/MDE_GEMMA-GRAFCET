@@ -55,6 +55,16 @@ const templateFBEntry = (model: MacroStep | EnclosingStep): string => `\
 IF Entry THEN
   ${model.name}(Initialization:=ENTRY);
   Entry:=FALSE;
+${model.transitions
+  .flatMap((t) =>
+    t.signalsWithMemory.map(
+      (sm) =>
+        `  ${sm.value}${memoryTransitionSuffix(t)} := ${
+          sm.behaviour === "NO" ? "FALSE" : "TRUE"
+        };`
+    )
+  )
+  .join("\n")}
 END_IF
 ${model.name}(Initialization:=ENTRY);`;
 
@@ -78,19 +88,14 @@ ${templateFBEntry(model)}
 
 ${transitions
   .map((t, index) => {
-    return `\
-${index === 0 ? "IF" : "ELSIF"} ${templateCondition(t)}${
+    const condition = `${templateCondition(t)}${
       _evaluateComplete(t, index) ? ` AND ${model.name}.Complete` : ""
-    } THEN
+    }`;
+    return `\
+${index === 0 ? "IF" : "ELSIF"} ${condition} THEN
   State:=${t.to.id};
   Entry:=TRUE;
-  ${model.transitions
-    .flatMap((t) =>
-      t.signalsWithMemory.map(
-        (sm) => `${sm}${memoryTransitionSuffix(t)} := FALSE;`
-      )
-    )
-    .join("  \n")}`;
+`;
   })
   .join("\n")}\
 ${H.textOrEmpty(transitions.length !== 0, "\nEND_IF")}`;
@@ -100,12 +105,11 @@ export const templateGlobals = (signals: Array<Signal>): string => {
   return `\
 VAR_GLOBAL
     ${signals
-      .map(
-        (s) =>
-          `${s.name} : ${s.type.toUpperCase()}${
-            s.defaultValue.trim().length === 0 ? "" : " :=" + s.defaultValue
-          };`
-      )
+      .map((s) => {
+        const defaultValue =
+          s.defaultValue.trim().length === 0 ? "" : " :=" + s.defaultValue;
+        return `${s.name} : ${s.type.toUpperCase()}${defaultValue};`;
+      })
       .join("\n    ")}
 END_VAR
 `;
@@ -123,10 +127,12 @@ ${model.steps
   .filter((s) => s.type === StepType.ENCLOSING || s.type === StepType.MACRO)
   .flatMap((s) => s.transitions)
   .flatMap((t) =>
-    t.signalsWithMemory.map((sm) => `${sm}${memoryTransitionSuffix(t)}`)
+    t.signalsWithMemory.map((sm) => {
+      const assign = sm.behaviour === "NO" ? "FALSE" : "TRUE";
+      return `  ${sm.value}${memoryTransitionSuffix(t)}:BOOL:=${assign};`;
+    })
   )
-  .map((sm) => `  ${sm}:BOOL:=FALSE;`)
-  .join("\n")}
+  .join("    \n")}
 
   State:UINT:=${model.initialStep?.id};
   Entry:BOOL:=TRUE;
@@ -158,13 +164,15 @@ ${model.steps
   .filter((s) => s.type === StepType.ENCLOSING || s.type === StepType.MACRO)
   .flatMap((s) => s.transitions)
   .flatMap((t) =>
-    t.signalsWithMemory.map(
-      (sm) => `\
-IF State = ${t.from.id} AND GVL.${sm} THEN
-  ${sm}${memoryTransitionSuffix(t)} := TRUE;
+    t.signalsWithMemory.map((sm) => {
+      const prefix = sm.behaviour === "NC" ? "NOT " : "";
+      const assign = sm.behaviour === "NO" ? "TRUE" : "FALSE";
+      return `\
+IF State = ${t.from.id} AND ${prefix}GVL.${sm.value} THEN
+  ${sm.value}${memoryTransitionSuffix(t)} := ${assign};
 END_IF
-`
-    )
+`;
+    })
   )
   .join("\n")}
 `;

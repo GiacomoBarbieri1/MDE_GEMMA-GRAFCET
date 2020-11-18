@@ -1,24 +1,17 @@
 import { Checkbox } from "@material-ui/core";
 import Switch from "@material-ui/core/Switch";
-import { action, computed, observable, ObservableSet } from "mobx";
+import { action, computed, observable, ObservableMap } from "mobx";
 import { observer } from "mobx-react-lite";
 import React, { useRef } from "react";
 import { JsonType } from "../canvas/store";
 import { FieldSpec, StrFieldSpec } from "../fields";
 import { ChoiceField } from "../fields/choice-field";
-import {
-  AndExpressionContext,
-  AndParentExpressionContext,
-  IdentifierExpressionContext,
-  NotExpressionContext,
-  OrExpressionContext,
-  SimpleExpressionContext,
-} from "../grammar/SimpleBooleanParser";
 import { ConnModel } from "../node/node-model";
 import { PropertiesTable } from "../properties/properties-table";
 import { parseBoolExpression, ParsedOutput } from "./antlr_parser";
 import { CustomToken, getCustomTokens, VarId } from "./custom_parser";
 import { GemmaGrafcet } from "./gemma";
+import { SignalType } from "./signal";
 import { Step, StepType } from "./step";
 
 type GemmaConn = ConnModel<Step, GemmaGrafcet, Transition>;
@@ -31,7 +24,10 @@ export class Transition {
   @observable
   isNegated: boolean;
   @observable
-  savedSignalsWithMemory: ObservableSet<string> = new ObservableSet();
+  savedSignalsWithMemory = new ObservableMap<
+    string,
+    { behaviour: "NC" | "NO"; withMemory: boolean }
+  >();
   @computed
   get priorityChoices() {
     return [...Array(this.connection.from.outputs.length)].map(
@@ -140,18 +136,21 @@ export class Transition {
 
   @computed
   get signalsInCondition(): Array<string> {
+    let _signals: string[];
     if (this.parsedExpression !== undefined) {
-      return this.parsedExpression.boolSignals.map((s) => s.text);
+      _signals = this.parsedExpression.boolSignals.map((s) => s.text);
+    } else {
+      _signals = this.expressionTokens
+        .map(([token, _]) => token)
+        .filter((token) => token instanceof VarId)
+        .map((s) => s.toString());
     }
     return [
-      ...this.expressionTokens
-        .map(([token, _]) => token)
-        .filter(
-          (token) =>
-            token instanceof VarId &&
-            this.from.automationSystem.signals.some(
-              (s) => s.name === token.toString()
-            )
+      ..._signals
+        .filter((token) =>
+          this.from.automationSystem.signals.some(
+            (s) => s.type === SignalType.bool && s.name === token
+          )
         )
         .reduce((set, token) => {
           set.add(token.toString());
@@ -161,40 +160,43 @@ export class Transition {
     ];
   }
 
-  @computed
-  get signalsInConditionWithDefault(): Array<[string, boolean]> | undefined {
-    return this.parsedExpression?.boolSignals.map((s) => {
-      if (s.parent === undefined) {
-      }
-      return [s.text, false];
-    });
-  }
+  // @computed
+  // get signalsInConditionWithDefault(): Array<[string, boolean]> | undefined {
+  //   return this.parsedExpression?.boolSignals.map((s) => {
+  //     if (s.parent === undefined) {
+  //     }
+  //     return [s.text, false];
+  //   });
+  // }
 
-  evaluateSignal = (s: IdentifierExpressionContext): boolean => {
-    let result = false;
-    let topOfNot = false;
-    let topOfAnd = false;
+  // evaluateSignal = (s: IdentifierExpressionContext): boolean => {
+  //   let result = false;
+  //   let topOfNot = false;
+  //   let topOfAnd = false;
 
-    let parent = s.parent;
-    while (parent !== undefined) {
-      if (parent instanceof AndParentExpressionContext) {
-        topOfAnd = !topOfAnd;
-      } else if (parent instanceof NotExpressionContext) {
-        topOfNot = !topOfNot;
-      } else if (parent instanceof OrExpressionContext) {
-      } else if (parent instanceof SimpleExpressionContext) {
-      } else if (parent instanceof AndExpressionContext) {
-      }
-      parent = parent.parent;
-    }
-    return result;
-  };
+  //   let parent = s.parent;
+  //   while (parent !== undefined) {
+  //     if (parent instanceof AndParentExpressionContext) {
+  //       topOfAnd = !topOfAnd;
+  //     } else if (parent instanceof NotExpressionContext) {
+  //       topOfNot = !topOfNot;
+  //     } else if (parent instanceof OrExpressionContext) {
+  //     } else if (parent instanceof SimpleExpressionContext) {
+  //     } else if (parent instanceof AndExpressionContext) {
+  //     }
+  //     parent = parent.parent;
+  //   }
+  //   return result;
+  // };
 
   @computed
   get signalsWithMemory() {
-    return this.signalsInCondition.filter((s) =>
-      this.savedSignalsWithMemory.has(s)
-    );
+    return this.signalsInCondition
+      .filter((s) => this.savedSignalsWithMemory.get(s)?.withMemory ?? false)
+      .map((value) => ({
+        value,
+        behaviour: this.savedSignalsWithMemory.get(value)!.behaviour,
+      }));
   }
 
   ConnectionView = observer(() => {
@@ -261,27 +263,13 @@ export class Transition {
                 {this.signalsInCondition.length === 0 &&
                   "No signals in transition"}
                 {this.signalsInCondition.map((token) => {
-                  const withMemory = this.savedSignalsWithMemory.has(token);
-                  const MemCheckbox = observer(() => (
-                    <div className="row" style={{ alignItems: "center" }}>
-                      <div>
-                        <Checkbox
-                          checked={withMemory}
-                          size="small"
-                          color="primary"
-                          onChange={() => {
-                            if (withMemory) {
-                              this.savedSignalsWithMemory.delete(token);
-                            } else {
-                              this.savedSignalsWithMemory.add(token);
-                            }
-                          }}
-                        />
-                      </div>
-                      <div style={{ flex: 1 }}>{token}</div>
-                    </div>
-                  ));
-                  return <MemCheckbox key={token} />;
+                  return (
+                    <MemCheckbox
+                      key={token}
+                      token={token}
+                      map={this.savedSignalsWithMemory}
+                    />
+                  );
                 })}
               </div>
             </>
@@ -291,6 +279,57 @@ export class Transition {
     );
   });
 }
+
+const MemCheckbox = observer(
+  ({
+    map,
+    token,
+  }: {
+    map: ObservableMap<string, { behaviour: "NC" | "NO"; withMemory: boolean }>;
+    token: string;
+  }) => {
+    const _update = (value: {
+      behaviour: "NC" | "NO";
+      withMemory: boolean;
+    }) => {
+      if (!value.withMemory && value.behaviour === "NO") {
+        map.delete(token);
+      } else {
+        map.set(token, value);
+      }
+    };
+    const state = map.get(token);
+    const behaviour = state?.behaviour ?? "NO";
+    const withMemory = state?.withMemory ?? false;
+
+    return (
+      <div className="row" style={{ alignItems: "center" }}>
+        <div>
+          <Checkbox
+            checked={withMemory}
+            size="small"
+            color="primary"
+            onChange={() => {
+              _update({ withMemory: !withMemory, behaviour });
+            }}
+          />
+        </div>
+        <div style={{ flex: 1 }}>{token}</div>
+        {withMemory && (
+          <div style={{ paddingLeft: 3, paddingRight: 3 }}>
+            <ChoiceField
+              value={behaviour}
+              keys={["NC", "NO"]}
+              setValue={(v) => {
+                _update({ withMemory, behaviour: v });
+              }}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+);
 
 const ConditionInput = observer(
   ({
