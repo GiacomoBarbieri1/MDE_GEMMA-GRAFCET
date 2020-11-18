@@ -73,16 +73,16 @@ export class ChoiceFieldSpec<
   });
 }
 
-export const ChoiceField = ({
+export const ChoiceField = <V extends string>({
   keys,
   value,
   setValue,
   maxButton,
 }: {
-  keys: string[];
-  value: string;
-  setValue: (v: string) => void;
-  maxButton?: number
+  keys: V[];
+  value: V;
+  setValue: (v: V) => void;
+  maxButton?: number;
 }) => {
   if (keys.length > (maxButton ?? 3)) {
     return (
@@ -92,7 +92,7 @@ export const ChoiceField = ({
           setValue(e.target.value as any);
         }}
         autoWidth={true}
-        style={{minHeight: "35px", marginBottom: "3px"}}
+        style={{ minHeight: "35px", marginBottom: "3px" }}
         disabled={keys.length <= 1}
       >
         {keys.map((k) => {
