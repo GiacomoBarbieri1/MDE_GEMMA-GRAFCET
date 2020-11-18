@@ -1,6 +1,12 @@
 import { Checkbox } from "@material-ui/core";
 import Switch from "@material-ui/core/Switch";
-import { action, computed, observable, ObservableMap } from "mobx";
+import {
+  action,
+  computed,
+  IKeyValueMap,
+  observable,
+  ObservableMap,
+} from "mobx";
 import { observer } from "mobx-react-lite";
 import React, { useRef } from "react";
 import { JsonType } from "../canvas/store";
@@ -24,10 +30,11 @@ export class Transition {
   @observable
   isNegated: boolean;
   @observable
-  savedSignalsWithMemory = new ObservableMap<
+  savedSignalsWithMemory: ObservableMap<
     string,
     { behaviour: "NC" | "NO"; withMemory: boolean }
-  >();
+  >;
+
   @computed
   get priorityChoices() {
     return [...Array(this.connection.from.outputs.length)].map(
@@ -47,11 +54,19 @@ export class Transition {
       conditionExpression?: string;
       priority?: number;
       isNegated?: boolean;
+      savedSignalsWithMemory?: IKeyValueMap<{
+        behaviour: "NC" | "NO";
+        withMemory: boolean;
+      }>;
     }
   ) {
     this.conditionExpression = d?.conditionExpression ?? "";
     this.priority = d?.priority ?? connection.from.outputs.length + 1;
     this.isNegated = d?.isNegated ?? false;
+    this.savedSignalsWithMemory = new ObservableMap<
+      string,
+      { behaviour: "NC" | "NO"; withMemory: boolean }
+    >(d?.savedSignalsWithMemory);
   }
 
   @action.bound
@@ -108,11 +123,24 @@ export class Transition {
 
   @computed
   get toJson(): JsonType {
-    return {
+    const json: JsonType = {
       conditionExpression: this.conditionExpression,
       priority: this.priority,
       isNegated: this.isNegated,
     };
+    if (this.savedSignalsWithMemory.size > 0) {
+      const _jsonSignals: {
+        [key: string]: {
+          behaviour: "NC" | "NO";
+          withMemory: boolean;
+        };
+      } = {};
+      for (const [k, v] of this.savedSignalsWithMemory.entries()) {
+        _jsonSignals[k] = { ...v };
+      }
+      json["savedSignalsWithMemory"] = _jsonSignals;
+    }
+    return json;
   }
 
   @computed
@@ -128,7 +156,6 @@ export class Transition {
         boolSignals: gemma.boolSignals.map((s) => s.name),
         numSignals: gemma.numSignals.map((s) => s.name),
       });
-      console.log(output.boolSignals);
       return output;
     } catch (e) {}
     return undefined;

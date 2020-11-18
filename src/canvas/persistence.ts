@@ -81,19 +81,19 @@ export async function createIndexedDB() {
   return new IndexedDB(db);
 }
 
-export function sameKeys(path: ConnectionJson, path2: ConnectionJson) {
-  return getKeyFromConnection(path) === getKeyFromConnection(path2);
+export function sameKeys(conn: ConnectionJson, conn2: ConnectionJson) {
+  return getKeyFromConnection(conn) === getKeyFromConnection(conn2);
 }
 
-export function getKeyFromConnection(path: ConnectionJson) {
-  return `${path.from}_${path.to}`;
+export function getKeyFromConnection(conn: ConnectionJson) {
+  return `${conn.from}_${conn.to}`;
 }
 
 export function connectionWithKey(
   graphKey: string,
-  path: ConnectionJson
+  conn: ConnectionJson
 ): _ConnectionJson {
-  return Object.assign(path, { key: getKeyFromConnection(path), graphKey });
+  return Object.assign(conn, { key: getKeyFromConnection(conn), graphKey });
 }
 
 export class IndexedDB {
