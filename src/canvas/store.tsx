@@ -123,7 +123,7 @@ export class RootStoreModel<
 
     document.addEventListener("mousemove", (e) => {
       this.mouseMoveEvent = e;
-    })
+    });
 
     reaction(
       (_) => ({

@@ -38,6 +38,7 @@ type RootStore = RootStoreModel<any, any, any>;
 export function App() {
   const [globalDB, setDB] = React.useState<IndexedDB | null>(null);
   const [store, setStore] = React.useState<RootStore | null>(null);
+  (window as any).store = store;
   const _isReset = store && store.resetStore;
   React.useEffect(() => {
     if (!store) {
@@ -58,8 +59,6 @@ export function App() {
         } else {
           _store = makeBaseGemmaTemplate(db);
         }
-
-        (window as any).store = _store;
         setStore(_store);
       });
     } else if (store.resetStore) {
@@ -269,32 +268,26 @@ export const WarningsDialog = ({
         </DialogContentText>
         {Object.entries(warnings).map(([title, warnings]) => {
           if (warnings.length === 0) {
-            return <></>;
+            return <div key={title}></div>;
           }
           return (
             <div key={title} className="warning-list">
               <h3>{title}</h3>
               <ul>
-                {warnings[0].length === 2 && Array.isArray(warnings[0][1]) ? (
-                  <>
-                    {(warnings as [string, string[]][]).map(
+                {warnings[0].length === 2 && Array.isArray(warnings[0][1])
+                  ? (warnings as [string, string[]][]).map(
                       ([sectionTitle, warnings], index) => (
-                        <>
-                          <h5 key={sectionTitle}>{sectionTitle}</h5>
+                        <div key={sectionTitle}>
+                          <h5>{sectionTitle}</h5>
                           {warnings.map((w, index) => (
                             <li key={`${sectionTitle}${index}`}>{w}</li>
                           ))}
-                        </>
+                        </div>
                       )
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {(warnings as string[]).map((w, index) => (
-                      <li key={index}>{w}</li>
+                    )
+                  : (warnings as string[]).map((w, index) => (
+                      <li key={`${title}${index}`}>{w}</li>
                     ))}
-                  </>
-                )}
               </ul>
             </div>
           );
