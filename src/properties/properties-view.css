@@ -1,10 +1,21 @@
-.properties-view{
+.properties-view {
   background-color: white;
   border-radius: 5px;
   overflow-x: auto;
   overflow-y: scroll;
-  flex: 1;
+  /* flex: 1; */
 }
-#node-properties, #connection-properties {
+#node-properties,
+#connection-properties {
   padding: 0 0 0 5px;
+}
+
+#node-properties {
+  flex: 8;
+}
+#connection-properties {
+  flex: 11;
+}
+#graph-properties {
+  flex: 9;
 }

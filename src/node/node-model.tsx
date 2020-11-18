@@ -117,7 +117,7 @@ export class ConnModel<
   }
 
   @observable
-  innerPoints = observable.array<{x: number; y: number}>([]);
+  innerPoints = observable.array<{ x: number; y: number }>([]);
 }
 
 export type LineData = {

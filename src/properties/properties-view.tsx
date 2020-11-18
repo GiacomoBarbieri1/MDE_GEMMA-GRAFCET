@@ -98,6 +98,7 @@ export const PropertiesView: React.FC<Props> = observer(() => {
           style={{ minWidth: "270px" }}
           className="properties-view"
           key="graph-properties"
+          id="graph-properties"
         >
           <rootStore.globalData.View />
         </div>
