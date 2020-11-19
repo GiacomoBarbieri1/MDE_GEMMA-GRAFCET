@@ -25,6 +25,7 @@ import { SourceDirectory, SourceFile } from "../codegen/file-system";
 import { macroStepTemplate } from "./macro-step";
 import { NodeView } from "../node/node";
 import { Signal, SignalRow, SignalType } from "./signal";
+import mm from "../gemma-model.json";
 
 export class GemmaGrafcet implements GlobalData<Step> {
   constructor(
@@ -369,6 +370,18 @@ export const make5NodesGraph = (
 };
 
 export const makeBaseGemmaTemplate = (
+  db: IndexedDB
+): RootStoreModel<Step, GemmaGrafcet, Transition> => {
+  const rootStore = new RootStoreModel<Step, GemmaGrafcet, Transition>({
+    db,
+    builders: gemmaBuilders,
+    hideOnDelete: true,
+    json: mm as any
+  });
+  return rootStore;
+}
+
+export const makeBaseGemmaTemplateOld = (
   db: IndexedDB
 ): RootStoreModel<Step, GemmaGrafcet, Transition> => {
   const rootStore = new RootStoreModel<Step, GemmaGrafcet, Transition>({

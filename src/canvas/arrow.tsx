@@ -152,7 +152,7 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
               <circle
                 cx={p.x}
                 cy={p.y}
-                r="1.5"
+                r="1.1"
                 fill="black"
                 key={`${connection.from.key}${connection.to.key}${index}`}
                 // onMouseDown={(_) => {
@@ -218,7 +218,7 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
             return lineAndPoint;
           })}
         </>
-        {firstArrow}
+        {!connection.isHidden && firstArrow}
         <path
           style={{
             strokeWidth: 3,
@@ -236,7 +236,7 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
         />
         {!connection.isHidden &&
           Triangle({ x1, y1, x2, y2, withNodeDelta: true })}
-        {points}
+        {!connection.isHidden && points}
         {!connection.isHidden && connectionText(connectionPoints)}
       </>
     );
