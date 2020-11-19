@@ -1,4 +1,4 @@
-import { action, computed, observable, ObservableMap } from "mobx";
+import { action, computed, IObservableArray, observable, ObservableMap } from "mobx";
 import { SnapshotIn } from "mobx-state-tree";
 import { FieldSpec } from "../fields";
 import { GlobalData, RootStoreModel, JsonType } from "../canvas/store";
@@ -66,13 +66,14 @@ export class ConnModel<
   constructor(
     public from: NodeModel<D, G, C>,
     public to: NodeModel<D, G, C>,
-
     dataBuilder: (connection: ConnModel<D, G, C>, json?: JsonType) => C,
-    json?: JsonType,
-    isHidden?: boolean
+    json?: Partial<ConnectionJson>
   ) {
-    this.data = dataBuilder(this, json);
-    this.isHidden = isHidden ?? false;
+    this.data = dataBuilder(this, json?.data);
+    this.isHidden = json?.isHidden ?? false;
+    this.innerPoints = observable.array<{ x: number; y: number }>(
+      json?.innerPoints ?? []
+    );
     // this.lines.push(
     //   { axis: "hori", length: to.x - from.x },
     //   { axis: "vert", length: to.y - from.y }
@@ -113,11 +114,15 @@ export class ConnModel<
       to: this.to.key,
       data: this.data.toJson,
       isHidden: this.isHidden,
+      innerPoints: [...this.innerPoints.map((p) => ({ ...p }))],
     };
   }
 
   @observable
-  innerPoints = observable.array<{ x: number; y: number }>([]);
+  innerPoints: IObservableArray<{
+    x: number;
+    y: number;
+  }>;
 }
 
 export type LineData = {

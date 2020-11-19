@@ -32,6 +32,7 @@ export type ConnectionJson = {
   from: string;
   to: string;
   isHidden: boolean;
+  innerPoints: Array<{x: number, y: number}>;
   data: JsonType;
 };
 

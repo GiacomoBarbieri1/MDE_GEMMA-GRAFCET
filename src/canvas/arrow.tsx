@@ -48,6 +48,13 @@ const getStartPositionConnection = (
   return { x: from.x + from.width / 2, y: from.y + from.height / 2 };
 };
 
+type TwoPoints = {
+  y1: number;
+  x1: number;
+  x2: number;
+  y2: number;
+};
+
 export const ArrowView: React.FC<ArrowViewProps> = observer(
   ({ connection }: ArrowViewProps) => {
     const rootStore = useStore();
@@ -81,6 +88,61 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
     };
 
     const points: JSX.Element[] = [];
+    const connectionPoints = { y1, x1, x2, y2 };
+    const Triangle = ({
+      y1,
+      x1,
+      x2,
+      y2,
+      withNodeDelta,
+    }: TwoPoints & { withNodeDelta: boolean }) => {
+      const dy = y2 - y1;
+      const dx = x2 - x1;
+
+      let changeX = 0;
+      let changeY = 0;
+      if (withNodeDelta) {
+        if (dx === 0) {
+          changeX = 0;
+          changeY = ((y2 > y1 ? 1 : -1) * to.height) / 2;
+        } else if (dy === 0) {
+          changeY = 0;
+          changeX = ((x2 > x1 ? 1 : -1) * to.width) / 2;
+        } else {
+          const m = Math.abs(dy / dx);
+          const [deltaX, deltaY] =
+            m > to.height / to.width
+              ? [to.height / 2 / m, to.height / 2]
+              : [to.width / 2, (to.width / 2) * m];
+          changeY = (y2 > y1 ? 1 : -1) * deltaY;
+          changeX = (x2 > x1 ? 1 : -1) * deltaX;
+        }
+      }
+      const xa = x2 - changeX;
+      const ya = y2 - changeY;
+      const degrees = 90 + (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
+
+      return (
+        <path
+          d={triangleFromCenter(xa, ya)}
+          transform={`rotate(${degrees} ${xa} ${ya})`}
+        />
+      );
+    };
+    const connectionText = ({ y1, x1, x2, y2 }: TwoPoints) => {
+      const [xm, ym] = [(x1 + x2) / 2, (y1 + y2) / 2];
+      return (
+        <RectAndText
+          connection={connection}
+          texts={connection.data.connectionText}
+          x={xm}
+          rectFill={isSelected ? "#eeedff" : "#eee"}
+          y={ym}
+          onClick={(_) => rootStore.selectConnection(connection)}
+        />
+      );
+    };
+    let firstArrow;
 
     return (
       <>
@@ -90,8 +152,8 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
               <circle
                 cx={p.x}
                 cy={p.y}
-                r="7"
-                fill="RoyalBlue"
+                r="1.5"
+                fill="black"
                 key={`${connection.from.key}${connection.to.key}${index}`}
                 // onMouseDown={(_) => {
                 //   connection.graph.selectedConnection = connection;
@@ -107,12 +169,13 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
                 }}
               />
             );
+            const key = `${connection.from.key}${connection.to.key}${
+              index - 1
+            }${index}`;
 
             const lineAndPoint = (
               <path
-                key={`${connection.from.key}${connection.to.key}${
-                  index - 1
-                }${index}`}
+                key={key}
                 style={{
                   strokeWidth: 3,
                   stroke: "black",
@@ -128,11 +191,34 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
                 }}
               />
             );
+            if (index === 0) {
+              firstArrow = (
+                <Triangle
+                  key={key + "t"}
+                  x1={x1}
+                  y1={y1}
+                  x2={p.x}
+                  y2={p.y}
+                  withNodeDelta={false}
+                />
+              );
+            }
+
             x1 = p.x;
             y1 = p.y;
+            if (index === Math.floor(connection.innerPoints.length / 2 - 0.1)) {
+              connectionPoints.x1 = x1;
+              connectionPoints.y1 = y1;
+            } else if (
+              index === Math.ceil(connection.innerPoints.length / 2 - 0.1)
+            ) {
+              connectionPoints.x2 = x1;
+              connectionPoints.y2 = y1;
+            }
             return lineAndPoint;
           })}
         </>
+        {firstArrow}
         <path
           style={{
             strokeWidth: 3,
@@ -142,57 +228,16 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
           d={`M${x1} ${y1} L${x2} ${y2}`}
           onClick={(event) => {
             if (event.shiftKey) {
-              addInnerPoint(event, 0);
+              addInnerPoint(event, connection.innerPoints.length);
             } else {
               rootStore.selectConnection(connection);
             }
           }}
         />
-        {points}
         {!connection.isHidden &&
-          (() => {
-            const dy = y2 - y1;
-            const dx = x2 - x1;
-
-            let changeX;
-            let changeY;
-            if (dx === 0) {
-              changeX = 0;
-              changeY = ((y2 > y1 ? 1 : -1) * to.height) / 2;
-            } else if (dy === 0) {
-              changeY = 0;
-              changeX = ((x2 > x1 ? 1 : -1) * to.width) / 2;
-            } else {
-              const m = Math.abs(dy / dx);
-              const [deltaX, deltaY] =
-                m > to.height / to.width
-                  ? [to.height / 2 / m, to.height / 2]
-                  : [to.width / 2, (to.width / 2) * m];
-              changeY = (y2 > y1 ? 1 : -1) * deltaY;
-              changeX = (x2 > x1 ? 1 : -1) * deltaX;
-            }
-            const xa = x2 - changeX;
-            const ya = y2 - changeY;
-
-            const [xm, ym] = [(x1 + x2) / 2, (y1 + y2) / 2];
-            const degrees = 90 + (Math.atan2(y2 - y1, x2 - x1) * 180) / Math.PI;
-            return (
-              <>
-                <RectAndText
-                  connection={connection}
-                  texts={connection.data.connectionText}
-                  x={xm}
-                  rectFill={isSelected ? "#eeedff" : "#eee"}
-                  y={ym}
-                  onClick={(_) => rootStore.selectConnection(connection)}
-                />
-                <path
-                  d={triangleFromCenter(xa, ya)}
-                  transform={`rotate(${degrees} ${xa} ${ya})`}
-                />
-              </>
-            );
-          })()}
+          Triangle({ x1, y1, x2, y2, withNodeDelta: true })}
+        {points}
+        {!connection.isHidden && connectionText(connectionPoints)}
       </>
     );
   }

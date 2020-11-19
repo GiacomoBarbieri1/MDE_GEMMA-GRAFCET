@@ -288,7 +288,7 @@ export class GemmaGrafcet implements GlobalData<Step> {
     };
 
     return (
-      <div style={{ width: "100%", height: "100%", position: "absolute" }}>
+      <div style={{ width: "100%", height: "100%", position: "absolute", paddingRight: "15px" }}>
         {nodes
           .filter((n) => n.data.type === StepType.CONTAINER)
           .map((n) => {
@@ -448,7 +448,9 @@ export const makeBaseGemmaTemplate = (
   }
 
   rootStore.addConnection(rootStore.globalData.fFamily!, nodes["D1"]!, {
-    conditionExpression: "I1 AND I2",
+    data: {
+      conditionExpression: "I1 AND I2",
+    },
   });
 
   const a1 = nodes["A1"]!;

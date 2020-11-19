@@ -99,7 +99,7 @@ export class RootStoreModel<
       const from = this.nodes.get(c.from);
       const to = this.nodes.get(c.to);
       if (from !== undefined && to !== undefined) {
-        this.addConnection(from, to, c.data, c.isHidden);
+        this.addConnection(from, to, c);
       }
     });
     if (this.nodes.size !== 0) {
@@ -302,16 +302,9 @@ export class RootStoreModel<
   addConnection = (
     from: NodeModel<D, G, C>,
     to: NodeModel<D, G, C>,
-    json?: JsonType,
-    isHidden?: boolean
+    json?: Partial<ConnectionJson>
   ): ConnModel<D, G, C> => {
-    const conn = new ConnModel(
-      from,
-      to,
-      this.builders.connectionBuilder,
-      json,
-      isHidden
-    );
+    const conn = new ConnModel(from, to, this.builders.connectionBuilder, json);
     conn.from.addOutput(conn);
     return conn;
   };
