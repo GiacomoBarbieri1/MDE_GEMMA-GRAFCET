@@ -36,8 +36,14 @@ export class Transition {
   >;
 
   @computed
+  get priorityUi() {
+    return (
+      this.connection.from.data._transitions.findIndex((t) => t === this) + 1
+    );
+  }
+  @computed
   get priorityChoices() {
-    return [...Array(this.connection.from.outputs.length)].map(
+    return [...Array(this.connection.from.data._transitions.length)].map(
       (_, i) => "" + (i + 1)
     );
   }
@@ -72,10 +78,26 @@ export class Transition {
   @action.bound
   setPriority = (v: string): void => {
     const priority = parseInt(v);
-    if (this.priority === priority) {
+    if (this.connection.isHidden) {
       return;
     }
+
     const transitions = this.connection.from.outputs;
+    const hiddenTransitions = transitions
+      .filter(
+        (t) => t.isHidden && t.data.priority <= this.priorityChoices.length
+      )
+      .sort((a, b) => a.data.priority - b.data.priority)
+      .map((t) => t.data);
+    console.log(hiddenTransitions);
+    if (hiddenTransitions.length > 0) {
+      let p = 1;
+      [...this.connection.from.data._transitions, ...hiddenTransitions].forEach(
+        (t, ind) => {
+          t.priority = p++;
+        }
+      );
+    }
     if (this.priority > priority) {
       transitions
         .filter(
@@ -110,11 +132,11 @@ export class Transition {
     const showPriority =
       hasNegation ||
       (this.from.type !== StepType.CONTAINER &&
-        this.connection.from.outputs.length > 1);
+        this.connection.from.data.transitions.length > 1);
 
     return [
       {
-        text: showPriority ? `${this.priority}: ` : "",
+        text: showPriority ? `${this.priorityUi}: ` : "",
         style: { textDecoration: hasNegation ? "overline" : undefined },
       },
       { text: ` ${cond}${this.conditionExpression.length > 20 ? "..." : ""}` },
@@ -235,7 +257,7 @@ export class Transition {
             <td>
               <ChoiceField
                 keys={this.priorityChoices}
-                value={"" + this.priority}
+                value={"" + this.priorityUi}
                 setValue={this.setPriority}
               />
             </td>

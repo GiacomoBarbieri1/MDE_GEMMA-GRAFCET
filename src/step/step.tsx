@@ -86,7 +86,9 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
     }
     throw new Error("");
   }
-
+  get key(): string {
+    return this.node.key;
+  }
   get automationSystem(): GemmaGrafcet {
     return this.node.graph.globalData;
   }
@@ -99,7 +101,7 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   };
 
   @computed
-  private get _transitions(): Transition[] {
+  get _transitions(): Transition[] {
     return this.node.outputs
       .filter((t) => !t.isHidden)
       .map((t) => t.data)
