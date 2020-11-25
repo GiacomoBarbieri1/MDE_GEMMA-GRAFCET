@@ -39,6 +39,7 @@ export type GraphWarnings = {
 export interface GlobalData<D extends NodeData<D, any, any>> {
   generateMainFile: string;
   generateSourceCode: SourceDirectory;
+  generateProjectInFormat(format: string): string;
   canAddNode(nodeType: string): boolean;
   View: React.FunctionComponent;
   CanvasView: React.FunctionComponent;
@@ -350,28 +351,37 @@ export class RootStoreModel<
     return json;
   };
 
-  downloadSourceCode = async () => {
-    const _addToZip = (root: JSZip, dir: SourceDirectory) => {
-      const newRoot = root.folder(dir.name)!;
+  downloadSourceCode = async (format: "XML" | "TXT") => {
+    if (format === "TXT") {
+      const _addToZip = (root: JSZip, dir: SourceDirectory) => {
+        const newRoot = root.folder(dir.name)!;
 
-      for (const item of dir.items) {
-        item.when({
-          file: (f) => newRoot.file(f.name, f.content),
-          dir: (d) => _addToZip(newRoot, d),
-        });
-      }
-    };
+        for (const item of dir.items) {
+          item.when({
+            file: (f) => newRoot.file(f.name, f.content),
+            dir: (d) => _addToZip(newRoot, d),
+          });
+        }
+      };
 
-    const zip = new JSZip();
-    const sourceCode = this.globalData.generateSourceCode;
-    _addToZip(zip, sourceCode);
+      const zip = new JSZip();
+      const sourceCode = this.globalData.generateSourceCode;
+      _addToZip(zip, sourceCode);
 
-    const content = await zip.generateAsync({ type: "blob" });
+      const content = await zip.generateAsync({ type: "blob" });
 
-    downloadToClient(
-      content,
-      "gemma-grafcet-source-code.zip",
-      "application/zip"
-    );
+      downloadToClient(
+        content,
+        "gemma-grafcet-source-code.zip",
+        "application/zip"
+      );
+    } else if (format === "XML") {
+      const projectFile = this.globalData.generateProjectInFormat(format);
+      downloadToClient(
+        projectFile,
+        "gemma-grafcet-source-code.xml",
+        "application/xml"
+      );
+    }
   };
 }

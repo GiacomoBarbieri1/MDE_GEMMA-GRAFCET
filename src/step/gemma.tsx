@@ -26,6 +26,7 @@ import { macroStepTemplate } from "./macro-step";
 import { NodeView } from "../node/node";
 import { Signal, SignalRow, SignalType } from "./signal";
 import mm from "../gemma-model.json";
+import { projectTemplate } from "./openxml-templates";
 
 export class GemmaGrafcet implements GlobalData<Step> {
   constructor(
@@ -41,6 +42,10 @@ export class GemmaGrafcet implements GlobalData<Step> {
         .filter((s) => s !== undefined) as Signal[];
     }
     this.signals = observable.array<Signal>(signals);
+  }
+
+  get key(): string {
+    return this.graph.key;
   }
 
   canAddNode = (nodeType: string): boolean => {
@@ -126,6 +131,13 @@ export class GemmaGrafcet implements GlobalData<Step> {
     return templateGemmaGrafcet(this);
   }
 
+  generateProjectInFormat = (format: string): string => {
+    this.generatingXML = true;
+    const result = projectTemplate(this);
+    this.generatingXML = false;
+    return result;
+  };
+
   @computed
   get generateSourceCode(): SourceDirectory {
     const main = templateGemmaGrafcet(this);
@@ -190,7 +202,7 @@ export class GemmaGrafcet implements GlobalData<Step> {
     }
 
     const transitionErrors = this.steps
-      .flatMap((s) => s.transitions)
+      .flatMap((s) => s._transitions)
       .filter(
         (t) =>
           t.parsedExpression?.errors !== undefined &&
@@ -291,7 +303,14 @@ export class GemmaGrafcet implements GlobalData<Step> {
     };
 
     return (
-      <div style={{ width: "100%", height: "100%", position: "absolute", paddingRight: "15px" }}>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          position: "absolute",
+          paddingRight: "15px",
+        }}
+      >
         {nodes
           .filter((n) => n.data.type === StepType.CONTAINER)
           .map((n) => {
@@ -378,10 +397,10 @@ export const makeBaseGemmaTemplate = (
     db,
     builders: gemmaBuilders,
     hideOnDelete: true,
-    json: mm as any
+    json: mm as any,
   });
   return rootStore;
-}
+};
 
 export const makeBaseGemmaTemplateOld = (
   db: IndexedDB

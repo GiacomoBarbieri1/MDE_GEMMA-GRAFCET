@@ -13,6 +13,7 @@ export type CustomToken =
   | "OR"
   | "NOT"
   | "<"
+  | "<>"
   | ">"
   | "="
   | "<="
@@ -50,6 +51,12 @@ export const getCustomTokens = (t: string): [CustomToken, number][] => {
       case ")":
       case "(":
       case "<":
+        if (t.substring(i, i + 2) === "<>") {
+          omit = 1;
+          add("<>");
+          continue;
+        }
+      // ignore: no-fallthrough
       case ">":
         add(c);
         break;

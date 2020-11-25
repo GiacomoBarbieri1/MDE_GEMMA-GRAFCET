@@ -45,7 +45,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "gemma": "ts-node-dev --respawn --transpile-only ./src/step/gemma.ts --experimental-modules",
-    "antlr4ts": "antlr4ts -visitor ./src/step/SimpleBoolean.g4 -o ./src/grammar/"
+    "antlr4ts": "antlr4ts -visitor ./src/grammar/SimpleBoolean.g4 -o ./src/grammar/"
   },
   "eslintConfig": {
     "extends": "react-app"
