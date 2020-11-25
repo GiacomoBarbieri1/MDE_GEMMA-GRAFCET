@@ -3,8 +3,7 @@ grammar SimpleBoolean;
 parse: expression EOF;
 
 expression:
-	NOT expression									# notExpression
-	| left = expressionAnd OR right = expression	# orExpression
+	left = expressionAnd OR right = expression	# orExpression
 	| expressionAnd									# andParentExpression;
 
 expressionAnd:
@@ -12,7 +11,8 @@ expressionAnd:
 	| expressionSimple									# simpleExpression;
 
 expressionSimple:
-	left = numExpression op = comparator right = numExpression	# comparatorExpression
+	NOT expression									# notExpression
+	| left = numExpression op = comparator right = numExpression	# comparatorExpression
 	| IDENTIFIER												# identifierExpression
 	| LPAREN expression RPAREN									# parenExpression;
 
@@ -20,7 +20,7 @@ numExpression:
 	IDENTIFIER	# identifierNumExpression
 	| DECIMAL	# decimalExpression;
 
-comparator: GT | GE | LT | LE | EQ;
+comparator: DIF | GT | GE | LT | LE | EQ;
 
 AND: 'AND';
 OR: 'OR';
@@ -30,6 +30,7 @@ FALSE: 'FALSE';
 GT: '>';
 GE: '>=';
 LT: '<';
+DIF: '<>';
 LE: '<=';
 EQ: '=';
 LPAREN: '(';

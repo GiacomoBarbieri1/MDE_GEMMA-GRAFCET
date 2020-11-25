@@ -1,15 +1,15 @@
-// Generated from ./src/step/SimpleBoolean.g4 by ANTLR 4.7.3-SNAPSHOT
+// Generated from ./src/grammar/SimpleBoolean.g4 by ANTLR 4.7.3-SNAPSHOT
 
 
 import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 
-import { NotExpressionContext } from "./SimpleBooleanParser";
 import { OrExpressionContext } from "./SimpleBooleanParser";
 import { AndParentExpressionContext } from "./SimpleBooleanParser";
 import { IdentifierNumExpressionContext } from "./SimpleBooleanParser";
 import { DecimalExpressionContext } from "./SimpleBooleanParser";
 import { AndExpressionContext } from "./SimpleBooleanParser";
 import { SimpleExpressionContext } from "./SimpleBooleanParser";
+import { NotExpressionContext } from "./SimpleBooleanParser";
 import { ComparatorExpressionContext } from "./SimpleBooleanParser";
 import { IdentifierExpressionContext } from "./SimpleBooleanParser";
 import { ParenExpressionContext } from "./SimpleBooleanParser";
@@ -29,14 +29,6 @@ import { ComparatorContext } from "./SimpleBooleanParser";
  * operations with no return type.
  */
 export interface SimpleBooleanVisitor<Result> extends ParseTreeVisitor<Result> {
-	/**
-	 * Visit a parse tree produced by the `notExpression`
-	 * labeled alternative in `SimpleBooleanParser.expression`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitNotExpression?: (ctx: NotExpressionContext) => Result;
-
 	/**
 	 * Visit a parse tree produced by the `orExpression`
 	 * labeled alternative in `SimpleBooleanParser.expression`.
@@ -84,6 +76,14 @@ export interface SimpleBooleanVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitSimpleExpression?: (ctx: SimpleExpressionContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by the `notExpression`
+	 * labeled alternative in `SimpleBooleanParser.expressionSimple`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitNotExpression?: (ctx: NotExpressionContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by the `comparatorExpression`

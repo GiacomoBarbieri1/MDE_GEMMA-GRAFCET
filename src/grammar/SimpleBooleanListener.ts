@@ -1,15 +1,17 @@
+/* eslint-disable */
 // Generated from ./src/step/SimpleBoolean.g4 by ANTLR 4.7.3-SNAPSHOT
+// @ts-nocheck
 
 
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
-import { NotExpressionContext } from "./SimpleBooleanParser";
 import { OrExpressionContext } from "./SimpleBooleanParser";
 import { AndParentExpressionContext } from "./SimpleBooleanParser";
 import { IdentifierNumExpressionContext } from "./SimpleBooleanParser";
 import { DecimalExpressionContext } from "./SimpleBooleanParser";
 import { AndExpressionContext } from "./SimpleBooleanParser";
 import { SimpleExpressionContext } from "./SimpleBooleanParser";
+import { NotExpressionContext } from "./SimpleBooleanParser";
 import { ComparatorExpressionContext } from "./SimpleBooleanParser";
 import { IdentifierExpressionContext } from "./SimpleBooleanParser";
 import { ParenExpressionContext } from "./SimpleBooleanParser";
@@ -26,19 +28,6 @@ import { ComparatorContext } from "./SimpleBooleanParser";
  * `SimpleBooleanParser`.
  */
 export interface SimpleBooleanListener extends ParseTreeListener {
-	/**
-	 * Enter a parse tree produced by the `notExpression`
-	 * labeled alternative in `SimpleBooleanParser.expression`.
-	 * @param ctx the parse tree
-	 */
-	enterNotExpression?: (ctx: NotExpressionContext) => void;
-	/**
-	 * Exit a parse tree produced by the `notExpression`
-	 * labeled alternative in `SimpleBooleanParser.expression`.
-	 * @param ctx the parse tree
-	 */
-	exitNotExpression?: (ctx: NotExpressionContext) => void;
-
 	/**
 	 * Enter a parse tree produced by the `orExpression`
 	 * labeled alternative in `SimpleBooleanParser.expression`.
@@ -116,6 +105,19 @@ export interface SimpleBooleanListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitSimpleExpression?: (ctx: SimpleExpressionContext) => void;
+
+	/**
+	 * Enter a parse tree produced by the `notExpression`
+	 * labeled alternative in `SimpleBooleanParser.expressionSimple`.
+	 * @param ctx the parse tree
+	 */
+	enterNotExpression?: (ctx: NotExpressionContext) => void;
+	/**
+	 * Exit a parse tree produced by the `notExpression`
+	 * labeled alternative in `SimpleBooleanParser.expressionSimple`.
+	 * @param ctx the parse tree
+	 */
+	exitNotExpression?: (ctx: NotExpressionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by the `comparatorExpression`
