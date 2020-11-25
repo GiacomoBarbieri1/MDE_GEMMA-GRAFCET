@@ -47,6 +47,8 @@ export class GemmaGrafcet implements GlobalData<Step> {
     return true;
   };
 
+  generatingXML = false;
+
   initState(): void {
     const nodes = [...this.graph.nodes.values()];
     const _selected = nodes.find(

@@ -11,10 +11,10 @@ END_VAR
 
 // FB behavior
 IF Initialization THEN
-  //Initialization actions
+  // Initialization actions
 
 END_IF
 
-//Nested behavior
+// Nested behavior
 
 `;

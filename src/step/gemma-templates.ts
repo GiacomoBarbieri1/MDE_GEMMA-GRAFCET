@@ -8,7 +8,7 @@ export class H {
   static textOrEmpty = (cond: boolean, text: string) => (cond ? text : "");
 }
 
-const memoryTransitionSuffix = (t: Transition): string => {
+export const memoryTransitionSuffix = (t: Transition): string => {
   return `_${t.from.name}_${t.priority}_MEM`;
 };
 
@@ -22,7 +22,24 @@ const templateCondition = (t: Transition): string => {
 
         return withMemory
           ? tok.text + memoryTransitionSuffix(t)
-          : "GVL." + tok.text;
+          : isNaN(Number.parseFloat(tok.text))
+          ? "GVL." + tok.text
+          : tok.text;
+      } else if (t.connection.graph.globalData.generatingXML) {
+        switch (tok) {
+          case "<":
+            return "&lt;";
+          case ">":
+            return "&gt;";
+          case "<=":
+            return "&lt;=";
+          case ">=":
+            return "&gt;=";
+          case "<>":
+            return "&lt;&gt;";
+          default:
+            return tok;
+        }
       } else {
         return tok;
       }
@@ -114,8 +131,8 @@ END_VAR
 `;
 };
 
-export const templateGemmaGrafcet = (model: GemmaGrafcet): string => {
-  return `
+const gemmaVariables = (model: GemmaGrafcet): string => {
+  return `\
 // Variable declaration
 VAR
 ${model.steps
@@ -135,8 +152,19 @@ ${model.steps
 
   State:UINT:=${model.initialStep?.id};
   Entry:BOOL:=TRUE;
-END_VAR
+END_VAR    
+`;
+};
 
+export const templateGemmaGrafcet = (model: GemmaGrafcet): string => {
+  return `
+${gemmaVariables(model)}
+${gemmaBehaviour(model)}
+`;
+};
+
+export const gemmaBehaviour = (model: GemmaGrafcet): string => {
+  return `
 // Program behavior
 CASE State OF
   ${model.steps
