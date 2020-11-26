@@ -84,7 +84,7 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
       event: { clientX: number; clientY: number },
       index: number
     ) => {
-      connection.innerPoints.splice(index, 0, getRelative(event));
+      // connection.innerPoints.splice(index, 0, getRelative(event));
     };
 
     const points: JSX.Element[] = [];
@@ -126,6 +126,7 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
         <path
           d={triangleFromCenter(xa, ya)}
           transform={`rotate(${degrees} ${xa} ${ya})`}
+          onClick={(_) => rootStore.selectConnection(connection)}
         />
       );
     };
@@ -155,17 +156,13 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
                 r="1.1"
                 fill="black"
                 key={`${connection.from.key}${connection.to.key}${index}`}
-                // onMouseDown={(_) => {
-                //   connection.graph.selectedConnection = connection;
-                //   connection.graph.selectedPointIndex = index;
-                // }}
                 onClick={(_) => {
-                  connection.graph.selectedConnection = connection;
-                  if (connection.graph.selectedPointIndex !== undefined) {
-                    connection.graph.selectedPointIndex = undefined;
-                  } else {
-                    connection.graph.selectedPointIndex = index;
-                  }
+                  // connection.graph.selectedConnection = connection;
+                  // if (connection.graph.selectedPointIndex !== undefined) {
+                  //   connection.graph.selectedPointIndex = undefined;
+                  // } else {
+                  //   connection.graph.selectedPointIndex = index;
+                  // }
                 }}
               />
             );

@@ -65,7 +65,8 @@ export const NodeView: React.FC<NodeViewProps> = observer((params) => {
 
   return (
     <Draggable
-      onDrag={onDrag}
+      // onDrag={onDrag}
+      disabled={true}
       position={{
         // TODO: improve x, y with support for nested children
         x: x - (node.data.parent?.x ?? 0),
