@@ -47,6 +47,9 @@ export class GemmaGrafcet implements GlobalData<Step> {
   get key(): string {
     return this.graph.key;
   }
+  get codesysVersion(): string | null {
+    return this.graph.codesysVersion;
+  }
 
   canAddNode = (nodeType: string): boolean => {
     return true;
@@ -164,15 +167,28 @@ export class GemmaGrafcet implements GlobalData<Step> {
   @computed
   get warnings(): GraphWarnings {
     const signalsErrors = new Set<string>();
+    let unnamedSignals = 0;
     for (const s of this.signals) {
-      if (!!s.errors.Name) {
+      const isUnnamed = s.name.trim() === "";
+      if (isUnnamed) {
+        unnamedSignals++;
+      } else if (!!s.errors["Name"]) {
         signalsErrors.add(`${s.name}. Name: ${s.errors["Name"]}.`);
       }
       if (!!s.errors["Default Value"]) {
         signalsErrors.add(
-          `${s.name}. Default value: ${s.errors["Default Value"]}.`
+          `${isUnnamed ? "<UNNAMED>" : s.name}. Default value: ${
+            s.errors["Default Value"]
+          }.`
         );
       }
+    }
+    if (unnamedSignals > 0) {
+      signalsErrors.add(
+        `${unnamedSignals} signal${
+          unnamedSignals === 1 ? "" : "s"
+        } with no name.`
+      );
     }
 
     const hasInitialStep = this.steps.some((s) => s.isInitial);

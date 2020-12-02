@@ -179,6 +179,14 @@ export class RootStoreModel<
 
   @observable
   showHidden = true;
+  @observable
+  codesysVersion = localStorage.getItem("codesysVersion");
+
+  @action
+  setCodesysVersion = (version: string) => {
+    localStorage.setItem("codesysVersion", version);
+    this.codesysVersion = version;
+  };
 
   // Select a node
   @action

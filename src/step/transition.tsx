@@ -132,7 +132,7 @@ export class Transition {
     const showPriority =
       hasNegation ||
       (this.from.type !== StepType.CONTAINER &&
-        this.connection.from.data.transitions.length > 1);
+        this.connection.from.data._transitions.length > 1);
 
     return [
       {

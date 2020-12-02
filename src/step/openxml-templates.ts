@@ -171,7 +171,7 @@ export const projectTemplate = (gemma: GemmaGrafcet): string => {
           </addData>
         </resource>
         <addData>
-          ${device()}
+          ${device(gemma.codesysVersion)}
           <data name="configurations" handleUnknown="discard">
             <configurations />
           </data>
@@ -280,7 +280,7 @@ const libraries = (): string => {
 `;
 };
 
-const device = (): string => {
+const device = (codesysVersion: string | null): string => {
   return `\
 <data name="Device" handleUnknown="discard">
   <Device xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="">
@@ -288,7 +288,7 @@ const device = (): string => {
       <DeviceIdentification>
         <Type>4096</Type>
         <Id>0000 0001</Id>
-        <Version>3.5.11.30</Version>
+        <Version>${codesysVersion ?? "3.5.11.30"}</Version>
       </DeviceIdentification>
       <Connector moduleType="256" interface="Common.PCI" connectorId="0">
         <HostParameterSet />
