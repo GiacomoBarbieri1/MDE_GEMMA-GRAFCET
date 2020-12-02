@@ -102,7 +102,7 @@ export const SignalRow = observer(
             <TextField
               type="text"
               value={s.name}
-              onChange={(e) => (s.name = e.target.value)}
+              onChange={(e) => (s.name = e.target.value.replace(/\s/g, ""))}
               style={{ width: "145px" }}
               error={s.errors["Name"] !== undefined}
             />
