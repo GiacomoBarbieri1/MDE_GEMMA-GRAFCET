@@ -67,18 +67,18 @@ export const ArrowView: React.FC<ArrowViewProps> = observer(
 
     const [x2, y2] = [to.x + to.width / 2, to.y + to.height / 2];
 
-    const getRelative = (event: {
-      clientX: number;
-      clientY: number;
-    }): { x: number; y: number } => {
-      const canvasScrollBbox = document
-        .getElementsByClassName("canvas-wrapper")[0]!
-        .getBoundingClientRect();
-      return {
-        x: event.clientX - canvasScrollBbox.left,
-        y: event.clientY - canvasScrollBbox.top,
-      };
-    };
+    // const getRelative = (event: {
+    //   clientX: number;
+    //   clientY: number;
+    // }): { x: number; y: number } => {
+    //   const canvasScrollBbox = document
+    //     .getElementsByClassName("canvas-wrapper")[0]!
+    //     .getBoundingClientRect();
+    //   return {
+    //     x: event.clientX - canvasScrollBbox.left,
+    //     y: event.clientY - canvasScrollBbox.top,
+    //   };
+    // };
 
     const addInnerPoint = (
       event: { clientX: number; clientY: number },

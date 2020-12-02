@@ -1,6 +1,7 @@
 import { observer } from "mobx-react-lite";
 import React from "react";
-import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
+import Draggable from "react-draggable";
+// import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
 import styled from "styled-components";
 import { NodeModel } from "./node-model";
 import { useStore } from "../App";
@@ -21,12 +22,12 @@ type NodeViewProps = { node: NodeModel<any, any, any> };
 export const NodeView: React.FC<NodeViewProps> = observer((params) => {
   const { node, children } = params;
   const rootStore = useStore();
-  const onDrag = React.useCallback(
-    (_: DraggableEvent, data: DraggableData) => {
-      node.move(data.deltaX, data.deltaY);
-    },
-    [node]
-  );
+  // const onDrag = React.useCallback(
+  //   (_: DraggableEvent, data: DraggableData) => {
+  //     node.move(data.deltaX, data.deltaY);
+  //   },
+  //   [node]
+  // );
   const selectingInput = rootStore.selectingInputFor !== undefined;
   const isValidInput =
     selectingInput && rootStore.selectingInputFor!.data.isValidInput(node);
