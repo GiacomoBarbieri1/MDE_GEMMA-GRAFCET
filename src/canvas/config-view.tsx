@@ -1,9 +1,15 @@
 import Button from "@material-ui/core/Button";
+import Dialog from "@material-ui/core/Dialog";
+import DialogContent from "@material-ui/core/DialogContent";
+import DialogTitle from "@material-ui/core/DialogTitle";
+import DialogActions from "@material-ui/core/DialogActions";
+import DialogContentText from "@material-ui/core/DialogContentText";
+import TextField from "@material-ui/core/TextField";
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import { observer } from "mobx-react-lite";
 import { Resizable } from "re-resizable";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useStore, WarningsDialog } from "../App";
 import { NodeModel } from "../node/node-model";
 import { resizableEnable } from "../utils";
@@ -19,6 +25,7 @@ export const ConfigView: React.FC<Props> = observer(<
     "XML" | "TXT" | undefined
   >(undefined);
   const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
+  const [isCodesysVersionOpen, setIsCodesysVersionOpen] = useState(false);
   const [anchorElem, setAnchorElem] = useState<HTMLButtonElement | null>(null);
 
   const ops = [...rootStore.nodes.values()];
@@ -73,7 +80,15 @@ export const ConfigView: React.FC<Props> = observer(<
     setIsDownloadMenuOpen(!isDownloadMenuOpen);
   };
 
+  const toggleCodesysVersion = () => {
+    setIsCodesysVersionOpen(!isCodesysVersionOpen);
+  };
+
   const tryDownload = (format: "XML" | "TXT") => () => {
+    if (format === "XML" && rootStore.codesysVersion === null) {
+      toggleCodesysVersion();
+      return;
+    }
     const hasWarnings = Object.values(rootStore.globalData.warnings).some(
       (v) => v.length > 0
     );
@@ -115,9 +130,46 @@ export const ConfigView: React.FC<Props> = observer(<
             open={isDownloadMenuOpen}
             onClose={toggleDownloadMenu}
           >
-            <MenuItem onClick={tryDownload("XML")}>Open XML</MenuItem>
+            <MenuItem
+              onClick={tryDownload("XML")}
+              style={{ paddingTop: "1px", paddingBottom: "1px" }}
+            >
+              PLCopen XML
+              {rootStore.codesysVersion !== null && (
+                <div
+                  className="col"
+                  style={{ fontSize: "0.7em", paddingLeft: "10px" }}
+                >
+                  <div>CodeSys version</div>
+                  <div
+                    className="row"
+                    style={{ justifyContent: "space-between" }}
+                  >
+                    {rootStore.codesysVersion}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCodesysVersion();
+                      }}
+                      style={{ fontSize: "0.8em" }}
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              )}
+            </MenuItem>
             <MenuItem onClick={tryDownload("TXT")}>Text Files</MenuItem>
           </Menu>
+          <CodesysVesionDialog
+            open={isCodesysVersionOpen}
+            toggleDialog={toggleCodesysVersion}
+            accept={(version: string) => {
+              rootStore.setCodesysVersion(version);
+              toggleCodesysVersion();
+              tryDownload("XML")();
+            }}
+          />
           <WarningsDialog
             open={isWarningsDialogOpen !== undefined}
             toggleDialog={() => setIsWarningsDialogOpen(undefined)}
@@ -139,3 +191,106 @@ export const ConfigView: React.FC<Props> = observer(<
     </Resizable>
   );
 });
+
+export const CodesysVesionDialog = ({
+  open,
+  toggleDialog,
+  accept,
+}: {
+  open: boolean;
+  toggleDialog: () => void;
+  accept: (version: string) => void;
+}) => {
+  const [version, setVersion] = useState("");
+  const [versionInput, setVersionInput] = useState<HTMLElement | null>(null);
+  const [error, setError] = useState("");
+  const [prevOpen, setPrevOpen] = useState(open);
+
+  useEffect(() => {
+    if (open && !prevOpen) {
+      setError("");
+    }
+    if (open !== prevOpen) {
+      setPrevOpen(open);
+    }
+  }, [open, prevOpen]);
+
+  const updateError = (version: string) => {
+    const hasError = version.match("^[0-9]+.[0-9]+.[0-9]+.[0-9]+$") === null;
+    if (hasError) {
+      setError("Should be 4 numbers separated by points, e.g. 3.5.9.40");
+    } else {
+      setError("");
+    }
+    return hasError;
+  };
+  const send = () => {
+    if (updateError(version)) {
+      versionInput?.focus();
+    } else {
+      accept(version);
+    }
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onClose={toggleDialog}
+      keepMounted
+      aria-labelledby="alert-dialog-slide-title"
+      aria-describedby="alert-dialog-slide-description"
+    >
+      <DialogTitle id="alert-dialog-slide-title">CoDeSys Version</DialogTitle>
+      <DialogContent>
+        <DialogContentText id="alert-dialog-slide-description">
+          We require your CoDeSys version to export the project as a PLCopen
+          XML. It can be found in the 'Help' - 'Information' toolbar menu in
+          CoDeSys.
+          <br />
+          <br />
+          Example:
+          <br />
+          3.5.11.30 = CODESYS V3.5 SP11 Patch 3
+        </DialogContentText>
+        <div className="col">
+          <TextField
+            type="text"
+            value={version}
+            onChange={(e) => {
+              const value = e.target.value.replace(/(\s|[a-zA-Z])/g, "");
+              if (error.length !== 0) {
+                updateError(value);
+              }
+              setVersion(value);
+            }}
+            style={{ width: "180px" }}
+            label="CoDeSys version"
+            helperText={
+              error.length !== 0 ? error : "4 integers separeted by points"
+            }
+            error={error.length !== 0}
+            inputRef={(ref) => {
+              if (ref !== null) {
+                ref.focus();
+                setVersionInput(ref);
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                send();
+              }
+            }}
+          />
+        </div>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={toggleDialog} color="primary">
+          Close
+        </Button>
+        <Button onClick={send} color="primary">
+          Continue
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};

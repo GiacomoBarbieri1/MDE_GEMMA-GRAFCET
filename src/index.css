@@ -20,7 +20,6 @@ code {
 }
 
 .row {
-  background: #fff;
   display: flex;
   flex-direction: row;
   max-height: 100%;
@@ -28,7 +27,6 @@ code {
 }
 
 .col {
-  background: #fff;
   display: flex;
   flex-direction: column;
   max-width: 100%;
@@ -50,12 +48,20 @@ code {
   font-size: inherit;
 }
 
-
-.warning-list h1,h2,h3,h4,h5,h6{
+.warning-list h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   margin-top: 5px;
   margin-bottom: 5px;
 }
 .warning-list ul {
   overflow: auto;
   max-height: 230px;
+}
+
+button {
+  cursor: pointer;
 }
