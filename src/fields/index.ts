@@ -29,12 +29,18 @@ export type PP2<M extends { [key: string]: FieldSpec }, T> = {
   model: OperationI<M, any, any>;
 };
 
-export type FieldSpec =
+export type FieldSpec = (
   | NumFieldSpec<any>
   | StrFieldSpec<any>
   | PatternFieldSpec<any, any, any, any, any>
   | ChoiceFieldSpec<any, any, any, any, any>
-  | BoolFieldSpec<any>;
+  | BoolFieldSpec<any>
+) & { label?: string };
 
-export { NumFieldSpec, StrFieldSpec, PatternFieldSpec, ChoiceFieldSpec, BoolFieldSpec, };
-
+export {
+  NumFieldSpec,
+  StrFieldSpec,
+  PatternFieldSpec,
+  ChoiceFieldSpec,
+  BoolFieldSpec,
+};

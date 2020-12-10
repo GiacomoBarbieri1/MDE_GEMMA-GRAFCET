@@ -74,25 +74,6 @@ export class ConnModel<
     this.innerPoints = observable.array<{ x: number; y: number }>(
       json?.innerPoints ?? []
     );
-    // this.lines.push(
-    //   { axis: "hori", length: to.x - from.x },
-    //   { axis: "vert", length: to.y - from.y }
-    // );
-    // const disposer = autorun((r) => {
-    //   const { dx, dy } = this.lines.reduce(
-    //     (p, c) =>
-    //       c.axis === "vert"
-    //         ? { dx: p.dx, dy: p.dy + c.length }
-    //         : { dx: p.dx + c.length, dy: p.dy },
-    //     { dx: 0, dy: 0 }
-    //   );
-    //   if (Math.abs(dx - (this.to.x - this.from.x)) > 1){
-
-    //   }
-    //   if (Math.abs(dy - (this.to.y - this.from.y)) > 1){
-
-    //   }
-    // });
   }
 
   data: C;

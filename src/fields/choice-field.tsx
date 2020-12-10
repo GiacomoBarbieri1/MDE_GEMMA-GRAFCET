@@ -26,10 +26,17 @@ export class ChoiceFieldSpec<
   choices: C;
   default: K;
   onChange?: (n: V) => void;
+  label?: string;
 
-  constructor(v: { choices: C; default: K; onChange?: (n: V) => void }) {
+  constructor(v: {
+    choices: C;
+    default: K;
+    onChange?: (n: V) => void;
+    label?: string;
+  }) {
     this.choices = v.choices;
     this.default = v.default;
+    this.label = v.label;
     this.onChange = v.onChange;
     if (this.isObservableMap()) {
       if ((this.choices as any).get(this.default) === null) {

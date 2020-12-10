@@ -143,8 +143,13 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   }
 
   spec = {
-    isInitial: new BoolFieldSpec({ default: false, required: true }),
+    isInitial: new BoolFieldSpec({
+      label: "Initial",
+      default: false,
+      required: true,
+    }),
     type: new ChoiceFieldSpec({
+      label: "Type",
       default: StepType.SIMPLE,
       choices: listToMap(
         Object.values(StepType).filter((t) => t !== StepType.CONTAINER)

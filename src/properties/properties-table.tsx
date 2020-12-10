@@ -35,7 +35,7 @@ export const PropertiesTableNode = observer(
         <PropertiesTable>
           {Object.entries(self.data.spec).map(([k, v]) => (
             <tr key={k}>
-              <td>{k}</td>
+              <td>{v.label ?? k}</td>
               <td>
                 <v.plotField name={k} model={self.data as any} />
               </td>

@@ -98,8 +98,10 @@ export class BoolFieldSpec<M extends { [key: string]: FieldSpec }>
   implements FieldSpecI<M, boolean> {
   default: boolean;
   required?: boolean;
+  label?: string;
 
-  constructor(v: { default: boolean; required?: boolean }) {
+  constructor(v: { default: boolean; required?: boolean; label?: string }) {
+    this.label = v.label;
     this.default = v.default;
     this.required = v.required !== undefined ? v.required : true;
   }
