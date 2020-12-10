@@ -36,13 +36,11 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   constructor(
     public node: GemmaNode,
     d?: {
-      description?: string;
       family?: ProcedureType;
       isInitial?: boolean;
       type?: StepType;
     }
   ) {
-    this.description = d?.description ?? "";
     this.family = d?.family ?? ProcedureType.F;
     this.isInitial = d?.isInitial ?? false;
     this.type = d?.type ?? StepType.SIMPLE;
@@ -65,8 +63,6 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   get name(): string {
     return this.node.name;
   }
-  @observable
-  description: string;
   @observable
   isInitial: boolean;
   @observable
@@ -165,7 +161,6 @@ export class BaseStep implements NodeData<Step, GemmaGrafcet, Transition> {
   get toJson(): JsonType {
     return {
       family: this.family,
-      description: this.description,
       type: this.type,
       isInitial: this.isInitial,
     };
