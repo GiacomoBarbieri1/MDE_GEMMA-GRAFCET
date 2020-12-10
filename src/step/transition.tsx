@@ -89,7 +89,6 @@ export class Transition {
       )
       .sort((a, b) => a.data.priority - b.data.priority)
       .map((t) => t.data);
-    console.log(hiddenTransitions);
     if (hiddenTransitions.length > 0) {
       let p = 1;
       [...this.connection.from.data._transitions, ...hiddenTransitions].forEach(

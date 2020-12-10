@@ -359,7 +359,6 @@ export class GemmaGrafcet implements GlobalData<Step> {
 export const gemmaBuilders: DataBuilder<Step, GemmaGrafcet, Transition> = {
   graphBuilder: (g, json) => new GemmaGrafcet(g, json),
   nodeBuilder: (n, json) => {
-    console.log(json);
     const type = json !== undefined ? json["type"] : undefined;
     if (typeof type === "string" && Object.keys(StepType).includes(type)) {
       return new BaseStep(n, json);

@@ -35,7 +35,6 @@ export const NodeView: React.FC<NodeViewProps> = observer((params) => {
 
   const onClick = React.useCallback(
     (_: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-      console.log(node);
       if (selectingInput) {
         if (isValidInput) {
           rootStore.assignInput(node);

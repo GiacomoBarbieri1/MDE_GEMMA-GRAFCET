@@ -79,7 +79,6 @@ export const MainCanvas: React.FC<Props> = observer(() => {
     engine.setModel(model);
     return engine;
   }, [ops]);
-  console.log(engine);
 
   return (
     <div
