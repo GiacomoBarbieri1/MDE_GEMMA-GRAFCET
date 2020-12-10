@@ -208,35 +208,6 @@ export class Transition {
     ];
   }
 
-  // @computed
-  // get signalsInConditionWithDefault(): Array<[string, boolean]> | undefined {
-  //   return this.parsedExpression?.boolSignals.map((s) => {
-  //     if (s.parent === undefined) {
-  //     }
-  //     return [s.text, false];
-  //   });
-  // }
-
-  // evaluateSignal = (s: IdentifierExpressionContext): boolean => {
-  //   let result = false;
-  //   let topOfNot = false;
-  //   let topOfAnd = false;
-
-  //   let parent = s.parent;
-  //   while (parent !== undefined) {
-  //     if (parent instanceof AndParentExpressionContext) {
-  //       topOfAnd = !topOfAnd;
-  //     } else if (parent instanceof NotExpressionContext) {
-  //       topOfNot = !topOfNot;
-  //     } else if (parent instanceof OrExpressionContext) {
-  //     } else if (parent instanceof SimpleExpressionContext) {
-  //     } else if (parent instanceof AndExpressionContext) {
-  //     }
-  //     parent = parent.parent;
-  //   }
-  //   return result;
-  // };
-
   @computed
   get signalsWithMemory() {
     return this.signalsInCondition
