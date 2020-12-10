@@ -54,7 +54,7 @@ export function importJson(
 ): Promise<string | ArrayBuffer | null | undefined> {
   const files = event.target.files;
   return new Promise((resolve, _) => {
-    if (files !== null) {
+    if (files !== null && files.length !== 0) {
       const file = files[0];
       if (file.type !== "application/json") {
         window.alert(

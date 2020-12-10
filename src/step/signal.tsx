@@ -130,7 +130,6 @@ export const SignalRow = observer(
                 ? s.errors["Default Value"]
                 : ""
             }
-            open={true}
           >
             <TextField
               type={s.typeBase === SignalTypeBase.bool ? "text" : "number"}

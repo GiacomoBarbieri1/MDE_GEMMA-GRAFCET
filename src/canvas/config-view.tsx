@@ -132,7 +132,14 @@ export const ConfigView: React.FC<Props> = observer(<
           >
             <MenuItem
               onClick={tryDownload("XML")}
-              style={{ paddingTop: "1px", paddingBottom: "1px" }}
+              style={
+                rootStore.codesysVersion !== null
+                  ? {
+                      paddingTop: "1px",
+                      paddingBottom: "1px",
+                    }
+                  : undefined
+              }
             >
               PLCopen XML
               {rootStore.codesysVersion !== null && (
