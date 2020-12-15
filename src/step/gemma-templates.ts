@@ -104,9 +104,14 @@ ${templateFBEntry(model)}
 
 ${transitions
   .map((t, index) => {
-    const condition = `${templateCondition(t)}${
-      _evaluateComplete(t, index) ? ` AND ${model.name}.Complete` : ""
-    }`;
+    let condition = templateCondition(t);
+    if (_evaluateComplete(t, index)) {
+      if (condition.trim().length === 0) {
+        condition = `${model.name}.Complete`;
+      } else {
+        condition = `(${condition}) AND ${model.name}.Complete`;
+      }
+    }
     return `\
 ${index === 0 ? "IF" : "ELSIF"} ${condition} THEN
   State:=${t.to.id};

@@ -67,7 +67,7 @@ const functionBlock = (step: MacroStep | EnclosingStep): string => {
 const gemmaImplementation = (gemma: GemmaGrafcet): string => {
   return `\
 <data name="http://www.3s-software.com/plcopenxml/pou" handleUnknown="implementation">
-  <pou name="GEMMA" pouType="functionBlock">
+  <pou name="GEMMA" pouType="program">
     <interface>
       <localVars>
         <variable name="State">

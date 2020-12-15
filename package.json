@@ -2,7 +2,7 @@
   "name": "gemma-grafcet",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/gemma-grafcet",
+  "homepage": ".",
   "dependencies": {
     "@emotion/core": "^10.0.35",
     "@emotion/styled": "^10.0.27",
