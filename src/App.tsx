@@ -136,6 +136,7 @@ function TopMenu<
       style={{
         justifyContent: "space-between",
         borderBottom: "rgb(221 220 220) solid 1.5px",
+        background: "white",
       }}
     >
       <ToggleShowHidden store={store} />
