@@ -21,7 +21,7 @@ export const PropertiesView: React.FC<Props> = observer(() => {
       <div
         style={{
           overflow: "auto",
-          maxHeight: "100%",
+          height: "100%",
           maxWidth: "100%",
           justifyContent: "space-around",
           backgroundColor: "#fafafa",

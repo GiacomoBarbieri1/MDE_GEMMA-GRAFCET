@@ -254,7 +254,7 @@ export class GemmaGrafcet implements GlobalData<Step> {
             justifyContent: "space-between",
           }}
         >
-          <h3 style={{ margin: "5px 0 10px 5px" }}>Signals</h3>
+          <h3 style={{ margin: "5px 0 10px 5px" }}>Variables</h3>
           <Button onClick={(_) => setShowDelete(!showDelete)}>
             {showDelete ? "Hide Delete" : "Show Delete"}
             <FontAwesomeIcon
@@ -294,7 +294,7 @@ export class GemmaGrafcet implements GlobalData<Step> {
           style={{ alignSelf: "flex-end" }}
           onClick={(_) => this.signals.push(new Signal(this))}
         >
-          Add Signal
+          Add Variable
         </Button>
       </div>
     );

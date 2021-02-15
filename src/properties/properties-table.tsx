@@ -12,12 +12,12 @@ type Props2 = {
 export const PropertiesTable = observer(({ children }: Props2) => {
   return (
     <PropertiesTableStyled>
-      <thead>
+      {/* <thead>
         <tr>
           <td>Property</td>
           <td>Value</td>
         </tr>
-      </thead>
+      </thead> */}
       <tbody>{children}</tbody>
     </PropertiesTableStyled>
   );

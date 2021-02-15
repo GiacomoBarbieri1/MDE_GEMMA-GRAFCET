@@ -114,16 +114,19 @@ export const ConfigView: React.FC<Props> = observer(<
     >
       <div className="col" style={{ height: "100%" }}>
         <div style={{ borderBottom: "rgb(221 220 220) solid 1.5px" }}>
-          <Button
-            onClick={toggleDownloadMenu}
-            ref={(ref) => {
-              if (ref !== null) {
-                setAnchorElem(ref);
-              }
-            }}
-          >
-            Download Code
-          </Button>
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <h3 style={{ margin: "3px 0px 0px 10px" }}>PLC Code</h3>
+            <Button
+              onClick={toggleDownloadMenu}
+              ref={(ref) => {
+                if (ref !== null) {
+                  setAnchorElem(ref);
+                }
+              }}
+            >
+              Download Code
+            </Button>
+          </div>
           <Menu
             anchorEl={anchorElem}
             keepMounted
