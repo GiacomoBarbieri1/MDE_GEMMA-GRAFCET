@@ -114,8 +114,7 @@ export const ConfigView: React.FC<Props> = observer(<
     >
       <div className="col" style={{ height: "100%" }}>
         <div style={{ borderBottom: "rgb(221 220 220) solid 1.5px" }}>
-          <div className="row" style={{ justifyContent: "space-between" }}>
-            <h3 style={{ margin: "3px 0px 0px 10px" }}>PLC Code</h3>
+          <div className="row" style={{ justifyContent: "flex-end" }}>
             <Button
               onClick={toggleDownloadMenu}
               ref={(ref) => {
@@ -187,6 +186,7 @@ export const ConfigView: React.FC<Props> = observer(<
             accept={() => rootStore.downloadSourceCode(isWarningsDialogOpen!)}
           />
         </div>
+        <h3 style={{ margin: "3px 0px 3px 10px" }}>PLC Code</h3>
         <div
           style={{
             overflow: "auto",

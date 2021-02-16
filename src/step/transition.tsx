@@ -277,7 +277,7 @@ export class Transition {
               <div style={{ width: "10px" }} />
               <div style={{ flex: 1 }}>
                 <h4 key="title" style={{ margin: "0" }}>
-                  With Memory
+                  Token
                 </h4>
                 {this.signalsInCondition.length === 0 &&
                   "No signals in transition"}
