@@ -83,7 +83,7 @@ export const parseBoolExpression = (
   // Use the visitor entry point
   const errors = countFunctionsVisitor.visit(tree);
 
-  if (tree.exception !== undefined) {
+  if (tree.exception !== undefined && !countFunctionsVisitor.isInvalid) {
     countFunctionsVisitor.isInvalid = true;
     errors.push("Invalid boolean expression");
   }

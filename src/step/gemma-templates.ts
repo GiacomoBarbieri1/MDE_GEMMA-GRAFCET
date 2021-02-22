@@ -12,7 +12,7 @@ export const memoryTransitionSuffix = (t: Transition): string => {
   return `_${t.from.name}_${t.priority}_MEM`;
 };
 
-const templateCondition = (t: Transition): string => {
+export const templateCondition = (t: Transition, options?: {memSuffix?: string, omitGVL?: boolean}): string => {
   return t.expressionTokens
     .map(([tok, _]) => {
       // Is signal
@@ -21,8 +21,8 @@ const templateCondition = (t: Transition): string => {
           t.savedSignalsWithMemory.get(tok.text)?.withMemory ?? false;
 
         return withMemory
-          ? tok.text + memoryTransitionSuffix(t)
-          : isNaN(Number.parseFloat(tok.text))
+          ? tok.text + (options?.memSuffix ?? memoryTransitionSuffix(t))
+          : isNaN(Number.parseFloat(tok.text)) && !options?.omitGVL
           ? "GVL." + tok.text
           : tok.text;
       } else if (t.connection.graph.globalData.generatingXML) {

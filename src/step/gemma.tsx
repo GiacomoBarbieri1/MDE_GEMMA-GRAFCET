@@ -185,7 +185,7 @@ export class GemmaGrafcet implements GlobalData<Step> {
     }
     if (unnamedSignals > 0) {
       signalsErrors.add(
-        `${unnamedSignals} signal${
+        `${unnamedSignals} variable${
           unnamedSignals === 1 ? "" : "s"
         } with no name.`
       );
@@ -232,7 +232,7 @@ export class GemmaGrafcet implements GlobalData<Step> {
     return {
       Steps: stepsErrors,
       Transitions: transitionErrors as any,
-      Signals: [...signalsErrors.values()],
+      Variables: [...signalsErrors.values()],
     };
   }
 

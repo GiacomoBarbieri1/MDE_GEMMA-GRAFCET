@@ -17,6 +17,7 @@ import { PropertiesTable } from "../properties/properties-table";
 import { parseBoolExpression, ParsedOutput } from "./antlr_parser";
 import { CustomToken, getCustomTokens, VarId } from "./custom_parser";
 import { GemmaGrafcet } from "./gemma";
+import { templateCondition } from "./gemma-templates";
 import { SignalType } from "./signal";
 import { Step, StepType } from "./step";
 
@@ -123,7 +124,8 @@ export class Transition {
 
   @computed
   get connectionText(): { text: string; style?: React.CSSProperties }[] {
-    const cond = this.conditionExpression.substring(0, 20);
+    const mappedCond = templateCondition(this, {memSuffix: "_MEM", omitGVL: true});
+    const cond = mappedCond.substring(0, 20);
     const hasNegation =
       this.isNegated &&
       (this.from.type === StepType.MACRO ||
@@ -138,7 +140,7 @@ export class Transition {
         text: showPriority ? `${this.priorityUi}: ` : "",
         style: { textDecoration: hasNegation ? "overline" : undefined },
       },
-      { text: ` ${cond}${this.conditionExpression.length > 20 ? "..." : ""}` },
+      { text: ` ${cond}${mappedCond.length > 20 ? "..." : ""}` },
     ];
   }
 
@@ -280,7 +282,7 @@ export class Transition {
                   Token
                 </h4>
                 {this.signalsInCondition.length === 0 &&
-                  "No signals in transition"}
+                  "No variables in transition"}
                 {this.signalsInCondition.map((token) => {
                   return (
                     <MemCheckbox
