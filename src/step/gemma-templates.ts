@@ -14,18 +14,26 @@ export const memoryTransitionSuffix = (t: Transition): string => {
 
 export const templateCondition = (
   t: Transition,
-  options?: { memSuffix?: string; omitGVL?: boolean }
+  options?: { memSuffix?: string; omitGVL?: boolean; omitPrefix?: boolean }
 ): string => {
   return t.expressionTokens
     .map(([tok, _]) => {
       // Is signal
       if (tok instanceof VarId) {
+        const savedMemoryState = t.savedSignalsWithMemory.get(tok.text);
         const withMemory =
-          t.shouldShowMemory &&
-          (t.savedSignalsWithMemory.get(tok.text)?.withMemory ?? false);
+          t.shouldShowMemory && (savedMemoryState?.withMemory ?? false);
+        const _prefix =
+          options?.omitPrefix === true || !withMemory
+            ? ""
+            : savedMemoryState?.behaviour! === "NO"
+            ? ""
+            : "NOT ";
 
         return withMemory
-          ? tok.text + (options?.memSuffix ?? memoryTransitionSuffix(t))
+          ? _prefix +
+              tok.text +
+              (options?.memSuffix ?? memoryTransitionSuffix(t))
           : isNaN(Number.parseFloat(tok.text)) && !options?.omitGVL
           ? "GVL." + tok.text
           : tok.text;
@@ -147,10 +155,10 @@ const _boolValueFromBehaviour = (
   return opts.default
     ? behaviour === "NO"
       ? "FALSE"
-      : "TRUE"
+      : "FALSE"
     : behaviour === "NO"
     ? "TRUE"
-    : "FALSE";
+    : "TRUE";
 };
 
 const gemmaVariables = (model: GemmaGrafcet): string => {
