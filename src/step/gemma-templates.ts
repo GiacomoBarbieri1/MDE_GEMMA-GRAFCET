@@ -12,12 +12,16 @@ export const memoryTransitionSuffix = (t: Transition): string => {
   return `_${t.from.name}_${t.priority}_MEM`;
 };
 
-export const templateCondition = (t: Transition, options?: {memSuffix?: string, omitGVL?: boolean}): string => {
+export const templateCondition = (
+  t: Transition,
+  options?: { memSuffix?: string; omitGVL?: boolean }
+): string => {
   return t.expressionTokens
     .map(([tok, _]) => {
       // Is signal
       if (tok instanceof VarId) {
-        const withMemory = t.shouldShowMemory &&
+        const withMemory =
+          t.shouldShowMemory &&
           (t.savedSignalsWithMemory.get(tok.text)?.withMemory ?? false);
 
         return withMemory
@@ -75,9 +79,9 @@ ${model.transitions
   .flatMap((t) =>
     t.signalsWithMemory.map(
       (sm) =>
-        `  ${sm.value}${memoryTransitionSuffix(t)} := ${
-          sm.behaviour === "NO" ? "FALSE" : "TRUE"
-        };`
+        `  ${sm.value}${memoryTransitionSuffix(
+          t
+        )} := ${_boolValueFromBehaviour(sm.behaviour, { default: true })};`
     )
   )
   .join("\n")}
@@ -136,6 +140,19 @@ END_VAR
 `;
 };
 
+const _boolValueFromBehaviour = (
+  behaviour: "NO" | "NC",
+  opts: { default: boolean }
+) => {
+  return opts.default
+    ? behaviour === "NO"
+      ? "FALSE"
+      : "TRUE"
+    : behaviour === "NO"
+    ? "TRUE"
+    : "FALSE";
+};
+
 const gemmaVariables = (model: GemmaGrafcet): string => {
   return `\
 // Variable declaration
@@ -149,7 +166,7 @@ ${model.steps
   .flatMap((s) => s.transitions)
   .flatMap((t) =>
     t.signalsWithMemory.map((sm) => {
-      const assign = sm.behaviour === "NO" ? "FALSE" : "TRUE";
+      const assign = _boolValueFromBehaviour(sm.behaviour, { default: true });
       return `  ${sm.value}${memoryTransitionSuffix(t)}:BOOL:=${assign};`;
     })
   )
@@ -198,7 +215,7 @@ ${model.steps
   .flatMap((t) =>
     t.signalsWithMemory.map((sm) => {
       const prefix = sm.behaviour === "NC" ? "NOT " : "";
-      const assign = sm.behaviour === "NO" ? "TRUE" : "FALSE";
+      const assign = _boolValueFromBehaviour(sm.behaviour, { default: false });
       return `\
 IF State = ${t.from.id} AND ${prefix}GVL.${sm.value} THEN
   ${sm.value}${memoryTransitionSuffix(t)} := ${assign};
