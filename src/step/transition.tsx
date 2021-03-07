@@ -124,7 +124,10 @@ export class Transition {
 
   @computed
   get connectionText(): { text: string; style?: React.CSSProperties }[] {
-    const mappedCond = templateCondition(this, {memSuffix: "_MEM", omitGVL: true});
+    const mappedCond = templateCondition(this, {
+      memSuffix: "_MEM",
+      omitGVL: true,
+    });
     const cond = mappedCond.substring(0, 20);
     const hasNegation =
       this.isNegated &&
@@ -212,12 +215,24 @@ export class Transition {
 
   @computed
   get signalsWithMemory() {
-    return this.signalsInCondition
-      .filter((s) => this.savedSignalsWithMemory.get(s)?.withMemory ?? false)
-      .map((value) => ({
-        value,
-        behaviour: this.savedSignalsWithMemory.get(value)!.behaviour,
-      }));
+    return !this.shouldShowMemory
+      ? []
+      : this.signalsInCondition
+          .filter(
+            (s) => this.savedSignalsWithMemory.get(s)?.withMemory ?? false
+          )
+          .map((value) => ({
+            value,
+            behaviour: this.savedSignalsWithMemory.get(value)!.behaviour,
+          }));
+  }
+
+  @computed
+  get shouldShowMemory() {
+    return (
+      (this.from.type === StepType.MACRO && !this.isNegated) ||
+      (this.from.type === StepType.ENCLOSING && this.isNegated)
+    );
   }
 
   ConnectionView = observer(() => {
@@ -273,8 +288,7 @@ export class Transition {
               ))}
             </ul>
           </div>
-          {((this.from.type === StepType.MACRO && !this.isNegated) ||
-            (this.from.type === StepType.ENCLOSING && this.isNegated)) && (
+          {this.shouldShowMemory && (
             <>
               <div style={{ width: "10px" }} />
               <div style={{ flex: 1 }}>

@@ -17,8 +17,8 @@ export const templateCondition = (t: Transition, options?: {memSuffix?: string, 
     .map(([tok, _]) => {
       // Is signal
       if (tok instanceof VarId) {
-        const withMemory =
-          t.savedSignalsWithMemory.get(tok.text)?.withMemory ?? false;
+        const withMemory = t.shouldShowMemory &&
+          (t.savedSignalsWithMemory.get(tok.text)?.withMemory ?? false);
 
         return withMemory
           ? tok.text + (options?.memSuffix ?? memoryTransitionSuffix(t))
