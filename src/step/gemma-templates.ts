@@ -20,13 +20,11 @@ export const templateCondition = (
     .map(([tok, _]) => {
       // Is signal
       if (tok instanceof VarId) {
-        const savedMemoryState = t.savedSignalsWithMemory.get(tok.text);
-        const withMemory =
-          t.shouldShowMemory && (savedMemoryState?.withMemory ?? false);
+        const { withMemory, behaviour } = t.memoryForVariable(tok.text);
         const _prefix =
           options?.omitPrefix === true || !withMemory
             ? ""
-            : savedMemoryState?.behaviour! === "NO"
+            : behaviour === "NO"
             ? ""
             : "NOT ";
 

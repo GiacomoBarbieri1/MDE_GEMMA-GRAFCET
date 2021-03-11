@@ -18,10 +18,14 @@ import { parseBoolExpression, ParsedOutput } from "./antlr_parser";
 import { CustomToken, getCustomTokens, VarId } from "./custom_parser";
 import { GemmaGrafcet } from "./gemma";
 import { templateCondition } from "./gemma-templates";
-import { SignalType } from "./signal";
 import { Step, StepType } from "./step";
 
 type GemmaConn = ConnModel<Step, GemmaGrafcet, Transition>;
+
+type BoolParseState = {
+  prev: BoolParseState | undefined;
+  state: boolean;
+};
 
 export class Transition {
   @observable
@@ -30,6 +34,8 @@ export class Transition {
   priority: number;
   @observable
   isNegated: boolean;
+  @observable
+  autoDetect: boolean = true;
   @observable
   savedSignalsWithMemory: ObservableMap<
     string,
@@ -127,6 +133,7 @@ export class Transition {
     const mappedCond = templateCondition(this, {
       memSuffix: "_MEM",
       omitGVL: true,
+      omitPrefix: true,
     });
     const cond = mappedCond.substring(0, 20);
     const hasNegation =
@@ -174,6 +181,72 @@ export class Transition {
     return getCustomTokens(this.conditionExpression);
   }
 
+  memoryForVariable(
+    name: string
+  ): {
+    behaviour: "NC" | "NO";
+    withMemory: boolean;
+  } {
+    const isBoolean = this.from.automationSystem.boolSignals.some(
+      (s) => s.name === name
+    );
+    const savedMemoryState = this.savedSignalsWithMemory.get(name);
+    const autoMemory = this.expressionTokensMeta.get(name) ?? [true];
+    const behaviour = this.autoDetect
+      ? autoMemory[0]
+        ? "NO"
+        : "NC"
+      : savedMemoryState?.behaviour!;
+
+    const withMemory =
+      this.shouldShowMemory &&
+      isBoolean &&
+      (savedMemoryState?.withMemory ?? false);
+    return {
+      behaviour,
+      withMemory,
+    };
+  }
+
+  @computed
+  get expressionTokensMeta(): Map<string, boolean[]> {
+    const tokens = this.expressionTokens;
+
+    const result = new Map<string, boolean[]>();
+    let currentBoolState: BoolParseState = {
+      state: true,
+      prev: undefined,
+    };
+    let previousNot = false;
+    for (const [token, _] of tokens) {
+      if (token instanceof VarId) {
+        let l = result.get(token.text);
+        if (l === undefined) {
+          l = [];
+          result.set(token.text, l);
+        }
+        l.push(!previousNot === currentBoolState.state);
+      } else if (token === "NOT") {
+        previousNot = !previousNot;
+        continue;
+      } else if (token === "(") {
+        currentBoolState = {
+          prev: currentBoolState,
+          state: !previousNot === currentBoolState.state,
+        };
+      } else if (token === ")") {
+        if (currentBoolState.prev !== undefined) {
+          currentBoolState = currentBoolState.prev;
+        } else {
+          // incorrect expression
+          return result;
+        }
+      }
+      previousNot = false;
+    }
+    return result;
+  }
+
   @computed
   get parsedExpression(): ParsedOutput | undefined {
     const gemma = this.connection.graph.globalData;
@@ -201,9 +274,7 @@ export class Transition {
     return [
       ..._signals
         .filter((token) =>
-          this.from.automationSystem.signals.some(
-            (s) => s.type === SignalType.bool && s.name === token
-          )
+          this.from.automationSystem.boolSignals.some((s) => s.name === token)
         )
         .reduce((set, token) => {
           set.add(token.toString());
@@ -223,7 +294,11 @@ export class Transition {
           )
           .map((value) => ({
             value,
-            behaviour: this.savedSignalsWithMemory.get(value)!.behaviour,
+            behaviour: this.autoDetect
+              ? this.expressionTokensMeta.get(value)![0]
+                ? "NO"
+                : "NC"
+              : this.savedSignalsWithMemory.get(value)!.behaviour,
           }));
   }
 
@@ -273,7 +348,7 @@ export class Transition {
         </PropertiesTable>
         <div className="row">
           <div style={{ flex: 1 }}>
-            <h4 style={{ margin: "0" }}>Errors</h4>
+            <h4 style={{ margin: "0", height: "27.8px" }}>Errors</h4>
             {this.parsedExpression?.errors.length === 0 && "No errors"}
             <ul
               style={{
@@ -292,9 +367,36 @@ export class Transition {
             <>
               <div style={{ width: "10px" }} />
               <div style={{ flex: 1 }}>
-                <h4 key="title" style={{ margin: "0" }}>
-                  Token
-                </h4>
+                <div
+                  className="row"
+                  style={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <h4 key="title" style={{ margin: "0" }}>
+                    Token
+                  </h4>
+                  <div
+                    className="row"
+                    style={{
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    Auto
+                    <div style={{ paddingTop: "2.5px" }}>
+                      <Switch
+                        checked={this.autoDetect}
+                        onChange={() => {
+                          this.autoDetect = !this.autoDetect;
+                        }}
+                        size="small"
+                        color="primary"
+                      />
+                    </div>
+                  </div>
+                </div>
                 {this.signalsInCondition.length === 0 &&
                   "No variables in transition"}
                 {this.signalsInCondition.map((token) => {
@@ -303,6 +405,13 @@ export class Transition {
                       key={token}
                       token={token}
                       map={this.savedSignalsWithMemory}
+                      override={
+                        this.autoDetect
+                          ? this.expressionTokensMeta.get(token)![0]
+                            ? "NO"
+                            : "NC"
+                          : undefined
+                      }
                     />
                   );
                 })}
@@ -319,9 +428,11 @@ const MemCheckbox = observer(
   ({
     map,
     token,
+    override,
   }: {
     map: ObservableMap<string, { behaviour: "NC" | "NO"; withMemory: boolean }>;
     token: string;
+    override: "NC" | "NO" | undefined;
   }) => {
     const _update = (value: {
       behaviour: "NC" | "NO";
@@ -350,7 +461,7 @@ const MemCheckbox = observer(
           />
         </div>
         <div style={{ flex: 1 }}>{token}</div>
-        {withMemory && (
+        {withMemory && override === undefined && (
           <div style={{ paddingLeft: 3, paddingRight: 3 }}>
             <ChoiceField
               value={behaviour}
@@ -360,6 +471,9 @@ const MemCheckbox = observer(
               }}
             />
           </div>
+        )}
+        {withMemory && override !== undefined && (
+          <div style={{ paddingLeft: 3, paddingRight: 15 }}>{override}</div>
         )}
       </div>
     );
