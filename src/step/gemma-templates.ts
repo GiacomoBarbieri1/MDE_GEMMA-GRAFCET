@@ -17,7 +17,7 @@ export const templateCondition = (
   options?: { memSuffix?: string; omitGVL?: boolean; omitPrefix?: boolean }
 ): string => {
   return t.expressionTokens
-    .map(([tok, _]) => {
+    .map(([tok]) => {
       // Is signal
       if (tok instanceof VarId) {
         const { withMemory, behaviour } = t.memoryForVariable(tok.text);

@@ -218,7 +218,7 @@ export class Transition {
       prev: undefined,
     };
     let previousNot = false;
-    for (const [token, _] of tokens) {
+    for (const [token] of tokens) {
       if (token instanceof VarId) {
         let l = result.get(token.text);
         if (l === undefined) {
